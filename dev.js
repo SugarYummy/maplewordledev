@@ -4,6 +4,8 @@
 // - Accounts: a pretend account server inside the page. Nobody can create an account; only the dev accounts
 //   YukiTest and YukiTest1-9 (UID Dev and Dev1-9) log in. Nothing reaches the real account database.
 //   The key phrase and the dev accounts' password are only kept as SHA-256 hashes (this file is public).
+// - One day behind: the clock reads 24 hours earlier, so today's puzzles here are yesterday's real ones (no spoilers when
+//   testing a fix on the day). Holidays, sales and the like follow it too.
 // - A black lock screen first ("Enter key phrase:"); once it's right, a cookie (a year, this site's test path only) skips it.
 //   (MapleStory Character searches still ask the real Worker, which only reads Nexon's rankings.)
 // - Everyone's results: shown, but test games aren't sent.
@@ -12,7 +14,12 @@
 //   b/<build>/ (their code only; the site-proxy Worker fills in images and sounds from the newest build).
 // - Settings > Console: /meso 5000 (free mesos), /egg limbo (Limbo's mashup on today's BGM Clip Extreme), /egg off, /help.
 (() => {
-  const BUILD = 'alphaTest v4.5.1.31102026.144811', STAMP = BUILD.split(' v')[1];
+  const RealDate = Date, BEHIND = 86400000;
+  window.Date = class extends RealDate {
+    constructor(...a) { if (a.length) super(...a); else super(RealDate.now() - BEHIND); }
+    static now() { return RealDate.now() - BEHIND; }
+  };
+  const BUILD = 'alphaTest v4.5.1.31102026.145204', STAMP = BUILD.split(' v')[1];
   const ROOT = location.pathname.match(/^(.*?\/maplewordledev\/)/)?.[1] ?? '/';
   const kept = window.localStorage;   // the browser's own storage: only the test login ('mwdev:login') goes here
   Object.defineProperty(window, 'localStorage', { value: window.sessionStorage, configurable: true });
