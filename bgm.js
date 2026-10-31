@@ -582,7 +582,7 @@ function renderEnd() {
   } else {
     const ok = b.right.includes(bonus);
     $('bonusResult').textContent = (ok ? 'Correct! ' : `Wrong! You picked ${bonus}.\n`) + (mash
-      ? `It's ${b.mashup.boss}'s BGM.` + (titleShown() && !isLimboEgg() ? `\nToday's track was "${answer.t.title}".` : '')
+      ? `It's ${b.mashup.boss}'s BGM.`
       : `It plays in: ${b.right.join(', ')}.` + (titleOn() ? '' : `\n${trackLine}`));   // with Bonus 2, the title shows there
     markResult($('bonusResult'), ok ? 'right' : 'wrong');
   }
