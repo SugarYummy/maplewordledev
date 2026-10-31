@@ -773,6 +773,14 @@ setInterval(() => {   // fades to / from quiet when one of those starts or stops
   tbgmLevel = want;
   tbgm.master.gain.setTargetAtTime(want, tbgm.ctx.currentTime, 0.12);
 }, 150);
+// Where the music is, kept when leaving the page (this tab only), so the next page of the site carries on from there.
+const TBGM_POS_KEY = 'mwThemeBgmAt';
+addEventListener('pagehide', () => {
+  const k = Object.keys(tbgm.tracks).filter((x) => tbgm.tracks[x].src);
+  const tr = tbgm.tracks[k[0]];
+  if (!tr || !tbgm.ctx) return sessionStorage.removeItem(TBGM_POS_KEY);
+  try { sessionStorage.setItem(TBGM_POS_KEY, JSON.stringify({ k, pos: tbgm.ctx.currentTime - tr.t0, at: Date.now() })); } catch {}
+});
 function themeBgm(t = tbgm.cur) {
   tbgm.cur = t;
   const want = THEME_BGM[t] && themeBgmOn() ? [t, ...(THEME_PAIR[t] && limboAllOn() ? [THEME_PAIR[t]] : [])] : [];
@@ -799,19 +807,25 @@ function themeBgm(t = tbgm.cur) {
     tr.gain.gain.value = 0;
     tr.ready = fetch(THEME_BGM[k]).then((r) => r.arrayBuffer()).then((b) => ctx.decodeAudioData(b));
   }
-  // Start together once both are decoded, so a pair stays in step (each loops on its own from there).
+  // Start together once both are decoded, so a pair stays in step (each loops on its own from there). Coming from another
+  // page of the site, it carries on from where that page was (plus the moment the page change took), not from 0:00.
   const fresh = want.filter((k) => !tbgm.tracks[k].src);
   if (fresh.length) {
     Promise.all(fresh.map((k) => tbgm.tracks[k].ready)).then((bufs) => {
       const at = ctx.currentTime + 0.05;
+      let was = null;
+      try { was = JSON.parse(sessionStorage.getItem(TBGM_POS_KEY)); } catch {}
+      const from = was && fresh.some((k) => was.k.includes(k)) ? was.pos + (Date.now() - was.at) / 1000 + 0.05 : 0;
       fresh.forEach((k, i) => {
         const tr = tbgm.tracks[k];
         if (!tr || tr.src) return;
+        const off = from % bufs[i].duration;
         tr.src = ctx.createBufferSource();
         tr.src.buffer = bufs[i];
         tr.src.loop = true;
         tr.src.connect(tr.gain);
-        tr.src.start(at);
+        tr.src.start(at, off);
+        tr.t0 = at - off;   // when 0:00 would have been (for where it's at now)
       });
     }).catch(() => {});
   }
