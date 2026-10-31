@@ -411,6 +411,30 @@ function start(d) {
   else loadStats();
   renderStreak();
   noteResult();
+  limboAutoStart();
+}
+// Back on Limbo's mashup day with its bonus still unanswered (another game or mode, then back here): the mashup and
+// Limbo's scene start by themselves. A browser only lets sound start on its own once you've clicked on the site; if it
+// says no, they start on your first click or key press instead (not one on Play itself).
+let limboWait = null;
+function limboAutoStart() {
+  if (limboWait) { removeEventListener('pointerdown', limboWait, true); removeEventListener('keydown', limboWait, true); limboWait = null; }
+  const ready = () => isLimboEgg() && over && bonus == null && !limbo.on && !(mashupAudio && !mashupAudio.paused);
+  if (!ready()) return;
+  const go = () => { if (ready()) $('mashupPlay').click(); };
+  const probe = new Audio(`audio/bgm/${answer.bonus.mashup.file}.mp3?v=2`);
+  probe.volume = 0;
+  probe.play().then(() => { probe.pause(); go(); }, () => {
+    limboWait = (e) => {
+      if (e.type === 'keydown' && e.target.closest?.('input, textarea')) return;
+      removeEventListener('pointerdown', limboWait, true);
+      removeEventListener('keydown', limboWait, true);
+      limboWait = null;
+      if (!e.target.closest?.('#mashupPlay, #play')) setTimeout(go);
+    };
+    addEventListener('pointerdown', limboWait, true);
+    addEventListener('keydown', limboWait, true);
+  });
 }
 // Before launch day the page is empty apart from this note.
 function notOpenYet() {
