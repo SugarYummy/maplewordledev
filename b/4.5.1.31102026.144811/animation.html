@@ -2,13 +2,13 @@
 <html>
 <head>
 <meta name="robots" content="noindex, nofollow">
-<script src="dev.js?b=4.5.1.31102026.143932"></script>
+<script src="dev.js?b=4.5.1.31102026.144811"></script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Maple Wordle - Guess the Class</title>
+<title>Maple Wordle - Attack Animation</title>
 <script src="move.js?v=1"></script>
 <script src="account.js?v=2"></script>
-<link rel="stylesheet" href="style.css?v=140">
+<link rel="stylesheet" href="style.css?v=141">
 </head>
 <body>
 <button id="archiveBtn" class="panel">Archive</button>
@@ -23,12 +23,12 @@
 <h1>Maple Wordle</h1>
 <div id="games">
   <button onclick="location.href='./'">Guess the Boss</button>
-  <button class="on">Guess the Class</button>
+  <button class="on" onclick="location.href='class'">Guess the Class</button>
   <button disabled>Guess the Map<small>Coming soon</small></button>
 </div>
 <div id="subgames">
-  <button class="on">Wordle</button>
-  <button onclick="location.href='animation'">Attack Animation</button>
+  <button onclick="location.href='class'">Wordle</button>
+  <button class="on">Attack Animation</button>
 </div>
 <div class="infostrip" id="infostrip">
   <div><span class="k" id="puzzleLabel">Puzzle</span><span class="v" id="puzzle"></span></div>
@@ -45,12 +45,23 @@
 </div>
 <button id="infoBtn" title="How to play">?</button>
 </div>
+<div id="congrats" hidden>
+  <h2>You guessed it!</h2>
+  <p id="congratsClass"></p>
+  <p id="congratsThanks"></p>
+  <img id="congratsImg" alt="">
+</div>
+<div id="clips">
+  <figure id="clip1"><table class="cliptag"><tr><th>Clip 1</th></tr><tr><td id="skill1" class="grey">🔒</td></tr></table></figure>
+  <figure id="clip2"><table class="cliptag"><tr><th>Clip 2</th></tr><tr><td id="skill2" class="grey">🔒</td></tr></table></figure>
+</div>
 <div class="table-wrap">
-<table>
-  <thead><tr><th>Class</th><th>Faction</th><th>Job Branch</th><th>Main Stat</th><th>Release Year (GMS)</th><th>Region</th></tr></thead>
-  <tbody id="rows"></tbody>
+<table id="clues">
+  <thead><tr><th>Faction</th><th>Job Branch</th><th>Main Stat</th><th>Release Year (GMS)</th><th>Region</th><th>Starts with</th></tr></thead>
+  <tbody><tr id="clueRow"></tr></tbody>
 </table>
 </div>
+<div id="rows"></div>
 <div id="stats" hidden>
   <h3 id="statsTitle"></h3>
   <div id="statsBars"></div>
@@ -75,6 +86,12 @@
     <p class="closebar"><button id="infoClose">Close</button></p>
   </div>
 </div>
+<div id="zoom" hidden>
+  <div class="panel">
+    <button id="zoomClose" title="Close">×</button>
+    <div id="zoomBody"></div>
+  </div>
+</div>
 <div id="changelog" hidden>
   <div class="panel">
     <h2>Changelog</h2>
@@ -82,8 +99,8 @@
     <p class="closebar"><button id="changelogClose">Close</button></p>
   </div>
 </div>
-<script src="fx.js?v=123"></script>
+<script src="fx.js?v=124"></script>
 <script src="archive.js?v=6"></script>
-<script src="class.js?v=33"></script>
+<script src="animation.js?v=34"></script>
 </body>
 </html>

@@ -2,19 +2,20 @@
 <html>
 <head>
 <meta name="robots" content="noindex, nofollow">
-<script src="dev.js?b=4.5.1.31102026.142847"></script>
+<script src="dev.js?b=4.5.1.31102026.144811"></script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Maple Wordle - Attack Animation</title>
+<title>Maple Wordle</title>
 <script src="move.js?v=1"></script>
 <script src="account.js?v=2"></script>
-<link rel="stylesheet" href="style.css?v=140">
+<link rel="stylesheet" href="style.css?v=141">
 </head>
 <body>
 <button id="archiveBtn" class="panel">Archive</button>
 <div id="archive" hidden>
   <div class="panel">
     <h2>Archive</h2>
+    <div id="archiveTabs"></div>
     <div id="archiveList"></div>
     <p class="closebar"><button id="archiveClose">Close</button></p>
   </div>
@@ -22,46 +23,44 @@
 <div class="panel game">
 <h1>Maple Wordle</h1>
 <div id="games">
-  <button onclick="location.href='./'">Guess the Boss</button>
-  <button class="on" onclick="location.href='class'">Guess the Class</button>
+  <button class="on">Guess the Boss</button>
+  <button onclick="location.href='class'">Guess the Class</button>
   <button disabled>Guess the Map<small>Coming soon</small></button>
 </div>
 <div id="subgames">
-  <button onclick="location.href='class'">Wordle</button>
-  <button class="on">Attack Animation</button>
+  <button class="on">Wordle</button>
+  <button onclick="location.href='bgm'" data-new="bgmClip" data-meso="bgm">BGM Clip</button>
+  <button disabled>Sound Clip<small>Coming soon</small></button>
+</div>
+<p><button id="today" hidden>Back to today</button></p>
+<div id="modes">Mode:
+  <button data-mode="story">Story</button>
+  <button data-mode="normal" class="on">Normal</button>
+  <button data-mode="hard">Hard</button>
+  <button data-mode="extreme">Extreme</button>
 </div>
 <div class="infostrip" id="infostrip">
   <div><span class="k" id="puzzleLabel">Puzzle</span><span class="v" id="puzzle"></span></div>
   <div><span class="k" id="timerLabel">Next in</span><span class="v" id="timer"></span></div>
   <div><span class="k">Streak</span><span class="v" id="streak"></span></div>
 </div>
-<p><button id="today" hidden>Back to today</button></p>
 <p id="status"></p>
 <p><button id="share" hidden>Share</button></p>
 <div class="pickrow">
 <div id="picker">
-  <input id="guess" type="search" placeholder="Type a class name" autocomplete="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-form-type="other">
+  <input id="guess" type="search" placeholder="Type a boss name" autocomplete="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-form-type="other">
   <div id="list" hidden></div>
 </div>
 <button id="infoBtn" title="How to play">?</button>
 </div>
-<div id="congrats" hidden>
-  <h2>You guessed it!</h2>
-  <p id="congratsClass"></p>
-  <p id="congratsThanks"></p>
-  <img id="congratsImg" alt="">
-</div>
-<div id="clips">
-  <figure id="clip1"><table class="cliptag"><tr><th>Clip 1</th></tr><tr><td id="skill1" class="grey">🔒</td></tr></table></figure>
-  <figure id="clip2"><table class="cliptag"><tr><th>Clip 2</th></tr><tr><td id="skill2" class="grey">🔒</td></tr></table></figure>
-</div>
+<button id="hint" hidden>Hint</button>
+<p id="twist" hidden></p>
 <div class="table-wrap">
-<table id="clues">
-  <thead><tr><th>Faction</th><th>Job Branch</th><th>Main Stat</th><th>Release Year (GMS)</th><th>Region</th><th>Starts with</th></tr></thead>
-  <tbody><tr id="clueRow"></tr></tbody>
+<table id="board">
+  <thead><tr><th>Boss</th><th id="diffHead" hidden>Difficulty</th><th>World</th><th>Gender</th><th>Region</th><th>Phases</th><th>HP</th><th>Entry Lv</th></tr></thead>
+  <tbody id="rows"></tbody>
 </table>
 </div>
-<div id="rows"></div>
 <div id="stats" hidden>
   <h3 id="statsTitle"></h3>
   <div id="statsBars"></div>
@@ -86,12 +85,6 @@
     <p class="closebar"><button id="infoClose">Close</button></p>
   </div>
 </div>
-<div id="zoom" hidden>
-  <div class="panel">
-    <button id="zoomClose" title="Close">×</button>
-    <div id="zoomBody"></div>
-  </div>
-</div>
 <div id="changelog" hidden>
   <div class="panel">
     <h2>Changelog</h2>
@@ -99,8 +92,8 @@
     <p class="closebar"><button id="changelogClose">Close</button></p>
   </div>
 </div>
-<script src="fx.js?v=123"></script>
+<script src="fx.js?v=124"></script>
 <script src="archive.js?v=6"></script>
-<script src="animation.js?v=34"></script>
+<script src="script.js?v=72"></script>
 </body>
 </html>

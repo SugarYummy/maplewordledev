@@ -12,8 +12,9 @@
 //   b/<build>/ (their code only; the site-proxy Worker fills in images and sounds from the newest build).
 // - Settings > Console: /meso 5000 (free mesos), /egg limbo (Limbo's mashup on today's BGM Clip Extreme), /egg off, /help.
 (() => {
-  const BUILD = 'alphaTest v4.5.1.31102026.144130', STAMP = BUILD.split(' v')[1];
+  const BUILD = 'alphaTest v4.5.1.31102026.144811', STAMP = BUILD.split(' v')[1];
   const ROOT = location.pathname.match(/^(.*?\/maplewordledev\/)/)?.[1] ?? '/';
+  const kept = window.localStorage;   // the browser's own storage: only the test login ('mwdev:login') goes here
   Object.defineProperty(window, 'localStorage', { value: window.sessionStorage, configurable: true });
   const ss = window.sessionStorage;
   const KEY_HASH = 'd6b62645532c4df47f8d5630a3833d77353883d1b3fdcf9f338ad17478fceb3e', PASS_HASH = 'f02da703180d0c0f21d0103da1a5578808131515b7bdbad3c7f9331d5214f5e5';
@@ -49,7 +50,7 @@
     document.body ? gate() : addEventListener('DOMContentLoaded', gate);
   }
   const ACCOUNT = 'https://maplewordle-account.hanayuki.workers.dev/', STATS = 'https://maplewordle-stats.hanayuki.workers.dev/';
-  const SERVER = 'mwdev:server';
+  const SERVER = 'mwdev:server2';   // (2: the password became a hash)
   const load = () => {
     try { const s = JSON.parse(ss.getItem(SERVER)); if (s) return s; } catch {}
     const users = {};
@@ -80,12 +81,13 @@
       const token = [...crypto.getRandomValues(new Uint8Array(32))].map((b) => b.toString(16).padStart(2, '0')).join('');
       s.sessions[token] = u.id;
       save(s);
+      try { kept.setItem('mwdev:login', u.id); } catch {}
       return reply({ token, id: u.id, name: u.name, rev: u.rev, data: u.data });
     }
     const token = (init.headers?.Authorization || '').replace('Bearer ', '');
     const u = Object.values(s.users).find((x) => x.id === s.sessions[token]);
     if (!u) return reply({ error: 'signed out' }, 401);
-    if (path === 'logout') { delete s.sessions[token]; save(s); return reply({ ok: true }); }
+    if (path === 'logout') { delete s.sessions[token]; save(s); try { kept.removeItem('mwdev:login'); } catch {} return reply({ ok: true }); }
     if (path === 'rename') {
       if (!NAME.test(body.name || '')) return reply({ error: 'name' }, 400);
       const other = byName(body.name);
@@ -110,6 +112,19 @@
     }
     return reply({ error: 'not found' }, 404);
   };
+  // Still logged in from before (this browser): a new tab starts logged in to that test account, with nothing else kept.
+  try {
+    const id = kept.getItem('mwdev:login');
+    if (id && !ss.getItem('mapleWordle:account')) {
+      const s = load(), u = Object.values(s.users).find((x) => x.id === id);
+      if (u) {
+        const token = [...crypto.getRandomValues(new Uint8Array(32))].map((b) => b.toString(16).padStart(2, '0')).join('');
+        s.sessions[token] = u.id;
+        save(s);
+        ss.setItem('mapleWordle:account', JSON.stringify({ name: u.name, uid: u.id, token, rev: u.rev, at: Date.now() }));
+      }
+    }
+  } catch {}
   window.devEgg = ss.getItem('mwdev:egg');   // read by bgm.js (bonusFor)
   const DEV_HELP = '/meso 5000 — add mesos (minus works too)\n/egg limbo — Limbo\'s mashup as today\'s BGM Clip Extreme bonus\n/egg off — back to the real bonus\n/help — this list';
   function devRun(line) {
@@ -171,6 +186,15 @@
   }
   addEventListener('click', (e) => { if (!e.target.closest?.('#devBuilds, #devTag')) document.getElementById('devBuilds')?.remove(); });
   addEventListener('DOMContentLoaded', () => {
+    // No guessing (or skipping, or the title guess; the bonus only comes after a game) until logged in to a test account.
+    for (const fn of ['guess', 'titleGuess']) {
+      if (typeof window[fn] !== 'function') continue;
+      const real = window[fn];
+      window[fn] = function (...args) {
+        if (window.acct?.()) return real.apply(this, args);
+        acctAsk('Log in first', 'The test version needs a test account to play.', ['Log in', 'yes'], ['Close', 'plain']).then((ok) => ok && acctForm('login'));
+      };
+    }
     try { ACCT_ERRORS.devonly = "Test version: you can't make accounts here."; } catch {}
     document.getElementById('version')?.remove();
     const tag = document.createElement('button');
