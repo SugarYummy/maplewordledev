@@ -850,5 +850,6 @@ input[type="search"]::-webkit-search-cancel-button, input[type="search"]::-webki
 @media (prefers-reduced-motion: reduce) { #shopBtn.shopcall { animation: none; box-shadow: 0 0 8px 3px rgba(255, 190, 0, 0.95); } }
 #limboShop { margin: 6px 0 0; font-weight: 700; color: #7a3fc4; }
 #limboShop[hidden] { display: none; }
-#limboShop button { margin-left: 6px; font-family: inherit; font-size: 13px; font-weight: 700; padding: 3px 10px; border-radius: 8px; cursor: pointer;
+#limboShop { white-space: nowrap; }   /* the message on one line, its button under it */
+#limboShop button { display: block; margin: 6px auto 0; font-family: inherit; font-size: 13px; font-weight: 700; padding: 3px 10px; border-radius: 8px; cursor: pointer;
                     border: 1px solid #b07800; background: #ffd34d; color: #5a3d00; }
