@@ -252,11 +252,6 @@ td.flip { animation: flip 0.5s ease both; }
 #tickLabels span.end { transform: translateX(-100%); }
 #tickLabels span.open { opacity: 1; font-weight: bold; }
 #track.seek #bar { cursor: pointer; }
-/* Easter egg mashup: the bar's moment of jumping to a random point */
-#track.barglitch #bar { transform: translateX(3px) skewX(-6deg);
-                        filter: drop-shadow(3px 0 0 rgba(255, 0, 80, 0.8)) drop-shadow(-3px 0 0 rgba(0, 220, 255, 0.8)); }
-#track.barglitch #fill { background: #c6f; }
-#track.barglitch #markerText { transform: translateX(-46%); text-shadow: 2px 0 rgba(255, 0, 80, 0.8), -2px 0 rgba(0, 220, 255, 0.8); }
 #controls { display: flex; justify-content: center; align-items: center; gap: 12px; margin-top: 6px; }
 #play { width: 44px; height: 40px; border-radius: 4px; border: 1px solid rgba(0, 0, 0, 0.35); background: #fff;
         font-size: 18px; font-family: inherit; cursor: pointer; }
@@ -304,7 +299,18 @@ td.flip { animation: flip 0.5s ease both; }
 /* BGM Clip: the bonus row under Everyone's results (% who got the bonus right), set a little apart. */
 .statrow.bonusrow { margin-top: 10px; }
 .statrow.bonusrow .label { width: 52px; margin-left: -8px; }
+#mashupRow { display: flex; flex-direction: column; align-items: center; gap: 8px; margin: 6px 0; }
 #mashupRow[hidden] { display: none; }
+/* The mashup's own bar (under its Play button): green fill like the main bar, click to jump around */
+#mashupTrack { display: flex; align-items: center; gap: 8px; width: min(320px, 100%); }
+#mashupBar { position: relative; flex: 1; height: 12px; border-radius: 4px; overflow: hidden; border: 1px solid rgba(0, 0, 0, 0.4);
+             background: #d6d6d6; cursor: pointer; }
+#mashupFill { position: absolute; top: 0; bottom: 0; left: 0; width: 0; background: #6c6; }
+#mashupTime { font-size: 12px; min-width: 76px; text-align: right; font-variant-numeric: tabular-nums; }
+#mashupTrack.barglitch #mashupBar { transform: translateX(3px) skewX(-6deg);
+                                    filter: drop-shadow(3px 0 0 rgba(255, 0, 80, 0.8)) drop-shadow(-3px 0 0 rgba(0, 220, 255, 0.8)); }
+#mashupTrack.barglitch #mashupFill { background: #c6f; }
+#mashupTrack.barglitch #mashupTime { text-shadow: 2px 0 rgba(255, 0, 80, 0.8), -2px 0 rgba(0, 220, 255, 0.8); }
 #mashupPlay { font-family: inherit; font-size: 15px; padding: 6px 14px; border-radius: 4px; border: 1px solid rgba(0, 0, 0, 0.35); background: #fff; cursor: pointer; }
 /* BGM Clip Easter eggs: a glitched mashup fades the background to the boss's map and glitches the screen while it plays
    (Malefic Star: Unglamoured Ruins; Limbo: Limbo's Subconscious (Light); Von Bon: Von Bon's Realm <Chaos>; Bellona: her fight map in Solatum). */

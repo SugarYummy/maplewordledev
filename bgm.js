@@ -582,7 +582,7 @@ function renderEnd() {
   } else {
     const ok = b.right.includes(bonus);
     $('bonusResult').textContent = (ok ? 'Correct! ' : `Wrong! You picked ${bonus}.\n`) + (mash
-      ? `It's ${b.mashup.boss}'s BGM.` + (titleShown() ? `\nToday's track was "${answer.t.title}".` : '')
+      ? `It's ${b.mashup.boss}'s BGM.` + (titleShown() && !isLimboEgg() ? `\nToday's track was "${answer.t.title}".` : '')
       : `It plays in: ${b.right.join(', ')}.` + (titleOn() ? '' : `\n${trackLine}`));   // with Bonus 2, the title shows there
     markResult($('bonusResult'), ok ? 'right' : 'wrong');
   }
@@ -590,39 +590,47 @@ function renderEnd() {
 // The mashup plays on its own little player in the bonus box (Play on the main bar stops it, and the other way round).
 // A mashup with an "egg" also changes the page while it plays: the background fades to that boss's map (and stays for
 // the day) and the screen glitches until the mashup stops.
-// The main bar follows the mashup meanwhile, and every 0.5-2 s it glitches: it jumps to a random point of the mashup
-// for a moment, then snaps back (only the bar: the sound keeps playing).
+// The mashup has its own bar under its Play button (click it to jump around); the main bar stays on today's track.
+// On an egg mashup that bar glitches every 0.5-2 s: it jumps to a random point of the mashup for a moment, then snaps
+// back (only the bar: the sound keeps playing).
 let mashupAudio = null, mashupKey = null, mashupHeard = null;   // heard: the mashup played at least once (its id)
 const mashupId = () => `${MODE}|${day}|${answer.bonus?.mashup?.file}`;   // key: mode | day | file of the mashup loaded
 const eggBar = { on: false, raf: 0, timer: 0, fake: null };
 function glitch(on) {
   document.body.classList.toggle('glitch', on);
-  cancelAnimationFrame(eggBar.raf);
   clearTimeout(eggBar.timer);
   eggBar.fake = null;
-  $('track').classList.remove('barglitch');
-  if (!on) { if (eggBar.on) { eggBar.on = false; drawBar(); } return; }
-  eggBar.on = true;
-  const tick = () => { drawEggBar(); eggBar.raf = requestAnimationFrame(tick); };
+  $('mashupTrack').classList.remove('barglitch');
+  eggBar.on = on;
+  if (!on) return drawMashupBar();
   const jump = () => {
     eggBar.timer = setTimeout(() => {
       eggBar.fake = Math.random();
-      $('track').classList.add('barglitch');
-      eggBar.timer = setTimeout(() => { eggBar.fake = null; $('track').classList.remove('barglitch'); jump(); }, 120 + Math.random() * 180);
+      $('mashupTrack').classList.add('barglitch');
+      eggBar.timer = setTimeout(() => { eggBar.fake = null; $('mashupTrack').classList.remove('barglitch'); jump(); }, 120 + Math.random() * 180);
     }, 500 + Math.random() * 1500);
   };
-  tick();
   jump();
 }
-function drawEggBar() {
+// The mashup's own bar: drawn every frame while it plays (and once when it stops).
+function drawMashupBar() {
+  const len = mashupAudio?.duration, cur = mashupAudio?.currentTime ?? 0;
+  const at = len ? (eggBar.fake ?? cur / len) * 100 : 0;
+  $('mashupFill').style.width = at + '%';
+  $('mashupTime').textContent = len ? `${clock(at / 100 * len)} / ${clock(len)}` : clock(0);
+}
+function mashupTick() {
+  cancelAnimationFrame(eggBar.raf);
+  drawMashupBar();
+  if (mashupAudio && !mashupAudio.paused) eggBar.raf = requestAnimationFrame(mashupTick);
+}
+$('mashupBar').addEventListener('click', (e) => {   // jump around in the mashup
   const len = mashupAudio?.duration;
   if (!len) return;
-  const at = (eggBar.fake ?? mashupAudio.currentTime / len) * 100;
-  $('fill').style.width = at + '%';
-  $('open').style.width = '100%';
-  $('markerText').textContent = `${clock(at / 100 * len)} / ${clock(len)}`;
-  placeMarker(at);
-}
+  const r = $('mashupBar').getBoundingClientRect();
+  mashupAudio.currentTime = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) * len;
+  drawMashupBar();
+});
 // Limbo's Easter egg (the glitched Abyss of Truth mashup, today only): Play brings in Limbo's Subconscious. A full-screen
 // fade-in covers the page, and under it the alert border, the glitch and the map come in; every few seconds a glitch
 // swaps the map between its light and dark side (white border on the light side, black on the dark). Until the bonus is
@@ -736,6 +744,7 @@ function mashupStopped() {
 }
 function stopMashup() {
   if (mashupAudio) { mashupAudio.pause(); mashupAudio = null; }
+  cancelAnimationFrame(eggBar.raf);
   mashupKey = null;
   $('mashupPlay').textContent = '▶\uFE0E Play the mashup';
   glitch(false);
@@ -756,6 +765,7 @@ $('mashupPlay').addEventListener('click', () => {
   }
   mashupAudio.volume = Math.min(1, bgmVolume() / 50);
   mashupAudio.play().catch(() => {});
+  mashupAudio.addEventListener('playing', mashupTick, { once: true });
   mashupHeard = mashupKey;
   if (bonus == null && $('bonusResult').textContent === 'Play the mashup first!') { $('bonusResult').textContent = ''; markResult($('bonusResult'), ''); }
   $('mashupPlay').textContent = '❚❚ Pause the mashup';
@@ -892,7 +902,7 @@ $('bonusGo').addEventListener('click', (window.acctGate ?? ((f) => f))(() => {
   const ok = answer.bonus.right.includes(pick);
   // Limbo's wrong guess effect (if it's on) eats a wrong answer; on Limbo's mashup everyone gets to see it.
   limboGuess($('bonusResult'), !ok, undefined, isLimboEgg());
-  if (ok && isLimboEgg()) limboWin();   // right: Limbo's cutscene, then the meso show
+  if (ok && isLimboEgg()) limboWin(guesses.length === 1 && won());   // right: Limbo's cutscene, then the meso show (not again after a guess in 1)
   noteResult();
   if (limbo.on) limboExit();
   sendBonus(ok);

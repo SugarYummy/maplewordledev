@@ -192,14 +192,15 @@ function limboCutLoad() {
   limboCutBlob ??= fetch(`video/hecate/limboCut.${SAFARI ? 'webp' : 'webm'}?v=2`).then((r) => (r.ok ? r.blob() : null)).catch(() => null);
   return limboCutBlob;
 }
-async function limboWin() {
+async function limboWin(noShow = false) {   // noShow: the meso show already played (a guess-in-1 win): just the cutscene
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   const blob = await limboCutLoad();
-  if (!blob) return mesoShow();
+  if (!blob) return noShow || mesoShow();
   const keep = hecate;
   hecate = { id: 'limboCut', skin: HECATE.limboCut, blob };
   const was = hecateLast;
-  setTimeout(mesoShow, playHecate(true));
+  const ms = playHecate(true);
+  if (!noShow) setTimeout(mesoShow, ms);
   hecate = keep;
   hecateLast = was;
 }
@@ -1716,17 +1717,19 @@ function openShop() {
   for (const b of body.querySelectorAll('[data-buy]')) { b.addEventListener('click', () => buy(b.dataset.buy, b)); hoverSound(b); }
   for (const pic of body.querySelectorAll('[data-zoom]')) pic.addEventListener('click', () => zoomItem(pic.dataset.zoom));
   bundleTips(body);
-  const clock = body.querySelector('.limboclock');   // Limbo's sale: its time left in Limbo's glowing digits, ticking
-  if (clock) {
+  const clocks = [...body.querySelectorAll('.limboclock')];   // Limbo's sales: their time left in Limbo's glowing digits, ticking
+  if (clocks.length) {
     const tick = () => {
-      if (!clock.isConnected) return clearInterval(timer);
+      if (!clocks[0].isConnected) return clearInterval(timer);
       if (!hudLoad()) return;
       const text = hudTime(86400000 - (Date.now() % 86400000)), k = 1;
       const w = Math.ceil(hudDigits(null, text, 0, 0, k, true)) + 60;   // room for the colons' glow
-      if (clock.width !== w) Object.assign(clock, { width: w, height: 47 * k });
-      const ctx = clock.getContext('2d');
-      ctx.clearRect(0, 0, clock.width, clock.height);
-      hudDigits(ctx, text, 30, 15 * k, k);
+      for (const clock of clocks) {
+        if (clock.width !== w) Object.assign(clock, { width: w, height: 47 * k });
+        const ctx = clock.getContext('2d');
+        ctx.clearRect(0, 0, clock.width, clock.height);
+        hudDigits(ctx, text, 30, 15 * k, k);
+      }
     };
     const timer = setInterval(tick, 250);
     tick();
