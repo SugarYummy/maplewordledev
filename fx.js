@@ -1173,6 +1173,30 @@ async function limboTransition() {
   await wait(Math.max(TRANS_END, 2880 - TRANS_BURST));   // the bursts' own clips run 2.88 s
   gone();
 }
+// The same transition on its own, for BGM Clip's Limbo mashup scene (paused there for 5 s): onSwap() at the moment the
+// sides swap; resolves when it's over. vol: its sound's volume (0-1).
+async function limboSharks(onSwap, vol) {
+  const blobs = await Promise.all(TRANS_CLIPS.map(cfxClip));
+  if (blobs.some((b) => !b)) return onSwap();   // the clips didn't load: just swap
+  const box = Object.assign(document.createElement('div'), { className: 'limbotrans' });
+  document.body.appendChild(box);
+  const play = (i) => box.appendChild(gfxVideo(blobs[i], false)).classList.add(TRANS_CLIPS[i].slice(6));
+  const wait = (ms) => new Promise((ok) => setTimeout(ok, ms));
+  play(0);
+  const snd = new Audio('sounds/limbo-transition.mp3');
+  snd.volume = vol;
+  snd.play().catch(() => {});
+  await wait(TRANS_PRE);
+  play(1);
+  await wait(TRANS_BURST);
+  play(2);
+  box.firstElementChild.classList.add('out');
+  await wait(TRANS_SWAP);
+  onSwap();
+  await wait(Math.max(TRANS_END, 2880 - TRANS_BURST));
+  for (const el of box.children) URL.revokeObjectURL(el.src);
+  box.remove();
+}
 // Limbo's wrong guess effect (in Limbo's set): a purple bar charges over the new guess row while it flips,
 // and a wrong guess gets swallowed by Limbo's dragon, which then stays on that row until the effect is turned off
 // (the guess text stays on top, tinted in its tile colour). Games that flip a row of clue tiles get the bar for

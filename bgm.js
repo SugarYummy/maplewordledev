@@ -577,7 +577,7 @@ function renderEnd() {
   const b = answer.bonus;
   const trackLine = titleShown() ? `The track is "${answer.t.title}".` : '';
   $('mashupRow').hidden = b?.kind !== 'mashup';
-  if (isLimboEgg()) { limboLoad(); limboCutLoad(); }   // ready before Play is pressed (and Limbo's cutscene for a right answer)
+  if (isLimboEgg()) { limboLoad(); limboCutLoad(); TRANS_CLIPS.forEach(cfxClip); }   // ready before Play is pressed (Limbo's cutscene for a right answer, its transition for a long pause)
   $('bonusAsk').hidden = !b || bonus != null;
   if (!b) {
     $('bonusTitle').textContent = 'The whole track is unlocked';
@@ -658,13 +658,14 @@ $('mashupBar').addEventListener('click', (e) => {   // jump around in the mashup
 // Limbo's Easter egg (the glitched Abyss of Truth mashup, today only): Play brings in Limbo's Subconscious. A full-screen
 // fade-in covers the page, and under it the alert border, the glitch and the map come in; every few seconds a glitch
 // swaps the map between its light and dark side (white border on the light side, black on the dark). Until the bonus is
-// answered, pausing stops the glitch and the swapping (the map stays), and 5 s later plays it out (limboPause). Answering it plays it out: the border fades, the glitch stops, a full-screen
+// answered, pausing stops the glitch and the swapping (the map stays), and every 5 s paused Limbo's shark transition jumps
+// to the other side (limboPause). Answering it plays it out: the border fades, the glitch stops, a full-screen
 // fade-out covers the page, the music stops and the normal background is back. After that, Play brings it in again and
 // Pause plays it out. Clips in video/limbo/: <name>.webm (see-through), .webp for Safari (fx.js SAFARI).
 const LIMBO_CLIPS = { 'screen-in': 1740, 'screen-out': 900, 'border-white-in': 840, 'border-white-loop': 0, 'border-white-out': 300,
   'border-black-in': 840, 'border-black-loop': 0, 'border-black-out': 300 };   // ms (0: loops)
 const LIMBO_COVERED = 780;   // ms into the fade-in while the page is still fully covered
-const limbo = { on: false, leaving: false, dark: false, swap: 0, wait: 0, blobs: null };   // wait: paused, until the fade-out
+const limbo = { on: false, leaving: false, jumping: false, dark: false, swap: 0, wait: 0, blobs: null };   // wait: paused, until the next transition
 const isLimboEgg = () => answer?.bonus?.mashup?.egg === 'limbo';   // the Archive gets Limbo's scene too (only the shop unlock is today-only)
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 function limboLoad() {   // fetched once (on a Limbo mashup day, when the bonus shows up)
@@ -731,13 +732,28 @@ function limboSwaps() {   // every 5-8 s the map swaps sides (a flash), while th
     limboSwaps();
   }, 5000 + Math.random() * 3000);
 }
-// Paused (bonus not answered yet): the glitch and the swapping stop, the map stays. Still paused 5 s later: Limbo's
-// fade-out plays (Play can't be clicked until it's over). Play again before that: it carries on.
+// Paused (bonus not answered yet): the glitch and the swapping stop, the map stays. Every 5 s it stays paused, Limbo's
+// shark transition (fx.js limboSharks) jumps to the other side (Play can't be clicked while it plays). Play: it carries on.
 function limboPause() {
   clearTimeout(limbo.swap);
   clearTimeout(limbo.wait);
   glitch(false);
-  limbo.wait = setTimeout(limboExit, 5000);
+  limbo.wait = setTimeout(limboJump, 5000);
+}
+async function limboJump() {
+  if (!limbo.on || limbo.leaving || limbo.jumping || (mashupAudio && !mashupAudio.paused)) return;
+  limbo.jumping = true;
+  Object.assign($('mashupPlay'), { disabled: true, title: 'Wait for the transition to finish' });
+  await limboSharks(() => {   // the sides swap under a white flash, like Limbo mode's
+    if (!limbo.on || limbo.leaving) return;
+    const w = document.body.appendChild(Object.assign(document.createElement('div'), { className: 'limbowhite' }));
+    limboSide(!limbo.dark);
+    setTimeout(() => w.classList.add('out'), 85);
+    setTimeout(() => w.remove(), 250);
+  }, Math.min(1, bgmVolume() / 50) * 0.5);
+  limbo.jumping = false;
+  Object.assign($('mashupPlay'), { disabled: false, title: '' });
+  if (limbo.on && !limbo.leaving && mashupAudio?.paused) limbo.wait = setTimeout(limboJump, 5000);
 }
 function limboResume() {
   clearTimeout(limbo.wait);
@@ -798,7 +814,7 @@ function stopMashup() {
 }
 $('mashupPlay').addEventListener('click', () => {
   if (mashupAudio && !mashupAudio.paused) { mashupAudio.pause(); $('mashupPlay').textContent = '▶\uFE0E Play the mashup'; mashupStopped(); return; }
-  if (limbo.leaving) return;   // let Limbo's fade-out finish first
+  if (limbo.leaving || limbo.jumping) return;   // let Limbo's fade-out / transition finish first
   pause();
   stopResultSounds();
   const m = answer.bonus.mashup;
