@@ -577,6 +577,7 @@ function renderEnd() {
   const b = answer.bonus;
   const trackLine = titleShown() ? `The track is "${answer.t.title}".` : '';
   $('mashupRow').hidden = b?.kind !== 'mashup';
+  $('limboTip').hidden = !isLimboEgg() || bonus != null;   // Limbo's mashup only, until it's answered
   if (isLimboEgg()) { limboLoad(); limboCutLoad(); TRANS_CLIPS.forEach(cfxClip); }   // ready before Play is pressed (Limbo's cutscene for a right answer, its transition for a long pause)
   $('bonusAsk').hidden = !b || bonus != null;
   if (!b) {

@@ -301,6 +301,8 @@ td.flip { animation: flip 0.5s ease both; }
 .statrow.bonusrow .label { width: 52px; margin-left: -8px; }
 #mashupRow { display: flex; flex-direction: column; align-items: center; gap: 8px; margin: 6px 0; }
 #mashupRow[hidden] { display: none; }
+#limboTip { margin: 0; font-size: 13px; font-style: italic; color: #7a3fc4; }   /* Limbo's mashup: try pausing (bgm.js limboPause) */
+#limboTip[hidden] { display: none; }
 /* The mashup's own bar (under its Play button): green fill like the main bar, click to jump around */
 #mashupTrack { display: flex; align-items: center; gap: 8px; width: min(320px, 100%); }
 #mashupBar { position: relative; flex: 1; height: 12px; border-radius: 4px; overflow: hidden; border: 1px solid rgba(0, 0, 0, 0.4);
