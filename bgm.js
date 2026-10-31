@@ -658,13 +658,13 @@ $('mashupBar').addEventListener('click', (e) => {   // jump around in the mashup
 // Limbo's Easter egg (the glitched Abyss of Truth mashup, today only): Play brings in Limbo's Subconscious. A full-screen
 // fade-in covers the page, and under it the alert border, the glitch and the map come in; every few seconds a glitch
 // swaps the map between its light and dark side (white border on the light side, black on the dark). Until the bonus is
-// answered, pausing keeps all of it. Answering it plays it out: the border fades, the glitch stops, a full-screen
+// answered, pausing stops the glitch and the swapping (the map stays), and 5 s later plays it out (limboPause). Answering it plays it out: the border fades, the glitch stops, a full-screen
 // fade-out covers the page, the music stops and the normal background is back. After that, Play brings it in again and
 // Pause plays it out. Clips in video/limbo/: <name>.webm (see-through), .webp for Safari (fx.js SAFARI).
 const LIMBO_CLIPS = { 'screen-in': 1740, 'screen-out': 900, 'border-white-in': 840, 'border-white-loop': 0, 'border-white-out': 300,
   'border-black-in': 840, 'border-black-loop': 0, 'border-black-out': 300 };   // ms (0: loops)
 const LIMBO_COVERED = 780;   // ms into the fade-in while the page is still fully covered
-const limbo = { on: false, leaving: false, dark: false, swap: 0, blobs: null };
+const limbo = { on: false, leaving: false, dark: false, swap: 0, wait: 0, blobs: null };   // wait: paused, until the fade-out
 const isLimboEgg = () => answer?.bonus?.mashup?.egg === 'limbo';   // the Archive gets Limbo's scene too (only the shop unlock is today-only)
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 function limboLoad() {   // fetched once (on a Limbo mashup day, when the bonus shows up)
@@ -718,21 +718,38 @@ async function limboEnter() {
   glitch(true);
   setTimeout(() => { limboGone(enter); if (limbo.on && !limbo.leaving) limboSide(limbo.dark); }, LIMBO_CLIPS['border-white-in']);
   setTimeout(() => limboGone(screen), LIMBO_CLIPS['screen-in'] - LIMBO_COVERED + 50);
-  const swap = () => {
-    limbo.swap = setTimeout(() => {
-      if (!limbo.on || limbo.leaving) return;
-      document.body.classList.add('limboswap');
-      setTimeout(() => limboSide(!limbo.dark), 120);   // swap in the middle of the flash
-      setTimeout(() => document.body.classList.remove('limboswap'), 320);
-      swap();
-    }, 5000 + Math.random() * 3000);
-  };
-  swap();
+  if (mashupAudio?.paused) limboPause();   // paused while it was coming in
+  else limboSwaps();
+}
+function limboSwaps() {   // every 5-8 s the map swaps sides (a flash), while the mashup plays
+  clearTimeout(limbo.swap);
+  limbo.swap = setTimeout(() => {
+    if (!limbo.on || limbo.leaving) return;
+    document.body.classList.add('limboswap');
+    setTimeout(() => limboSide(!limbo.dark), 120);   // swap in the middle of the flash
+    setTimeout(() => document.body.classList.remove('limboswap'), 320);
+    limboSwaps();
+  }, 5000 + Math.random() * 3000);
+}
+// Paused (bonus not answered yet): the glitch and the swapping stop, the map stays. Still paused 5 s later: Limbo's
+// fade-out plays (Play can't be clicked until it's over). Play again before that: it carries on.
+function limboPause() {
+  clearTimeout(limbo.swap);
+  clearTimeout(limbo.wait);
+  glitch(false);
+  limbo.wait = setTimeout(limboExit, 5000);
+}
+function limboResume() {
+  clearTimeout(limbo.wait);
+  glitch(true);
+  limboSwaps();
 }
 async function limboExit() {
   if (!limbo.on || limbo.leaving) return;
   limbo.leaving = true;
   clearTimeout(limbo.swap);
+  clearTimeout(limbo.wait);
+  Object.assign($('mashupPlay'), { disabled: true, title: 'Wait for the transition to finish' });
   document.body.classList.remove('limboswap');
   glitch(false);
   const border = $('limboborder');
@@ -751,9 +768,12 @@ async function limboExit() {
   await sleep(450);
   limboGone(screen);
   limbo.on = limbo.leaving = false;
+  Object.assign($('mashupPlay'), { disabled: false, title: '' });
 }
 function limboKill() {   // right away (another day or mode)
   clearTimeout(limbo.swap);
+  clearTimeout(limbo.wait);
+  Object.assign($('mashupPlay'), { disabled: false, title: '' });
   document.body.classList.remove('limboswap');
   for (const el of document.querySelectorAll('#limboborder video, #limboborder img, .limboscreen')) limboGone(el);
   $('limboborder')?.remove();
@@ -763,7 +783,7 @@ function limboKill() {   // right away (another day or mode)
 // The mashup stopped (paused, ended, or the main Play took over): a glitch egg's screen glitch stops, except Limbo's
 // before the bonus is answered.
 function mashupStopped() {
-  if (limbo.on) { if (bonus != null) limboExit(); }
+  if (limbo.on) { if (bonus != null) limboExit(); else if (!limbo.leaving) limboPause(); }
   else glitch(false);
 }
 function stopMashup() {
@@ -793,7 +813,7 @@ $('mashupPlay').addEventListener('click', () => {
   mashupHeard = mashupKey;
   if (bonus == null && $('bonusResult').textContent === 'Play the mashup first!') { $('bonusResult').textContent = ''; markResult($('bonusResult'), ''); }
   $('mashupPlay').textContent = '❚❚ Pause the mashup';
-  if (isLimboEgg()) limboEnter();
+  if (isLimboEgg()) { if (limbo.on) limboResume(); else limboEnter(); }
   else if (m.egg && live) { document.body.classList.add(`egg-${m.egg}`); glitch(true); }   // the Easter egg is for today only, not the Archive
 });
 // A bonus answer line's colour (right / wrong / none); only that class changes, so Limbo's dragon (fx.js) keeps its own.
