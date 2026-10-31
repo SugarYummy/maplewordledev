@@ -12,14 +12,15 @@
 // - Bottom left (instead of the alpha version): the build's version (alphaTest vX.Y.Z.DDMMYYYY.HHMMSS, Pacific time when it
 //   was uploaded). Click it: every test build (builds.json), newest first; pick one to play that build. Old builds live in
 //   b/<build>/ (their code only; the site-proxy Worker fills in images and sounds from the newest build).
-// - Settings > Console: /meso 5000 (free mesos), /egg limbo (Limbo's mashup on today's BGM Clip Extreme), /egg off, /help.
+// - Settings > Console: /meso 5000 (free mesos), /egg limbo (Limbo's mashup on today's BGM Clip Extreme), /egg lucid (today's
+//   Extreme clip is Lucid's Garden of Eternal Dream), /egg off, /help.
 (() => {
   const RealDate = Date, BEHIND = 86400000;
   window.Date = class extends RealDate {
     constructor(...a) { if (a.length) super(...a); else super(RealDate.now() - BEHIND); }
     static now() { return RealDate.now() - BEHIND; }
   };
-  const BUILD = 'alphaTest v4.5.1.31102026.145204', STAMP = BUILD.split(' v')[1];
+  const BUILD = 'alphaTest v4.5.1.31102026.145320', STAMP = BUILD.split(' v')[1];
   const ROOT = location.pathname.match(/^(.*?\/maplewordledev\/)/)?.[1] ?? '/';
   const kept = window.localStorage;   // the browser's own storage: only the test login ('mwdev:login') goes here
   Object.defineProperty(window, 'localStorage', { value: window.sessionStorage, configurable: true });
@@ -133,7 +134,7 @@
     }
   } catch {}
   window.devEgg = ss.getItem('mwdev:egg');   // read by bgm.js (bonusFor)
-  const DEV_HELP = '/meso 5000 — add mesos (minus works too)\n/egg limbo — Limbo\'s mashup as today\'s BGM Clip Extreme bonus\n/egg off — back to the real bonus\n/help — this list';
+  const DEV_HELP = '/meso 5000 — add mesos (minus works too)\n/egg limbo — Limbo\'s mashup as today\'s BGM Clip Extreme bonus\n/egg lucid — today\'s BGM Clip Extreme clip is Lucid\'s Garden of Eternal Dream\n/egg off — back to the real one\n/help — this list';
   function devRun(line) {
     const [cmd, a] = line.trim().split(/\s+/);
     if (cmd === '/help') return DEV_HELP;
@@ -147,13 +148,13 @@
       return `${n > 0 ? 'Added' : 'Took away'} ${Math.abs(n).toLocaleString()} mesos.`;
     }
     if (cmd === '/egg') {
-      if (a === 'limbo') ss.setItem('mwdev:egg', 'limbo');
+      if (a === 'limbo' || a === 'lucid') ss.setItem('mwdev:egg', a);
       else if (a === 'off') ss.removeItem('mwdev:egg');
-      else return 'Try: /egg limbo or /egg off';
+      else return 'Try: /egg limbo, /egg lucid or /egg off';
       const page = /\/bgm(\.html)?$/.test(location.pathname);
       if (page) setTimeout(() => location.reload(), 900);
-      return a === 'limbo' ? `Limbo's mashup is now today's BGM Clip Extreme bonus.${page ? ' Reloading…' : ' Open BGM Clip (Extreme).'}`
-        : `Back to the real bonus.${page ? ' Reloading…' : ''}`;
+      const what = { limbo: "Limbo's mashup is now today's BGM Clip Extreme bonus.", lucid: "Today's BGM Clip Extreme clip is now Lucid's Garden of Eternal Dream." }[a];
+      return what ? `${what}${page ? ' Reloading…' : ' Open BGM Clip (Extreme).'}` : `Back to the real BGM Clip.${page ? ' Reloading…' : ''}`;
     }
     return 'Unknown command. Type /help';
   }

@@ -80,7 +80,9 @@ function entryFor(d) {
 // isn't quiet. "The beginning" skips a track's silent lead-in (data/bgm.json "lead", seconds), so the first guess
 // isn't spent on silence.
 function answerFor(d) {
-  const e = entryFor(d);
+  let e = entryFor(d);
+  // Test build only (tools/dev/dev.js console: /egg lucid): today's Extreme clip is Lucid's Garden of Eternal Dream.
+  if (window.devEgg === 'lucid' && MODE === 'bgm' && d === Math.floor(Date.now() / DAY_MS)) e = pool.find((x) => data.tracks[x.track]?.egg === 'lucid') ?? e;
   const boss = e.boss, track = e.track;
   const t = data.tracks[track];
   const h = hash(`${MODE}|${d}|start`);
