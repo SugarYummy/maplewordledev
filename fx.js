@@ -1684,6 +1684,7 @@ function shopUnlock(t, deal = true) {   // deal: found on its special day itself
   if (!(t in SHOP) || shopFound().includes(t)) return;
   lsSet(SHOP_KEY, JSON.stringify([...shopFound(), t]));
   if (deal) lsSet(SHOP_FOUND_DAY_KEY, JSON.stringify({ ...shopFoundDay(), [t]: Math.floor(Date.now() / 86400000) }));
+  shopNewTag();
 }
 // Limited hidden items: 90% off for the rest of the (UTC) day you find them, e.g. Limbo's set found with 5 hours of its
 // day left is 90% off for those 5 hours; a holiday's item is 90% off all of its day. Still locked: full price.
@@ -1712,7 +1713,10 @@ function shopNewTag() {
   const b = document.getElementById('shopBtn');
   if (!b) return;
   b.querySelector('.newtag')?.remove();
-  if (shopNew().length) b.appendChild(newTag());
+  const fresh = shopNew();
+  if (fresh.length) b.appendChild(newTag());
+  // Something you found yourself (a hidden item) and haven't looked at yet: the Shop button glows until you open it.
+  b.classList.toggle('shopcall', fresh.some((t) => SHOP[t].hidden));
 }
 function openShop() {
   const body = popup('shop', 'Shop');
@@ -1720,6 +1724,7 @@ function openShop() {
   for (const t of shopNew()) shopFresh.add(t);
   lsSet(SHOP_SEEN_KEY, JSON.stringify([...new Set([...shopSeen(), ...found])]));
   shopNewTag();
+  for (const el of document.querySelectorAll('.shopnote')) el.hidden = true;   // "unlocked in the shop": seen it now
   // A "hidden" item not found yet: a locked card with just its price (no picture or name), so people can save up for it.
   const locked = Object.keys(SHOP).filter((t) => SHOP[t].hidden && !found.includes(t) && !shopOwned(t)).map((t) =>
     `<div class="shopitem lockeditem"><span class="themepic hiddenpic">?</span>` +

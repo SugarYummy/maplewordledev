@@ -611,6 +611,8 @@ function renderEnd() {
       : `It plays in: ${b.right.join(', ')}.` + (titleOn() ? '' : `\n${trackLine}`));   // with Bonus 2, the title shows there
     markResult($('bonusResult'), ok ? 'right' : 'wrong');
   }
+  // Limbo's mashup answered: its shop items are in the shop now (shown until the shop is opened).
+  $('limboShop').hidden = !(isLimboEgg() && bonus != null && shopNew().some((t) => t.startsWith('limbo')));
 }
 // The mashup plays on its own little player in the bonus box (Play on the main bar stops it, and the other way round).
 // A mashup with an "egg" also changes the page while it plays: the background fades to that boss's map (and stays for
@@ -833,6 +835,7 @@ $('mashupPlay').addEventListener('click', () => {
   if (isLimboEgg()) { if (limbo.on) limboResume(); else limboEnter(); }
   else if (m.egg && live) { document.body.classList.add(`egg-${m.egg}`); glitch(true); }   // the Easter egg is for today only, not the Archive
 });
+$('limboShop').querySelector('button').addEventListener('click', openShop);
 // A bonus answer line's colour (right / wrong / none); only that class changes, so Limbo's dragon (fx.js) keeps its own.
 function markResult(el, cls) {
   el.classList.remove('right', 'wrong');
