@@ -147,6 +147,8 @@ const audio = { ctx: null, gain: null, raw: null, buffer: null, src: null, playi
 // What you may listen to right now, in seconds of the track: from the clip's start up to your unlock, or all of it.
 const winStart = () => over ? 0 : answer.start;
 const winEnd = () => over ? answer.t.len : answer.start + limitAt(Math.min(guesses.length, maxGuesses() - 1));
+// The background's music (fx.js) goes quiet while the clip or a mashup plays.
+window.themeBgmHold = () => audio.playing || !!(mashupAudio && !mashupAudio.paused);
 const nowPos = () => audio.playing ? audio.p0 + (audio.ctx.currentTime - audio.t0) : audio.pos;
 
 function loadTrack() {

@@ -303,7 +303,7 @@ function saveSliderVolume(v) {
 
 // Result sounds playing (or about to), so stopResultSounds() can cut them off (BGM Clip does when you press Play).
 const resultPlaying = new Set();
-let resultGen = 0;
+let resultGen = 0, resultActive = 0;   // active: result sounds waiting or playing (the background's music waits for them)
 function stopResultSounds() {
   resultGen++;
   for (const src of resultPlaying) { try { src.stop(); } catch {} }
@@ -339,8 +339,10 @@ function resultSound(won, delay, file) {
   const ready = soundFile(SOUNDS[file] || (won ? SOUNDS.win : SOUNDS.lose)).then((b) => ctx.decodeAudioData(b.slice(0)));
   const due = Date.now() + delay;
   const gen = resultGen;
+  resultActive++;
+  const done = () => { resultActive = Math.max(0, resultActive - 1); };
   ready.then((buffer) => {
-    if (gen !== resultGen) return;   // stopped before it started
+    if (gen !== resultGen) return done();   // stopped before it started
     const start = ctx.currentTime + Math.max(0, due - Date.now()) / 1000;
     const gain = ctx.createGain();
     const volume = (SOUND_LOUDER[file] ?? SOUND_VOLUME) * (PHONE ? 2 : 1);
@@ -354,8 +356,8 @@ function resultSound(won, delay, file) {
     src.start(start);
     src.stop(start + len + SOUND_FADE);
     resultPlaying.add(src);
-    src.onended = () => resultPlaying.delete(src);
-  }).catch(() => {});
+    src.onended = () => { resultPlaying.delete(src); done(); };
+  }).catch(done);
 }
 
 // Short interface sounds (the Cash Shop's hover tick on the shop's buttons): fetched and decoded once, then played right
@@ -422,7 +424,7 @@ applyBox();
     body.innerHTML = (typeof acctRow === 'function' ? acctRow(tip) : '') +   // Account (account.js)
       `<div class="setrow"><span class="setlabel">Sound ${tip('The sound effects when a game ends (the win / lose music). The slider sets how loud they are. BGM Clip has its own volume next to Play.')}</span>` +
       '<button id="setMute"></button><input id="setVol" type="range" min="0" max="100"><span id="setVolPct"></span></div>' +
-      (ownsThemeBgm() ? `<div class="setrow"><span class="setlabel">Background BGM ${tip("Music for backgrounds that come with their own (Limbo's Subconscious: Phase 3's White and Black tracks; Limbo Background: Phase 1's). It plays while that background is on, from your first click. Not on BGM Clip, so it doesn't get in the way of guessing.")}</span>` +
+      (ownsThemeBgm() ? `<div class="setrow"><span class="setlabel">Background BGM ${tip("Music for backgrounds that come with their own (Limbo's Subconscious: Phase 3's White and Black tracks; Limbo Background: Phase 1's). It plays while that background is on, from your first click. It goes quiet while a game's sound plays (the win / lose music, BGM Clip's clip, the VIP player), then comes back.")}</span>` +
         '<button id="setBgm"></button><input id="setBgmVol" type="range" min="0" max="100"><span id="setBgmPct"></span></div>' : '') +
       `<div class="setrow"><span class="setlabel">Box opacity ${tip('How see-through the main game box is. 0%: no box, the whole background shows. 50%: the usual frosted box. 100%: solid, no background inside the box.')}</span>` +
       '<input id="setBox" type="range" min="0" max="100" step="5"><span id="setBoxPct"></span></div>' +
@@ -741,10 +743,9 @@ const THEME_BGM_KEY = 'mapleWordle:themeBgm', THEME_BGM_VOL_KEY = 'mapleWordle:t
 const themeBgmOn = () => lsGet(THEME_BGM_KEY) !== '0';
 const themeBgmVol = () => { const v = Number(lsGet(THEME_BGM_VOL_KEY) ?? 50); return Number.isFinite(v) ? v : 50; };
 const ownsThemeBgm = () => ownedThemes().some((t) => THEME_BGM[t]);
-const BGM_PAGE = /\/bgm(\.html)?$/.test(location.pathname);
 const tbgm = { ctx: null, master: null, cur: null, tracks: {} };   // tracks: theme -> { gain, src, ready }
 // A sound that goes with a background's music (Limbo's transition): through the same volume and On / Off, so it's only
-// heard where the music is (not on BGM Clip).
+// heard where the music is.
 const tbgmSounds = {};
 function themeBgmSound(src, vol = 1) {
   if (!tbgm.ctx || !tbgm.master || !Object.keys(tbgm.tracks).length) return;
@@ -759,10 +760,22 @@ function themeBgmSound(src, vol = 1) {
     s.start();
   });
 }
-function themeBgmLevel() { return themeBgmOn() && !(vip.audio && !vip.audio.paused) ? themeBgmVol() / 100 * 0.5 * (PHONE ? 2 : 1) : 0; }
+// Quiet (not stopped) while the VIP player plays, while a game's result sound (win, lose, guess-in-1 effect) plays, and
+// on BGM Clip while its clip or a mashup plays (bgm.js themeBgmHold); back right after.
+function themeBgmLevel() {
+  return themeBgmOn() && !(vip.audio && !vip.audio.paused) && !resultActive && !window.themeBgmHold?.() ? themeBgmVol() / 100 * 0.5 * (PHONE ? 2 : 1) : 0;
+}
+let tbgmLevel = null;
+setInterval(() => {   // fades to / from quiet when one of those starts or stops
+  if (!tbgm.master) return;
+  const want = themeBgmLevel();
+  if (want === tbgmLevel) return;
+  tbgmLevel = want;
+  tbgm.master.gain.setTargetAtTime(want, tbgm.ctx.currentTime, 0.12);
+}, 150);
 function themeBgm(t = tbgm.cur) {
   tbgm.cur = t;
-  const want = THEME_BGM[t] && !BGM_PAGE && themeBgmOn() ? [t, ...(THEME_PAIR[t] && limboAllOn() ? [THEME_PAIR[t]] : [])] : [];
+  const want = THEME_BGM[t] && themeBgmOn() ? [t, ...(THEME_PAIR[t] && limboAllOn() ? [THEME_PAIR[t]] : [])] : [];
   for (const k of Object.keys(tbgm.tracks)) if (!want.includes(k)) {   // a background without music now: stop it
     try { tbgm.tracks[k].src?.stop(); } catch {}
     delete tbgm.tracks[k];
