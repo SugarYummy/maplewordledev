@@ -1422,18 +1422,42 @@ const hudTime = (ms) => {   // HH:MM:SS (MM:SS under an hour)
 // (timerNumber, as they are: one draw each, so their faded top edge stays faded) on either side.
 // Into a canvas context at x (left) / y (top of the digits), scale k; returns the width.
 const TIMER_COLON = 14;   // room the colon takes between two digit groups (art pixels)
+// Each colon's glow (its colon (43-44, 20-26) on the slot). With two colons (HH:MM:SS) the glows overlap over the
+// minutes: they're merged keeping the brighter of the two at each pixel, not added up, so the minutes aren't pinker.
+const timerGlows = {};
+function timerGlow(text, k, back) {
+  const key = text.replace(/\d/g, '0') + '|' + k;
+  if (timerGlows[key]) return timerGlows[key];
+  const ox = Math.ceil(44 * k), oy = Math.ceil(15 * k);
+  const out = document.createElement('canvas');
+  Object.assign(out, { width: Math.ceil(hudDigits(null, text, 0, 0, k, true)) + 2 * ox, height: Math.ceil(47 * k), ox, oy });
+  const tmp = document.createElement('canvas');
+  Object.assign(tmp, { width: out.width, height: out.height });
+  const tc = tmp.getContext('2d', { willReadFrequently: true });
+  let acc = null, cx = 0;
+  for (const ch of text) {
+    if (ch === ':') {
+      tc.clearRect(0, 0, tmp.width, tmp.height);
+      tc.imageSmoothingEnabled = false;
+      tc.drawImage(back, ox + cx + (TIMER_COLON / 2 - 44) * k, oy + (8 - 23) * k, 87 * k, 47 * k);
+      const px = tc.getImageData(0, 0, tmp.width, tmp.height);
+      if (!acc) acc = px;
+      else for (let i = 0; i < acc.data.length; i++) acc.data[i] = Math.max(acc.data[i], px.data[i]);
+    }
+    cx += (ch === ':' ? TIMER_COLON : 13) * k;
+  }
+  if (acc) out.getContext('2d').putImageData(acc, 0, 0);
+  return (timerGlows[key] = out);
+}
 function hudDigits(ctx, text, x, y, k, measure = false) {
   const w = [...text].reduce((n, ch) => n + (ch === ':' ? TIMER_COLON : 13), -1) * k;
   if (measure) return w;
   const d = hudArt['digits-small.png'], back = hudArt['timer-back.png'];
   ctx.save();
   ctx.imageSmoothingEnabled = false;
+  const glow = timerGlow(text, k, back);   // the glow pieces first (under the digits)
+  ctx.drawImage(glow, x - glow.ox, y - glow.oy);
   let cx = x;
-  for (const ch of text) {   // the glow pieces first (under the digits)
-    if (ch === ':') ctx.drawImage(back, cx + (TIMER_COLON / 2 - 44) * k, y + (8 - 23) * k, 87 * k, 47 * k);   // its colon (43-44, 20-26) on the slot
-    cx += (ch === ':' ? TIMER_COLON : 13) * k;
-  }
-  cx = x;
   for (const ch of text) {
     if (ch !== ':') ctx.drawImage(d, +ch * 12, 0, 12, 16, cx, y, 12 * k, 16 * k);
     cx += (ch === ':' ? TIMER_COLON : 13) * k;
