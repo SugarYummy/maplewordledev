@@ -462,7 +462,7 @@ applyBox();
     body.innerHTML = (typeof acctRow === 'function' ? acctRow(tip) : '') +   // Account (account.js)
       `<div class="setrow"><span class="setlabel">Sound ${tip('The sound effects when a game ends (the win / lose music). The slider sets how loud they are. BGM Clip has its own volume next to Play.')}</span>` +
       '<button id="setMute"></button><input id="setVol" type="range" min="0" max="100"><span id="setVolPct"></span></div>' +
-      (ownsThemeBgm() ? `<div class="setrow"><span class="setlabel">Background BGM ${tip("Music for backgrounds that come with their own (Limbo's Subconscious: Phase 3's White and Black tracks; Limbo Background: Phase 1's). It plays while that background is on, from your first click. It goes quiet while a game's sound plays (the win / lose music, BGM Clip's clip, the VIP player), then comes back.")}</span>` +
+      (ownsThemeBgm() ? `<div class="setrow"><span class="setlabel">Background BGM ${tip("Music for backgrounds that come with their own (Limbo's Subconscious: Phase 3's White and Black tracks; Limbo Background: Phase 1's; Garden of Eternal Dream: its own). It plays while that background is on, from your first click. Mute one background's music with the speaker on its card in Customize > Background. It goes quiet while a game's sound plays (the win / lose music, BGM Clip's clip, the VIP player), then comes back.")}</span>` +
         '<button id="setBgm"></button><input id="setBgmVol" type="range" min="0" max="100"><span id="setBgmPct"></span></div>' : '') +
       `<div class="setrow"><span class="setlabel">Box opacity ${tip('How see-through the main game box is. 0%: no box, the whole background shows. 50%: the usual frosted box. 100%: solid, no background inside the box.')}</span>` +
       '<input id="setBox" type="range" min="0" max="100" step="5"><span id="setBoxPct"></span></div>' +
@@ -672,7 +672,18 @@ const THEME_VIDEO = { lucid: ['video/lucid-dream.webm?v=2', 'video/lucid-dream.m
   limboP1: ['video/limbo-bg/phase1.webm', 'video/limbo-bg/phase1.mp4'] };   // Phase 1's map: a 25.3 s loop (the boss's cycle)
 // Backgrounds with their own music (Settings > Background BGM, once you own one): it loops while that background is on.
 // Limbo's light and dark sides are Phase 3's White and Black tracks; Limbo Background is Phase 1's (Specter A).
-const THEME_BGM = { limbo: 'audio/bgm/c743160da5.mp3', limboDark: 'audio/bgm/d8872d703d.mp3', limboP1: 'audio/bgm/460fc75990.mp3' };
+const THEME_BGM = { limbo: 'audio/bgm/c743160da5.mp3', limboDark: 'audio/bgm/d8872d703d.mp3', limboP1: 'audio/bgm/460fc75990.mp3',
+  lucid: 'audio/bgm/lucid-garden.mp3' };   // Garden of Eternal Dream: Shattered Time's "Garden of Eternal Dream" (a 20 s loop)
+// A background's music can be muted on its own (the speaker on its card in Customize > Background), the rest stay on.
+// Only a background you picked there: Limbo mode (Custom Effects) always has its music.
+const THEME_MUTE_KEY = 'mapleWordle:themeMute';
+const themeMuted = (t) => { try { return JSON.parse(lsGet(THEME_MUTE_KEY) || '[]').includes(t); } catch { return false; } };
+function setThemeMuted(t, on) {
+  let list = [];
+  try { list = JSON.parse(lsGet(THEME_MUTE_KEY) || '[]'); } catch {}
+  lsSet(THEME_MUTE_KEY, JSON.stringify(on ? [...new Set([...list, t])] : list.filter((x) => x !== t)));
+  themeBgm();
+}
 // A pair of sides (Limbo mode swaps between them): both videos and both tracks run together, only one shown / heard,
 // so a swap changes picture and music at the same moment, each carrying on from where it is.
 const THEME_PAIR = { limbo: 'limboDark', limboDark: 'limbo' };
@@ -839,7 +850,7 @@ addEventListener('pagehide', () => {
 });
 function themeBgm(t = tbgm.cur) {
   tbgm.cur = t;
-  const want = THEME_BGM[t] && themeBgmOn() ? [t, ...(THEME_PAIR[t] && limboAllOn() ? [THEME_PAIR[t]] : [])] : [];
+  const want = THEME_BGM[t] && themeBgmOn() && (limboAllOn() || !themeMuted(t)) ? [t, ...(THEME_PAIR[t] && limboAllOn() ? [THEME_PAIR[t]] : [])] : [];
   for (const k of Object.keys(tbgm.tracks)) if (!want.includes(k)) {   // a background without music now: stop it
     try { tbgm.tracks[k].src?.stop(); } catch {}
     delete tbgm.tracks[k];
@@ -1090,13 +1101,33 @@ function drawThemeButton() {
       const cur = applyTheme(true);
       // A holiday's background is on all of its day (see HOLIDAYS), so picking one does nothing until it's over.
       const locked = !!holidayToday() && !limboAllOn();
-      for (const t of own) card(list, THEME_IMG[t], THEMES[t], t === cur, () => {
-        if (locked) return toast('You cannot change theme on special occasional days.', 'no');
-        lsSet(THEME_KEY, t);
-        if (limboAllOn()) { limboAllOff(); drawCustomFx(); }
-        else applyTheme(true);
-        fill();
-      }, customFresh.has(t)).classList.toggle('locked', locked);
+      for (const t of own) {
+        const c = card(list, THEME_IMG[t], THEMES[t], t === cur, () => {
+          if (locked) return toast('You cannot change theme on special occasional days.', 'no');
+          lsSet(THEME_KEY, t);
+          if (limboAllOn()) { limboAllOff(); drawCustomFx(); }
+          else applyTheme(true);
+          fill();
+        }, customFresh.has(t));
+        c.classList.toggle('locked', locked);
+        if (THEME_BGM[t]) {   // its music: on / off (just this background's)
+          const muted = themeMuted(t);
+          const m = Object.assign(document.createElement('span'), { className: 'thememute' + (muted ? ' off' : ''), textContent: muted ? '🔇' : '🔊',
+            title: muted ? 'Music muted (click to unmute)' : 'Music on (click to mute)', tabIndex: 0 });
+          m.setAttribute('role', 'button');
+          m.setAttribute('aria-label', `${THEMES[t]} music: ${muted ? 'muted' : 'on'}`);
+          const flip = (e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            setThemeMuted(t, !muted);
+            fill();
+            toast(`${THEMES[t]} music: ${muted ? 'On' : 'Muted'}`, muted ? 'yes' : 'no');
+          };
+          m.addEventListener('click', flip);
+          m.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') flip(e); });
+          c.appendChild(m);
+        }
+      }
     }
   };
   for (const b of win.querySelectorAll('.themetabs button')) b.addEventListener('click', () => { customTab = b.dataset.tab; fill(); });
@@ -1782,7 +1813,7 @@ const SHOP = {
   mimica: { name: 'Sol Hecate: Mimica', kind: 'Guess in 1 win effect (Bundle of 5)', price: 2000, always: true, effect: true, added: Date.UTC(2026, 9, 25),
             img: 'images/fx/hecate/mimica-bundle.webp', zoom: 'images/fx/hecate/mimica-bundle-big.webp' },
   limboP1: { hidden: true, name: 'Limbo Background', kind: 'Moving background + BGM', price: 1000, limboClock: true },   // also from the Archive (full price)
-  lucid: { hidden: true, name: 'Garden of Eternal Dream', kind: 'Moving background', price: 5000 },
+  lucid: { hidden: true, name: 'Garden of Eternal Dream', kind: 'Moving background + BGM', price: 5000 },
   lucidBloom: { hidden: true, name: 'Lucid in Bloom', kind: 'Background', price: 2500 },
   lucidNight: { hidden: true, name: "Lucid's Starry Night", kind: 'Background', price: 2500 },
 };
