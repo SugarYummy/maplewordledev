@@ -237,6 +237,10 @@ function guess(name) {
   limboGuess(newRow, g.name !== answer.name, flipMs);   // Limbo's wrong guess effect, if it's on
   flipMs = flipAnswer($('rows').querySelector('tr.answer'), flipMs);   // out of guesses: the answer comes in and turns over next (fx.js)
   if (over) fxHold(flipMs);   // the win border and "+mesos" wait for the flip
+  if (over) {   // the search box stays until the flip is done (guessing in it does nothing now), then goes
+    $('picker').hidden = false;
+    setTimeout(() => { if (over) { $('picker').hidden = true; closeList(); } }, flipMs);
+  }
   if (over && guesses.includes(answer.name)) setTimeout(() => confetti(guesses.length === 1), flipMs);
   if (over) limboOver(guesses.includes(answer.name), flipMs);   // Limbo's alert border: gone on a win, its fail screen on a loss
   if (over && live) resultSound(guesses.includes(answer.name), flipMs, !guesses.includes(answer.name) ? 'classLose' : guesses.length === 1 ? 'firstTry' : 'classWin');   // today's puzzle only

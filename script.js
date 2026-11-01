@@ -544,6 +544,10 @@ function guess(name) {
   const won = guesses.includes(answer.name);
   const quietWin = won && mode === 'story' && guesses.length >= 7;
   if (over) fxHold(flipMs);   // the win border and "+mesos" wait for the flip
+  if (over) {   // the search box stays until the flip is done (guessing in it does nothing now), then goes
+    $('picker').hidden = false;
+    setTimeout(() => { if (over) { $('picker').hidden = true; closeList(); } }, flipMs);
+  }
   if (over && won && !quietWin) setTimeout(() => confetti(guesses.length === 1), flipMs);
   if (over) limboOver(won, flipMs);   // Limbo's alert border: gone on a win, its fail screen on a loss
   if (over && live && !quietWin) resultSound(won, flipMs, won && guesses.length === 1 ? 'firstTry' : mode !== 'extreme' ? undefined : !won ? 'extremeLose' : 'extremeWin');
