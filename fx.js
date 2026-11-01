@@ -401,7 +401,7 @@ function resultSound(won, delay, file) {
 // Short interface sounds (the Cash Shop's hover tick on the shop's buttons): fetched and decoded once, then played right
 // away, through the same volume and sound on/off as everything else. uiSound() with no name just gets them ready
 // (call it from a click, so the browser lets the sound play later on hover).
-const UI_SOUNDS = { hover: ['sounds/hover.mp3', 0.35] };   // file, volume (like SOUND_VOLUME)
+const UI_SOUNDS = { hover: ['sounds/hover.mp3', 0.35], dragon: ['sounds/limbo-dragon.mp3', 0.15] };   // file, volume (like SOUND_VOLUME); dragon: Limbo's wrong guess effect, kept soft
 const uiBuffers = {};
 let uiLast = 0;
 function uiSound(name) {
@@ -1370,6 +1370,7 @@ async function limboGuess(row, wrong, flipMs, force = false) {   // force: show 
   row.dataset.gfx = '1';
   const barMs = flipMs ?? 500;
   const start = performance.now();
+  if (wrong) uiSound();   // its sound ready by the time the dragon comes
   const [barBlob, eatBlob, idleBlob] = await Promise.all([cfxClip('guess-bar'), wrong && cfxClip('guess-eat'), wrong && cfxClip('guess-idle')]);
   if (!barBlob || !row.isConnected) return;
   const g = gfxLayer(row);
@@ -1384,6 +1385,7 @@ async function limboGuess(row, wrong, flipMs, force = false) {   // force: show 
     return gfxDrop(g);
   }
   const eat = gfxVideo(eatBlob, false);   // the dragon rushes in from the left and swallows the row...
+  uiSound('dragon');   // (its attack sound)
   g.layer.appendChild(eat).classList.add('dragon');
   setTimeout(() => { URL.revokeObjectURL(bar.src); bar.remove(); }, 60);
   await wait(250);
