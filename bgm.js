@@ -1260,7 +1260,7 @@ function openInfo() {
       'Each wrong guess or Skip plays more:<ul><li>0.5s</li><li>1s</li><li>2s</li><li>5s</li><li>10s</li><li>Then 30s</li></ul>',
     ]),
     'It can be from any part of the fight.',
-    ...(yellowOn() ? ['🟨 yellow:<ul><li>Right track</li><li>Wrong boss (still a miss)</li></ul>'] : []),
+    ...(yellowOn() ? ['🟨 Yellow:<ul><li>Right track</li><li>Wrong boss (still a miss)</li></ul>'] : []),
     '<b>Bonus:</b> guess which part of the fight it plays in (after the game).',
     ...(titleOn() ? ["<b>Bonus 2:</b> guess the track's title."] : []),
     ...(titleOn() ? ['Win in 1 guess for:<ul><li>⭐ The win</li><li>💎 Plus a bonus</li><li>🌈 Plus both bonuses</li></ul>'] : ['Win in 1 guess for a ⭐. Get the bonus too for a 💎.']),
