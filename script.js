@@ -680,7 +680,8 @@ $('changelogClose').addEventListener('click', () => { $('changelog').hidden = tr
 const peekTimers = new Map();
 $('credit').addEventListener('click', () => {
   const all = document.querySelectorAll('.peekclip');
-  const who = all[Math.floor(Math.random() * all.length)];
+  let who = all[Math.floor(Math.random() * all.length)];
+  if (typeof acctPeek === 'function') who = acctPeek(who, all);   // sometimes your own character instead (account.js)
   who.classList.add('up');
   clearTimeout(peekTimers.get(who));
   peekTimers.set(who, setTimeout(() => who.classList.remove('up'), 350 + 2000));

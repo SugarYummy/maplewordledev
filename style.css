@@ -878,3 +878,7 @@ input[type="search"]::-webkit-search-cancel-button, input[type="search"]::-webki
 /* NEW on Account Settings / MapleStory Character (a new shop avatar) and on the avatar's row */
 .acctbtn:has(> .newtag), .acctpickrow { position: relative; }
 .acctbtn > .newtag, .acctpickrow > .newtag { top: -6px; left: -6px; font-size: 9px; line-height: 13px; padding: 0 4px; z-index: 1; }
+
+/* Your own character peeking out (account.js acctPeek): a shop sprite is smooth art, a bit bigger */
+.peekclip img.peeksprite { image-rendering: auto; width: 130px; }
+.peekclip img.peekchar { width: 110px; }
