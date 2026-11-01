@@ -295,7 +295,7 @@ const ACCT_MAPLE_SAVED = 'mapleWordle:mapleSaved';   // every character found be
 const ACCT_REGIONS = { na: 'North America', eu: 'Europe' };
 // Shop avatars: animated sprites (.webm, .webp on Safari), yours while you own what they came with; they can't be deleted.
 const ACCT_AVATARS = {
-  lucid: { name: 'Lucid', from: "Lucid's Eternal Dream", src: 'images/avatars/lucid', owned: () => typeof ownedThemes === 'function' && ownedThemes().includes('lucid') },
+  lucid: { name: 'Lucid', from: "Lucid's Eternal Dream", src: 'images/avatars/lucid', owned: () => { try { return ownedThemes().includes('lucid'); } catch { return false; } } },
 };
 // A shop avatar you haven't looked at yet (new in the MapleStory Character list): the Settings cog glows with NEW, and
 // Account Settings, MapleStory Character and the avatar itself say NEW, until that list is opened.

@@ -529,7 +529,7 @@ applyBox();
     show();
   });
   document.body.appendChild(btn);
-  if (typeof acctAvatarCall === 'function') acctAvatarCall();   // a new shop avatar to look at (account.js)
+  if (typeof acctAvatarCall === 'function') setTimeout(acctAvatarCall);   // a new shop avatar to look at (account.js; after the rest of this file has run)
 })();
 
 // VIP (the secret passcode in Settings): a player for every BGM we have, in random order, each from start to end.
