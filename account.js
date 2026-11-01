@@ -187,7 +187,7 @@ function acctWin(html, { closable = true, form = false, onClose } = {}) {
 }
 // A question: resolves true for the first button, false for the second (null: closed). No second one: just OK.
 const acctAsk = (title, text, [okText, okClass], [noText, noClass] = [], closable = true) => new Promise((done) => {
-  const { panel, close } = acctWin(`<h2>${title}</h2><div class="accttext">${text}</div>` +
+  const { panel, close } = acctWin(`<h2>${title}</h2>${text ? `<div class="accttext">${text}</div>` : ''}` +
     `<p class="buybtns"><button class="${okClass}">${okText}</button>${noText ? `<button class="${noClass}">${noText}</button>` : ''}</p>`, { closable, onClose: done });
   const [ok, no] = panel.querySelectorAll('.buybtns button');
   ok.addEventListener('click', () => close(true));
@@ -365,7 +365,7 @@ function acctMapleWin() {
   for (const b of panel.querySelectorAll('.acctdel')) b.addEventListener('click', async () => {
     const m = items[b.dataset.del];
     close();
-    if (await acctAsk(`Delete ${acctEsc(m.name)}?`, 'It comes off your list (you can add it again later).', ['Delete', 'no'], ['Cancel', 'plain'])) {
+    if (await acctAsk(`Delete ${acctEsc(m.name)}?`, '', ['Delete', 'no'], ['Cancel', 'plain'])) {
       localStorage.setItem(ACCT_MAPLE_SAVED, JSON.stringify(acctMapleSaved().filter((x) => acctMapleKey(x) !== acctMapleKey(m))));
       const now = acctMaple();   // (what's shown now: maybe picked since this list opened)
       if (now && acctMapleKey(now) === acctMapleKey(m)) localStorage.removeItem(ACCT_MAPLE);
