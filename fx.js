@@ -35,12 +35,18 @@ function revealStats(el) {
   if (wait > 0) revealAfter(el, wait);
 }
 // Keep something that would give the result away (status text, Best so far row) hidden until the flip is done.
+// Hidden outright until then (not only by the fade), so it waits even where animations don't run.
 function revealAfter(el, ms) {
   if (!el) return;
+  clearTimeout(el.revealT);
   el.classList.remove('later');
-  void el.offsetWidth;   // restart the animation if it's already running
-  el.style.animationDelay = ms + 'ms';
-  el.classList.add('later');
+  el.style.visibility = 'hidden';
+  el.revealT = setTimeout(() => {
+    el.style.visibility = '';
+    void el.offsetWidth;   // restart the fade if it already ran
+    el.style.animationDelay = '0ms';
+    el.classList.add('later');
+  }, ms);
 }
 
 // Confetti pieces are the in-game meso drops (sprites from maplestorywiki.net), drawn at their in-game size and kept pixel-sharp.
