@@ -1427,7 +1427,7 @@ function setLimboAll(on) {
 }
 function limboAllOff() { if (limboAllOn()) { lsSet(LIMBO_ALL_KEY, '0'); applyTheme(true); drawCustomFx(); halloweenFx(); limboTransitions(); limboDragons(); hecate = null; loadHecate(); } }   // you picked something yourself
 // Losing with the alert border on plays Limbo's fail screen full screen, in the border's colour (white or black).
-const LIMBO_FAIL_MS = 3900;
+const LIMBO_FAIL_MS = 3600;   // (the longer of the two clips)
 // The end sound comes in as the pre sound trails off (overlapping it a little), with the screen's end part (Limbo's mouth,
 // then its face): black 1.32 s, white 1.56 s (each clip had a bit taken out before the mouth so the two line up).
 const FAIL_END_AT = { black: 1320, white: 1560 };
