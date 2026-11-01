@@ -847,7 +847,7 @@ input[type="search"]::-webkit-search-cancel-button, input[type="search"]::-webki
 .acctsprite { object-fit: contain; image-rendering: auto; }   /* a shop avatar (animated) */
 .acctmaple .acctsprite { width: 96px; height: 96px; image-rendering: auto; }
 /* MapleStory Character: your characters and shop avatars, the one shown with a green border */
-.acctpick { display: flex; flex-direction: column; gap: 6px; max-height: 50vh; overflow-y: auto; margin: 6px 0 4px; padding: 3px; }
+.acctpick { display: flex; flex-direction: column; gap: 6px; max-height: 50vh; overflow-y: auto; margin: 2px -4px 0; padding: 8px 8px 6px; }
 .acctpickrow { position: relative; display: flex; align-items: center; padding: 4px 40px 4px 8px; border-radius: 10px; cursor: pointer;
   background: rgba(255, 255, 255, 0.55); outline: 2px solid transparent; }
 .acctpickrow:hover { background: rgba(255, 255, 255, 0.85); }
