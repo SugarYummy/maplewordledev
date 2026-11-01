@@ -743,7 +743,9 @@ const THEME_BGM_KEY = 'mapleWordle:themeBgm', THEME_BGM_VOL_KEY = 'mapleWordle:t
 const themeBgmOn = () => lsGet(THEME_BGM_KEY) !== '0';
 const themeBgmVol = () => { const v = Number(lsGet(THEME_BGM_VOL_KEY) ?? 50); return Number.isFinite(v) ? v : 50; };
 const ownsThemeBgm = () => ownedThemes().some((t) => THEME_BGM[t]);
-const tbgm = { ctx: null, master: null, cur: null, tracks: {} };   // tracks: theme -> { gain, src, ready }
+// Inside the main page (shell.js) the music lives in that page, not in this game's, so it keeps playing when you switch games.
+const TBGM_HOST = (() => { try { return window.parent !== window && window.parent.mwShell ? window.parent : window; } catch { return window; } })();
+const tbgm = TBGM_HOST.mwTbgm ??= { ctx: null, master: null, cur: null, tracks: {} };   // tracks: theme -> { gain, src, ready }
 // A sound that goes with a background's music (Limbo's transition): through the same volume and On / Off, so it's only
 // heard where the music is.
 const tbgmSounds = {};
@@ -762,8 +764,11 @@ function themeBgmSound(src, vol = 1) {
 }
 // Quiet (not stopped) while the VIP player plays, while a game's result sound (win, lose, guess-in-1 effect) plays, and
 // on BGM Clip while its clip or a mashup plays (bgm.js themeBgmHold); back right after.
+// After any of those it waits 2 more seconds before coming back.
+let tbgmQuietTill = 0;
 function themeBgmLevel() {
-  return themeBgmOn() && !(vip.audio && !vip.audio.paused) && !resultActive && !window.themeBgmHold?.() ? themeBgmVol() / 100 * 0.5 * (PHONE ? 2 : 1) : 0;
+  if ((vip.audio && !vip.audio.paused) || resultActive || window.themeBgmHold?.()) tbgmQuietTill = Date.now() + 2000;
+  return themeBgmOn() && Date.now() >= tbgmQuietTill ? themeBgmVol() / 100 * 0.5 * (PHONE ? 2 : 1) : 0;
 }
 let tbgmLevel = null;
 setInterval(() => {   // fades to / from quiet when one of those starts or stops
@@ -791,9 +796,12 @@ function themeBgm(t = tbgm.cur) {
   if (!want.length) return;
   try {
     if (!tbgm.ctx) {
-      tbgm.ctx = new (window.AudioContext || window.webkitAudioContext)();
+      tbgm.ctx = new (TBGM_HOST.AudioContext || TBGM_HOST.webkitAudioContext)();
       tbgm.master = tbgm.ctx.createGain();
       tbgm.master.connect(tbgm.ctx.destination);
+    }
+    if (!themeBgm.woke) {   // (each game page listens for its own clicks)
+      themeBgm.woke = true;
       const wake = () => { if (tbgm.ctx.state === 'suspended') tbgm.ctx.resume(); };
       for (const ev of ['pointerdown', 'keydown']) document.addEventListener(ev, wake, true);
     }
@@ -801,11 +809,13 @@ function themeBgm(t = tbgm.cur) {
   const ctx = tbgm.ctx;
   tbgm.master.gain.value = themeBgmLevel();
   for (const k of want) {
-    if (tbgm.tracks[k]) continue;
-    const tr = tbgm.tracks[k] = { gain: ctx.createGain() };
+    const had = tbgm.tracks[k];
+    if (had && (had.src || had.page === window)) continue;
+    if (had) had.gain.disconnect();   // the last game page was left mid-download: start that one again
+    const tr = tbgm.tracks[k] = { gain: ctx.createGain(), page: window };
     tr.gain.connect(tbgm.master);
     tr.gain.gain.value = 0;
-    tr.ready = fetch(THEME_BGM[k]).then((r) => r.arrayBuffer()).then((b) => ctx.decodeAudioData(b));
+    tr.ready = TBGM_HOST.fetch(THEME_BGM[k]).then((r) => r.arrayBuffer()).then((b) => ctx.decodeAudioData(b));
   }
   // Start together once both are decoded, so a pair stays in step (each loops on its own from there). Coming from another
   // page of the site, it carries on from where that page was (plus the moment the page change took), not from 0:00.

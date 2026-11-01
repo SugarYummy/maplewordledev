@@ -15,7 +15,7 @@
 // - Settings > Console: /meso 5000 (free mesos), /egg limbo (Limbo's mashup on today's BGM Clip Extreme), /egg lucid (today's
 //   Extreme clip is Lucid's Garden of Eternal Dream), /egg off, /help.
 (() => {
-  // (2 days on Nov 1, 2026 only, to try Halloween's day before.)
+  // (2 days behind on Nov 1, 2026 only: a one-day test.)
   const RealDate = Date, BEHIND = (Math.floor(RealDate.now() / 86400000) === Date.UTC(2026, 10, 1) / 86400000 ? 2 : 1) * 86400000;
   window.Date = class extends RealDate {
     constructor(...a) { if (a.length) super(...a); else super(RealDate.now() - BEHIND); }
@@ -30,7 +30,11 @@
   const sha = async (t) => [...new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode('mwdev|' + t)))]
     .map((b) => b.toString(16).padStart(2, '0')).join('');
   // The lock screen: everything else stays hidden until the key phrase is right (then not again in this tab).
-  if (!document.cookie.split('; ').includes('mwdevkey=' + KEY_HASH)) {
+  // (A game inside the main page (shell.js): the main page has the lock screen and the version box.)
+  const SHELL = document.documentElement.hasAttribute('data-shell');
+  let framed = false;
+  try { framed = window.parent !== window && window.parent.document.documentElement.hasAttribute('data-shell'); } catch {}
+  if (!framed && !document.cookie.split('; ').includes('mwdevkey=' + KEY_HASH)) {
     const lock = document.createElement('style');
     lock.id = 'devLockCss';
     lock.textContent = 'html.devlock body > :not(#devGate) { display: none !important; } html.devlock body { background: #000 !important; overflow: hidden; }' +
@@ -52,6 +56,7 @@
         document.documentElement.classList.remove('devlock');
         g.remove();
         lock.remove();
+        document.getElementById('game')?.contentWindow?.focus();
       });
       document.body.appendChild(g);
       g.querySelector('input').focus();
@@ -190,11 +195,12 @@
     let list = [];
     try { list = await (await fetch(ROOT + 'builds.json', { cache: 'no-cache' })).json(); } catch {}
     if (!list.length) { menu.textContent = 'No builds found.'; return; }
-    const page = location.pathname.split('/').pop();
-    menu.innerHTML = list.map((b, i) => `<a href="${i ? `${ROOT}b/${b}/` : ROOT}${page}" class="${b === STAMP ? 'on' : ''}">alphaTest v${b}${i ? '' : ' (newest)'}</a>`).join('');
+    const page = location.pathname.split('/').pop().replace(/^(boss|index)(\.html)?$/, '');   // (older builds have no boss page: the main page is it)
+    menu.innerHTML = list.map((b, i) => `<a target="_top" href="${i ? `${ROOT}b/${b}/` : ROOT}${page}" class="${b === STAMP ? 'on' : ''}">alphaTest v${b}${i ? '' : ' (newest)'}</a>`).join('');
   }
   addEventListener('click', (e) => { if (!e.target.closest?.('#devBuilds, #devTag')) document.getElementById('devBuilds')?.remove(); });
   addEventListener('DOMContentLoaded', () => {
+    if (SHELL) return;
     // No guessing (or skipping, or the title guess; the bonus only comes after a game) until logged in to a test account.
     for (const fn of ['guess', 'titleGuess']) {
       if (typeof window[fn] !== 'function') continue;

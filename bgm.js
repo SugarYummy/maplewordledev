@@ -148,7 +148,8 @@ const audio = { ctx: null, gain: null, raw: null, buffer: null, src: null, playi
 const winStart = () => over ? 0 : answer.start;
 const winEnd = () => over ? answer.t.len : answer.start + limitAt(Math.min(guesses.length, maxGuesses() - 1));
 // The background's music (fx.js) goes quiet while the clip or a mashup plays.
-window.themeBgmHold = () => audio.playing || !!(mashupAudio && !mashupAudio.paused);
+// Once you've played today's clip it stays quiet until the game is over (fx.js then waits for the result sound + 2 s).
+window.themeBgmHold = () => audio.playing || (audio.heard && !over) || !!(mashupAudio && !mashupAudio.paused);
 const nowPos = () => audio.playing ? audio.p0 + (audio.ctx.currentTime - audio.t0) : audio.pos;
 
 function loadTrack() {
@@ -209,7 +210,7 @@ async function play() {
   src.buffer = buf;
   src.connect(audio.gain);
   src.start(0, audio.pos);
-  Object.assign(audio, { src, playing: true, t0: audio.ctx.currentTime, p0: audio.pos });
+  Object.assign(audio, { src, playing: true, heard: true, t0: audio.ctx.currentTime, p0: audio.pos });
   src.onended = () => { if (audio.src === src) { audio.src = null; audio.playing = false; audio.pos = winEnd(); audio.ended = true; drawBar(); } };
   scheduleEnd();
   drawBar();
@@ -386,6 +387,7 @@ const titleShown = () => !titleOn() || title != null;
 const titleRight = () => title != null && title === answer.t.title;
 
 function start(d) {
+  audio.heard = false;
   live = d == null || d === today();
   day = live ? today() : d;
   for (const b of document.querySelectorAll('#modes button')) b.classList.toggle('on', b.dataset.mode === MODE);
@@ -1180,7 +1182,7 @@ function shareText() {
     : grid === '💎' || grid === '🌈' ? ''
     : (bonus == null ? '' : `\nBonus ${ok ? '✅' : '❌'}`) + (title == null ? '' : `\nTitle ${titleRight() ? '✅' : '❌'}`);
   return [`${isHalloween(day) ? '🎃 ' : ''}Maple Wordle - BGM Clip (${MODES[MODE].name}) #${day - firstDay() + 1} ${won() ? guesses.length : 'X'}/${maxGuesses()}`,
-    grid + extra, 'https://ima.moe/maplewordle/bgm'].join('\n');
+    grid + extra, 'https://ima.moe/maplewordle/bgm/' + (MODE === 'bgmnormal' ? 'normal' : 'extreme')].join('\n');
 }
 function share() {
   const text = shareText();
