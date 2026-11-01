@@ -21,7 +21,7 @@
     constructor(...a) { if (a.length) super(...a); else super(RealDate.now() - BEHIND); }
     static now() { return RealDate.now() - BEHIND; }
   };
-  const BUILD = 'alphaTest v4.5.1.31102026.175418', STAMP = BUILD.split(' v')[1];
+  const BUILD = 'alphaTest v4.5.1.31102026.180313', STAMP = BUILD.split(' v')[1];
   const ROOT = location.pathname.match(/^(.*?\/maplewordledev\/)/)?.[1] ?? '/';
   const kept = window.localStorage;   // the browser's own storage: only the test login ('mwdev:login') goes here
   Object.defineProperty(window, 'localStorage', { value: window.sessionStorage, configurable: true });
@@ -140,7 +140,7 @@
     }
   } catch {}
   window.devEgg = ss.getItem('mwdev:egg');   // read by bgm.js (bonusFor)
-  const DEV_HELP = '/meso 5000 — add mesos (minus works too)\n/egg limbo — Limbo\'s mashup as today\'s BGM Clip Extreme bonus\n/egg lucid — today\'s BGM Clip Extreme clip is Lucid\'s Garden of Eternal Dream\n/egg off — back to the real one\n/help — this list';
+  const DEV_HELP = '/meso 5000 — add mesos (minus works too)\n/egg limbo — Limbo\'s mashup as today\'s BGM Clip Extreme bonus\n/egg lucid — today\'s BGM Clip Extreme clip is Lucid\'s Garden of Eternal Dream\n/egg off — back to the real one\n/unlock all — unlock every hidden shop item (to buy at full price)\n/help — this list';
   function devRun(line) {
     const [cmd, a] = line.trim().split(/\s+/);
     if (cmd === '/help') return DEV_HELP;
@@ -161,6 +161,12 @@
       if (page) setTimeout(() => location.reload(), 900);
       const what = { limbo: "Limbo's mashup is now today's BGM Clip Extreme bonus.", lucid: "Today's BGM Clip Extreme clip is now Lucid's Garden of Eternal Dream." }[a];
       return what ? `${what}${page ? ' Reloading…' : ' Open BGM Clip (Extreme).'}` : `Back to the real BGM Clip.${page ? ' Reloading…' : ''}`;
+    }
+    if (cmd === '/unlock') {
+      if (a !== 'all') return 'Try: /unlock all';
+      const got = Object.keys(SHOP).filter((t) => SHOP[t].hidden && !shopFound().includes(t) && !shopOwned(t));
+      for (const t of got) shopUnlock(t, false);
+      return got.length ? `Unlocked in the shop: ${got.map((t) => SHOP[t].name).join(', ')}.` : 'Every hidden shop item is already unlocked.';
     }
     return 'Unknown command. Type /help';
   }
