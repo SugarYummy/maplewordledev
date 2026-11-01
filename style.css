@@ -591,7 +591,7 @@ body.glitch .game.glow.diamond { animation: glitchslice 2.3s steps(1) infinite, 
 .infotip:hover { background: rgba(255, 255, 255, 0.95); }
 .infotip.open { background: #222; color: #fff; }
 .setrow { position: relative; }
-.tiptext { position: absolute; left: 0; right: 0; top: calc(100% + 2px); z-index: 5; margin: 0; padding: 6px 10px; border-radius: 6px;
+.tiptext { position: absolute; left: 0; width: max-content; max-width: 100%; box-sizing: border-box; top: calc(100% + 2px); z-index: 5; margin: 0; padding: 6px 10px; border-radius: 6px;
            background: #222; color: #fff; font-size: 12px; line-height: 1.35; opacity: 0; pointer-events: none; transition: opacity 0.2s ease; }
 .tiptext.show { opacity: 1; }
 /* BGM Clip: "Bonus below!" call-out under the result, and a soft gold glow on the bonus box until it's answered. */
