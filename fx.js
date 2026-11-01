@@ -336,7 +336,9 @@ function soundFile(src) {
   soundBytes[src] ??= fetch(src).then((r) => (r.ok ? r.arrayBuffer() : Promise.reject())).catch((e) => { delete soundBytes[src]; throw e; });
   return soundBytes[src];
 }
+let failMutesLose = false;   // (limboOver: a loss with Limbo's fail screen coming)
 function resultSound(won, delay, file) {
+  if (failMutesLose && !won && !file?.startsWith('fail')) return;
   if (muted()) return;
   const ctx = soundCtx();
   if (!ctx) return;
@@ -1129,6 +1131,8 @@ function limboOver(won, delay = 0) {   // game over (called by the games, with w
   const release = (ms) => setTimeout(() => { cfxHold = false; drawCustomFx(); }, ms);
   if (won) return release(delay);
   failPending = true;
+  failMutesLose = true;   // the game's own lose sound, called right after this, stays quiet: the fail screen has its own
+  setTimeout(() => { failMutesLose = false; });
   setTimeout(() => {   // the fail screen in the colour showing now, over (and instead of) any transition on its way
     failPending = false;
     limboTransitionStop();
