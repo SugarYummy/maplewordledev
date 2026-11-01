@@ -769,7 +769,8 @@ function limboResume() {
   glitch(true);
   limboSwaps();
 }
-async function limboExit() {
+// fail (a wrong answer): the border's exit, then Limbo's fail screen in that side's colour instead of the fade.
+async function limboExit(fail = false) {
   if (!limbo.on || limbo.leaving) return;
   limbo.leaving = true;
   clearTimeout(limbo.swap);
@@ -784,6 +785,17 @@ async function limboExit() {
   limboGone(out);
   for (const el of border?.querySelectorAll('video, img') ?? []) limboGone(el);
   border?.remove();
+  if (fail) {
+    limboTransitionStop();
+    limboFail(limbo.dark ? 'black' : 'white');
+    await sleep(600);   // the fail screen covers the page by now: Limbo's scene goes underneath it
+    if (mashupAudio && !mashupAudio.paused) mashupAudio.pause();
+    $('mashupPlay').textContent = '▶\uFE0E Play the mashup';
+    $('limbobg')?.remove();
+    limbo.on = limbo.leaving = false;
+    Object.assign($('mashupPlay'), { disabled: false, title: '' });
+    return;
+  }
   const screen = await limboClip('screen-out', document.body, 'limboscreen');
   await sleep(LIMBO_CLIPS['screen-out']);   // the page is covered now
   if (mashupAudio && !mashupAudio.paused) mashupAudio.pause();
@@ -975,12 +987,14 @@ $('bonusGo').addEventListener('click', (window.acctGate ?? ((f) => f))(() => {
   if (ok && isLimboEgg()) limboWin(guesses.length === 1 && won());   // right: Limbo's cutscene, then the meso show (not again after a guess in 1)
   noteResult();
   if (!ok && isLimboEgg()) {
-    // Wrong: the dragon swallows the answer and stays a second, then Limbo's fail screen in the side showing then (dark:
-    // black, light: white). Limbo's scene stays on until the fail screen covers it, then goes underneath it.
-    const failAt = 500 + GFX_RUSH + 1000, here = MODE + day;
-    const still = () => MODE + day === here;   // (not if you've gone to another mode or day meanwhile)
-    setTimeout(() => { if (still()) { limboTransitionStop(); limboFail(limbo.dark ? 'black' : 'white'); } }, failAt);
-    setTimeout(() => { if (still() && limbo.on) limboExit(); }, failAt + 600);
+    // Wrong: the dragon swallows the answer and stays a moment, then the border's exit and Limbo's fail screen in
+    // the side showing then (dark: black, light: white; limboExit). Without Limbo's scene on: just the fail screen.
+    const failAt = 500 + GFX_RUSH + 200, here = MODE + day;   // (+ the border's 0.3 s exit: the fail screen 0.5 s sooner than before)
+    setTimeout(() => {
+      if (MODE + day !== here) return;   // (gone to another mode or day meanwhile)
+      if (limbo.on) limboExit(true);
+      else { limboTransitionStop(); limboFail(limbo.dark ? 'black' : 'white'); }
+    }, failAt);
   } else if (limbo.on) limboExit();
   sendBonus(ok);
   if (ok && live) answer.t.unlock?.bonus?.forEach((t) => shopUnlock(t));   // shows up in the meso shop (fx.js)
