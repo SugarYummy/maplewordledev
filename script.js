@@ -640,7 +640,7 @@ function infoHtml(m) {
   const rules = [
     `Guess today's boss in ${guesses}. New boss daily at 00:00 UTC.`,
     '🟩 right · 🟨 close · 🟥 wrong · ↑↓ higher / lower',
-    'Close: Phases ±1, HP within 3×, Entry Lv ±10, Region overlaps.',
+    'Close:<ul><li>Phases ±1</li><li>HP within 3×</li><li>Entry Lv ±10</li><li>Region partly overlaps</li></ul>',
     'HP = all phases added up.',
     ...(m === 'extreme' ? ['Also guess the difficulty (Hard = Chaos, Extreme = Hell).',
                            'Daily twist: 4 guesses, or a hidden column.',
