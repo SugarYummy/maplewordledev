@@ -1263,7 +1263,7 @@ function openInfo() {
     ...(yellowOn() ? ['🟨 yellow:<ul><li>Right track</li><li>Wrong boss (still a miss)</li></ul>'] : []),
     '<b>Bonus:</b> guess which part of the fight it plays in (after the game).',
     ...(titleOn() ? ["<b>Bonus 2:</b> guess the track's title."] : []),
-    'Win in 1 guess for a ⭐. Get the bonus too for a 💎.',
+    ...(titleOn() ? ['Win in 1 guess for:<ul><li>⭐ the win</li><li>💎 plus a bonus</li><li>🌈 plus both bonuses</li></ul>'] : ['Win in 1 guess for a ⭐. Get the bonus too for a 💎.']),
     'Streak resets when you lose.',
   ];
   $('infoBody').innerHTML = '<ul>' + rules.map((x) => `<li>${x}</li>`).join('') + '</ul>' +
