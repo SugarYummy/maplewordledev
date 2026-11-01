@@ -1139,6 +1139,7 @@ function renderStats(counts, mine, bonusCounts, titleCounts) {
   }
   $('statsAvg').textContent = total ? `${Math.round(solved * 100 / total)}% solved${bonusLine}` : '';
   $('stats').hidden = false;
+  revealStats($('stats'));   // (fx.js: after your result, when the game just ended)
 }
 
 // ---- Win streak (today's puzzle only): +1 per win, back to 0 on a loss ----

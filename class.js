@@ -343,6 +343,7 @@ function renderStats(counts, mine) {
   $('statsAvg').textContent = !total ? '' :
     `Average: ${(sum / total).toFixed(1)} guesses (fails count as ${failAs})\n${Math.round(solved * 100 / total)}% solved`;
   $('stats').hidden = false;
+  revealStats($('stats'));   // (fx.js: after your result, when the game just ended)
 }
 
 // ---- Win streak (today's puzzle only): +1 per win, back to 0 on a loss ----

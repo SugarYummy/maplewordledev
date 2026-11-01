@@ -333,6 +333,7 @@ function renderStats(counts, mine) {
   for (const [k, c] of Object.entries(counts)) sum += Number(k) * c;
   $('statsAvg').textContent = total ? `Average: ${(sum / total).toFixed(1)} guesses` : '';
   $('stats').hidden = false;
+  revealStats($('stats'));   // (fx.js: after your result, when the game just ended)
 }
 
 // ---- Win streak (today's puzzle only). You can't lose, so it resets if you miss a day. ----

@@ -28,6 +28,12 @@ function flipAnswer(tr, start) {
 let flipEnd = 0;
 function flipUntil(ms) { flipEnd = Math.max(flipEnd, performance.now() + ms); return ms; }
 
+// Everyone's results: right after a game ends, they come in a moment after your result (once the flip is done), not
+// before it.
+function revealStats(el) {
+  const wait = fxHoldTill + 700 - Date.now();
+  if (wait > 0) revealAfter(el, wait);
+}
 // Keep something that would give the result away (status text, Best so far row) hidden until the flip is done.
 function revealAfter(el, ms) {
   if (!el) return;
