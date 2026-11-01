@@ -1254,15 +1254,15 @@ function openInfo() {
   const rules = [
     `Guess which boss fight today's BGM is from in <b>${maxGuesses()}</b> guesses. New clip daily at 00:00 UTC.`,
     ...(newRules() ? [
-      'Each wrong guess or Skip plays more: 1s, 5s, 10s, 30s, 60s, then all.',
-      'From your 3rd guess, each miss reveals a boss clue.',
+      'Each wrong guess or Skip plays more:<ul><li>1s</li><li>5s</li><li>10s</li><li>30s</li><li>60s</li><li>Then all</li></ul>',
+      'Each miss from your 3rd guess on reveals a boss clue.',
     ] : [
-      'Each wrong guess or Skip plays more: 0.5s, 1s, 2s, 5s, 10s, then 30s.',
+      'Each wrong guess or Skip plays more:<ul><li>0.5s</li><li>1s</li><li>2s</li><li>5s</li><li>10s</li><li>Then 30s</li></ul>',
     ]),
     'It can be from any part of the fight.',
-    ...(yellowOn() ? ['🟨 yellow: right track, wrong boss (still a miss).'] : []),
+    ...(yellowOn() ? ['🟨 yellow:<ul><li>Right track</li><li>Wrong boss (still a miss)</li></ul>'] : []),
     ...(titleOn() ? ["<b>Bonus 2:</b> guess the track's title for <b>+70 mesos</b>."] : []),
-    '<b>Bonus:</b> after the game, guess which part of the fight it plays in.',
+    '<b>Bonus:</b> guess which part of the fight it plays in (after the game).',
     'Win in 1 guess for a ⭐. Get the bonus too for a 💎.',
     'Streak resets when you lose.',
   ];

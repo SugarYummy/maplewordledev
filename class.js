@@ -450,7 +450,7 @@ function openInfo() {
   const rules = [
     "Guess today's class in <b>5</b> guesses. New class daily at 00:00 UTC.",
     'Colors:<ul><li>🟩 right</li><li>🟨 close</li><li>🟥 wrong</li><li>↑↓ newer / older</li></ul>',
-    'Close: partly matches, or Release Year within 4 years.',
+    'Close:<ul><li>Partly matches</li><li>Release Year within 4 years</li></ul>',
     'Release Year = GMS release.',
     'Identical classes share a card (e.g. Hero / Paladin / Dark Knight).',
     'Streak resets when you lose.',

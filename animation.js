@@ -423,8 +423,8 @@ const DISCORD = 'https://discord.gg/f22H4UJ';
 function openInfo() {
   const rules = [
     "Watch the skill clip and guess today's class. <b>Unlimited</b> guesses. New class daily at 00:00 UTC.",
-    'Each wrong guess unlocks a hint: another clip, skill names, a category, then the first letter.',
-    'Hero, Paladin and Dark Knight are separate answers.',
+    'Each wrong guess unlocks a hint:<ul><li>Another clip</li><li>Skill names</li><li>A category</li><li>Then the first letter</li></ul>',
+    'Hero / Paladin / Dark Knight are separate answers.',
     'Streak resets if you miss a day.',
   ];
   $('infoBody').innerHTML = '<ul>' + rules.map((x) => `<li>${x}</li>`).join('') + '</ul>' +
