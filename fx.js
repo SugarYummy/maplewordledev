@@ -13,8 +13,20 @@ function flipRow(tr, start = 0) {
     td.classList.add('flip');
     td.style.animationDelay = `${start + i * FLIP_STEP}ms`;
   });
-  return start + (cells.length - 1) * FLIP_STEP + FLIP_TIME;
+  return flipUntil(start + (cells.length - 1) * FLIP_STEP + FLIP_TIME);
 }
+// Out of guesses: the answer row stays out of the table until your last guess has turned over (and, with Limbo's wrong
+// guess effect, been swallowed), then comes in and turns over. Returns when it's done, like flipRow.
+function flipAnswer(tr, start) {
+  if (!tr) return start;
+  const at = start + (limboGuessOn() ? GFX_RUSH : 0);
+  tr.hidden = true;
+  setTimeout(() => { tr.hidden = false; flipRow(tr); }, at);
+  return flipUntil(at + (tr.children.length - 1) * FLIP_STEP + FLIP_TIME);
+}
+// When the rows flipping now are done (Limbo's alert border waits for the guess to turn over first).
+let flipEnd = 0;
+function flipUntil(ms) { flipEnd = Math.max(flipEnd, performance.now() + ms); return ms; }
 
 // Keep something that would give the result away (status text, Best so far row) hidden until the flip is done.
 function revealAfter(el, ms) {
@@ -345,9 +357,12 @@ function resultSound(won, delay, file) {
   const ready = soundFile(SOUNDS[file] || (won ? SOUNDS.win : SOUNDS.lose)).then((b) => ctx.decodeAudioData(b.slice(0)));
   const due = Date.now() + delay;
   const gen = resultGen;
-  const duck = file !== 'purchase';   // a shop purchase plays over the background's music (it doesn't stop it)
-  if (duck) resultActive++;
-  const done = () => { if (duck) resultActive = Math.max(0, resultActive - 1); };
+  // The background's music goes quiet when the sound starts (after the flip), not when it's asked for. A shop purchase
+  // plays over it (doesn't quiet it).
+  const duck = file !== 'purchase';
+  let counted = false;
+  const count = duck && setTimeout(() => { counted = true; resultActive++; }, Math.max(0, (delay ?? 0) - 150));
+  const done = () => { clearTimeout(count); if (counted) { counted = false; resultActive = Math.max(0, resultActive - 1); } };
   ready.then((buffer) => {
     if (gen !== resultGen) return done();   // stopped before it started
     const start = ctx.currentTime + Math.max(0, due - Date.now()) / 1000;
@@ -758,19 +773,20 @@ const themeBgmOn = () => lsGet(THEME_BGM_KEY) !== '0';
 const themeBgmVol = () => { const v = Number(lsGet(THEME_BGM_VOL_KEY) ?? 50); return Number.isFinite(v) ? v : 50; };
 const ownsThemeBgm = () => ownedThemes().some((t) => THEME_BGM[t]);
 const tbgm = TBGM_HOST.mwTbgm ??= { ctx: null, master: null, cur: null, tracks: {} };   // tracks: theme -> { gain, src, ready }
-// A sound that goes with a background's music (Limbo's transition): through the same volume and On / Off, so it's only
-// heard where the music is.
-const tbgmSounds = {};
-function themeBgmSound(src, vol = 1) {
-  if (!tbgm.ctx || !tbgm.master || !Object.keys(tbgm.tracks).length) return;
-  const ctx = tbgm.ctx;
-  tbgmSounds[src] ??= fetch(src).then((r) => r.arrayBuffer()).then((b) => ctx.decodeAudioData(b)).catch(() => null);
-  tbgmSounds[src].then((buf) => {
-    if (!buf || !tbgm.master) return;
+// Limbo mode's transition sound: always heard (only the sound mute button stops it), whatever the background's music is
+// doing (on, off, or quiet for a clip or a result sound); half as loud as the music would be at your music volume.
+let transSound = null;
+function limboTransitionSound() {
+  if (muted()) return;
+  const ctx = soundCtx();
+  if (!ctx) return;
+  transSound ??= fetch('sounds/limbo-transition.mp3').then((r) => r.arrayBuffer()).then((b) => ctx.decodeAudioData(b)).catch(() => null);
+  transSound.then((buf) => {
+    if (!buf) return;
     const s = ctx.createBufferSource(), g = ctx.createGain();
     s.buffer = buf;
-    g.gain.value = vol;
-    s.connect(g).connect(tbgm.master);
+    g.gain.value = themeBgmVol() / 100 * 0.5 * (PHONE ? 2 : 1) * 0.5;
+    s.connect(g).connect(ctx.destination);
     s.start();
   });
 }
@@ -1121,7 +1137,13 @@ function cfxPreview() {
 function limboAlertCheck() {   // each game says how many guesses are left (window.gameLeft)
   const g = window.gameLeft?.();
   const was = cfxShown();
-  cfxAlert = !!g && !g.over && g.left <= 2;
+  const want = !!g && !g.over && g.left <= 2;
+  if (want && !cfxAlert && performance.now() < flipEnd) {   // coming on: once the guess has turned over
+    clearTimeout(limboAlertCheck.t);
+    limboAlertCheck.t = setTimeout(limboAlertCheck, flipEnd - performance.now() + 50);
+    return;
+  }
+  cfxAlert = want;
   if (cfxShown() !== was) drawCustomFx(cfxAlert);
 }
 function limboOver(won, delay = 0) {   // game over (called by the games, with when the result shows)
@@ -1231,7 +1253,7 @@ async function limboTransition() {
   const gone = () => { for (const el of box.children) URL.revokeObjectURL(el.src); box.remove(); if (transBox === box) transBox = null; };
   const wait = (ms) => new Promise((ok) => setTimeout(ok, ms));
   play(0);
-  themeBgmSound('sounds/limbo-transition.mp3', 0.5);   // the pools' rumble, then a hit as the sharks burst out (3.15 s); half as loud as the music
+  limboTransitionSound();   // the pools' rumble, then a hit as the sharks burst out (3.15 s)
   await wait(TRANS_PRE);
   if (gen !== transGen) return gone();   // Limbo mode turned off (or a side picked) meanwhile
   play(1);

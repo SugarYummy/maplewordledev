@@ -235,7 +235,7 @@ function guess(name) {
   const newRow = $('rows').querySelector('tr:not(.bestrow):not(.hintrow):not(.answer)');
   let flipMs = flipRow(newRow);
   limboGuess(newRow, g.name !== answer.name, flipMs);   // Limbo's wrong guess effect, if it's on
-  flipMs = flipRow($('rows').querySelector('tr.answer'), flipMs);   // out of guesses: the answer turns over next
+  flipMs = flipAnswer($('rows').querySelector('tr.answer'), flipMs);   // out of guesses: the answer comes in and turns over next (fx.js)
   if (over) fxHold(flipMs);   // the win border and "+mesos" wait for the flip
   if (over && guesses.includes(answer.name)) setTimeout(() => confetti(guesses.length === 1), flipMs);
   if (over) limboOver(guesses.includes(answer.name), flipMs);   // Limbo's alert border: gone on a win, its fail screen on a loss

@@ -512,7 +512,7 @@ function guess(name) {
   save();
   $('rows').firstElementChild.classList.add('flip');   // the new bar flips in
   limboGuess($('rows').firstElementChild, !name || !isRight(name));   // Limbo's wrong guess effect, if it's on (skips too)
-  const flipMs = FLIP_TIME;
+  const flipMs = flipUntil(FLIP_TIME);
   for (const el of [$('status'), $('share')]) revealAfter(el, flipMs);
   if (!over) {
     // Stopped at the end of what was unlocked: Play now carries on from there into the new part (not from the start).

@@ -538,7 +538,7 @@ function guess(name) {
   const newRow = $('rows').querySelector('tr:not(.bestrow):not(.hintrow):not(.answer)');
   let flipMs = flipRow(newRow);
   limboGuess(newRow, g.name !== answer.name, flipMs);   // Limbo's wrong guess effect, if it's on
-  flipMs = flipRow($('rows').querySelector('tr.answer'), flipMs);   // out of guesses: the answer turns over next
+  flipMs = flipAnswer($('rows').querySelector('tr.answer'), flipMs);   // out of guesses: the answer comes in and turns over next (fx.js)
   // A Story win that took 7+ guesses gets no confetti and no win sound. Sounds are for today's puzzle only.
   const won = guesses.includes(answer.name);
   const quietWin = won && mode === 'story' && guesses.length >= 7;

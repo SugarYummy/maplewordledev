@@ -229,7 +229,7 @@ function guess(name) {
   save();
   $('rows').firstElementChild.classList.add('flip');   // the new bar flips in
   limboGuess($('rows').firstElementChild, g.name !== answer.name);   // Limbo's wrong guess effect, if it's on
-  const flipMs = FLIP_TIME;
+  const flipMs = flipUntil(FLIP_TIME);
   if (over) fxHold(flipMs);   // the win border and "+mesos" wait for the flip
   renderCongrats();
   for (const el of [$('status'), $('share'), $('congrats')]) revealAfter(el, flipMs);
