@@ -15,7 +15,8 @@
 // - Settings > Console: /meso 5000 (free mesos), /egg limbo (Limbo's mashup on today's BGM Clip Extreme), /egg lucid (today's
 //   Extreme clip is Lucid's Garden of Eternal Dream), /egg off, /help.
 (() => {
-  const RealDate = Date, BEHIND = 86400000;
+  // (2 days on Nov 1, 2026 only, to try Halloween's day before.)
+  const RealDate = Date, BEHIND = (Math.floor(RealDate.now() / 86400000) === Date.UTC(2026, 10, 1) / 86400000 ? 2 : 1) * 86400000;
   window.Date = class extends RealDate {
     constructor(...a) { if (a.length) super(...a); else super(RealDate.now() - BEHIND); }
     static now() { return RealDate.now() - BEHIND; }
