@@ -460,7 +460,7 @@ applyBox();
     // The (i) after each name explains it: hover on a computer, tap on a phone.
     const tip = (text) => `<button class="infotip" type="button" aria-label="What is this?" data-tip="${text}">i</button>`;
     body.innerHTML = (typeof acctRow === 'function' ? acctRow(tip) : '') +   // Account (account.js)
-      `<div class="setrow"><span class="setlabel">Sound ${tip('Win / lose sounds. BGM Clip has its own volume.')}</span>` +
+      `<div class="setrow"><span class="setlabel">Sound ${tip('All sound effects, including win / lose sounds. BGM Clip has its own volume.')}</span>` +
       '<button id="setMute"></button><input id="setVol" type="range" min="0" max="100"><span id="setVolPct"></span></div>' +
       (ownsThemeBgm() ? `<div class="setrow"><span class="setlabel">Background BGM ${tip("Music for backgrounds that have it. Mute one in Customize > Background.")}</span>` +
         '<button id="setBgm"></button><input id="setBgmVol" type="range" min="0" max="100"><span id="setBgmPct"></span></div>' : '') +
