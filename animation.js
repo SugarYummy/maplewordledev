@@ -91,6 +91,7 @@ function showClip(n, open) {
   fig.querySelector('video, .locked')?.remove();
   if (open && has) {
     const v = document.createElement('video');
+    v.disablePictureInPicture = true;   // no picture-in-picture button on hover
     v.muted = v.autoplay = v.loop = v.playsInline = true;
     v.setAttribute('playsinline', '');
     v.poster = clipSrc(answer, n) + '.jpg';
@@ -440,6 +441,7 @@ function openZoom(el) {
   let big;
   if (el.tagName === 'VIDEO') {
     big = document.createElement('video');
+    big.disablePictureInPicture = true;   // no picture-in-picture button on hover
     big.muted = big.autoplay = big.loop = big.playsInline = true;
     big.setAttribute('playsinline', '');
     for (const src of el.querySelectorAll('source')) big.appendChild(src.cloneNode());

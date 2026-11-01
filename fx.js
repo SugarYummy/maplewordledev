@@ -163,6 +163,7 @@ function playHecate(special = false) {   // special: Limbo's mashup win (plays w
   if (!special) setTimeout(loadHecate, skin.ms + 500);   // the next one ready
   const url = URL.createObjectURL(blob);   // a fresh URL each time, so the WebP starts from its first frame
   const el = document.createElement(SAFARI ? 'img' : 'video');
+  el.disablePictureInPicture = true;   // no picture-in-picture button on hover
   el.className = 'hecatefx' + (skin.wide ? ' widefx' : '');
   let gone = false;
   const done = () => { if (gone) return; gone = true; el.remove(); URL.revokeObjectURL(url); };
@@ -651,6 +652,7 @@ const bgDoc = () => TBGM_HOST.document;
 function bgSwapClass(on) { for (const d of new Set([document, bgDoc()])) d.body.classList.toggle('limboswap', on); }
 function bgVideo(t) {
   const v = bgDoc().createElement('video');
+  v.disablePictureInPicture = true;   // no picture-in-picture button on hover
   Object.assign(v, { autoplay: true, muted: true, loop: true, playsInline: true, poster: THEME_IMG[t] });
   v.setAttribute('aria-hidden', 'true');
   v.dataset.theme = t;
@@ -736,7 +738,7 @@ function pairVideos(el, t) {
 }
 function themeScreen(src) {
   const el = SAFARI ? Object.assign(bgDoc().createElement('img'), { src: src + '.webp', alt: '' })
-    : Object.assign(bgDoc().createElement('video'), { src: src + '.webm', muted: true, loop: true, autoplay: true, playsInline: true });
+    : Object.assign(bgDoc().createElement('video'), { src: src + '.webm', muted: true, loop: true, autoplay: true, playsInline: true, disablePictureInPicture: true });
   el.className = 'themescreen';
   el.setAttribute('aria-hidden', 'true');
   el.play?.().catch(() => {});
@@ -1258,6 +1260,7 @@ const gfxLayers = new Set();   // { row, layer, host }: every bar / dragon showi
 function gfxClips() { cfxClip('guess-bar'); cfxClip('guess-eat'); cfxClip('guess-idle'); }
 function gfxVideo(blob, loop) {
   const el = document.createElement(SAFARI ? 'img' : 'video');
+  el.disablePictureInPicture = true;   // no picture-in-picture button on hover
   if (!SAFARI) Object.assign(el, { muted: true, playsInline: true, autoplay: true, loop });
   el.src = URL.createObjectURL(blob);
   el.play?.().catch(() => {});
@@ -1368,6 +1371,7 @@ async function limboFail(color, delay = 0) {
   const [blob] = await Promise.all([cfxClip(`fail-${color}`), new Promise((ok) => setTimeout(ok, delay))]);
   if (!blob || performance.now() - start > delay + 3000) return;   // too late now (slow download)
   const el = document.createElement(SAFARI ? 'img' : 'video');
+  el.disablePictureInPicture = true;   // no picture-in-picture button on hover
   el.className = 'limboscreen';
   const url = URL.createObjectURL(blob);
   const done = () => { el.remove(); URL.revokeObjectURL(url); };

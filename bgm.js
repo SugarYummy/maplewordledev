@@ -686,6 +686,7 @@ async function limboClip(name, parent, cls) {   // plays one clip (from its firs
   if (!blob) return null;
   const url = URL.createObjectURL(blob);
   const el = document.createElement(SAFARI ? 'img' : 'video');
+  el.disablePictureInPicture = true;   // no picture-in-picture button on hover
   el.className = cls;
   if (!SAFARI) Object.assign(el, { muted: true, playsInline: true, autoplay: true, loop: !LIMBO_CLIPS[name] });
   el.src = url;
