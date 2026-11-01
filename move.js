@@ -18,6 +18,7 @@
     location.replace('https://ima.moe/maplewordle' + (path || '/') + location.search + hash);
     return;
   }
+  try { if (window.parent !== window && window.parent.document.documentElement.hasAttribute('data-shell')) document.documentElement.classList.add('inshell'); } catch {}
   // A game page opened on its own (ima.moe/maplewordle/class, an old link): open it in the main page instead, which
   // keeps the music going between games (shell.js).
   if (window.top === window && !document.documentElement.hasAttribute('data-shell')) {

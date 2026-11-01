@@ -643,12 +643,17 @@ const THEME_PAIR = { limbo: 'limboDark', limboDark: 'limbo' };
 // (its first 4 are the loop's, fading in), 60 ms each. Limbo Background: Phase 1's purple mist, 16 frames of 120 ms, on
 // from the start. .webm (see-through), .webp for Safari.
 const THEME_SCREEN = { limboDark: 'video/limbo-bg/dark-screen', limboP1: 'video/limbo-bg/phase1-screen' };
+// Inside the main page (shell.js) the background and its music live in that page, under this game's, so they carry on
+// (video and all) when you switch games.
+const TBGM_HOST = (() => { try { return window.parent !== window && window.parent.mwShell ? window.parent : window; } catch { return window; } })();
+const bgDoc = () => TBGM_HOST.document;
+function bgSwapClass(on) { for (const d of new Set([document, bgDoc()])) d.body.classList.toggle('limboswap', on); }
 function bgVideo(t) {
-  const v = document.createElement('video');
+  const v = bgDoc().createElement('video');
   Object.assign(v, { autoplay: true, muted: true, loop: true, playsInline: true, poster: THEME_IMG[t] });
   v.setAttribute('aria-hidden', 'true');
   v.dataset.theme = t;
-  for (const src of THEME_VIDEO[t]) v.appendChild(Object.assign(document.createElement('source'), { src, type: src.includes('.webm') ? 'video/webm' : 'video/mp4' }));
+  for (const src of THEME_VIDEO[t]) v.appendChild(Object.assign(bgDoc().createElement('source'), { src, type: src.includes('.webm') ? 'video/webm' : 'video/mp4' }));
   v.play?.().catch(() => {});
   return v;
 }
@@ -676,7 +681,8 @@ function applyTheme(fade = false) {
   const secs = fade === true ? 1 : fade || 0;
   const pick = lsGet(THEME_KEY);
   const t = limboAllOn() ? (limboDarkSide ? 'limboDark' : 'limbo') : holidayToday() ?? (ownedThemes().includes(pick) ? pick : 'default');
-  const old = [...document.querySelectorAll('.themebg')];
+  const doc = bgDoc();
+  const old = [...doc.querySelectorAll('.themebg')];
   const top = old.at(-1)?.dataset.theme ?? 'default';
   if (top === t) {   // already showing (Limbo mode may have just come on: add the other side)
     if (THEME_PAIR[t]) pairVideos(old.at(-1), t);
@@ -694,7 +700,7 @@ function applyTheme(fade = false) {
   const gone = () => old.forEach((el) => el.remove());
   themeBgm(t);
   if (t !== 'default') {
-    const el = document.createElement('div');
+    const el = doc.createElement('div');
     el.className = 'themebg';
     el.dataset.theme = t;
     el.style.backgroundImage = `url("${THEME_IMG[t]}")`;
@@ -706,8 +712,8 @@ function applyTheme(fade = false) {
       el.style.opacity = 0;
       requestAnimationFrame(() => requestAnimationFrame(() => { el.style.opacity = 1; }));
     }
-    document.body.prepend(el);
-    old.forEach((o) => document.body.prepend(o));   // keep the old one underneath while the new one fades in
+    doc.body.prepend(el);
+    old.forEach((o) => doc.body.prepend(o));   // keep the old one underneath while the new one fades in
     if (secs) setTimeout(gone, secs * 1000 + 100); else gone();
   } else if (secs) {
     old.forEach((o) => { o.style.transition = `opacity ${secs}s ease`; o.style.opacity = 0; });
@@ -728,8 +734,8 @@ function pairVideos(el, t) {
   el.querySelector('.themescreen')?.classList.toggle('on', !!THEME_SCREEN[t]);
 }
 function themeScreen(src) {
-  const el = SAFARI ? Object.assign(document.createElement('img'), { src: src + '.webp', alt: '' })
-    : Object.assign(document.createElement('video'), { src: src + '.webm', muted: true, loop: true, autoplay: true, playsInline: true });
+  const el = SAFARI ? Object.assign(bgDoc().createElement('img'), { src: src + '.webp', alt: '' })
+    : Object.assign(bgDoc().createElement('video'), { src: src + '.webm', muted: true, loop: true, autoplay: true, playsInline: true });
   el.className = 'themescreen';
   el.setAttribute('aria-hidden', 'true');
   el.play?.().catch(() => {});
@@ -743,8 +749,6 @@ const THEME_BGM_KEY = 'mapleWordle:themeBgm', THEME_BGM_VOL_KEY = 'mapleWordle:t
 const themeBgmOn = () => lsGet(THEME_BGM_KEY) !== '0';
 const themeBgmVol = () => { const v = Number(lsGet(THEME_BGM_VOL_KEY) ?? 50); return Number.isFinite(v) ? v : 50; };
 const ownsThemeBgm = () => ownedThemes().some((t) => THEME_BGM[t]);
-// Inside the main page (shell.js) the music lives in that page, not in this game's, so it keeps playing when you switch games.
-const TBGM_HOST = (() => { try { return window.parent !== window && window.parent.mwShell ? window.parent : window; } catch { return window; } })();
 const tbgm = TBGM_HOST.mwTbgm ??= { ctx: null, master: null, cur: null, tracks: {} };   // tracks: theme -> { gain, src, ready }
 // A sound that goes with a background's music (Limbo's transition): through the same volume and On / Off, so it's only
 // heard where the music is.
@@ -769,6 +773,13 @@ let tbgmQuietTill = 0;
 function themeBgmLevel() {
   if ((vip.audio && !vip.audio.paused) || resultActive || window.themeBgmHold?.()) tbgmQuietTill = Date.now() + 2000;
   return themeBgmOn() && Date.now() >= tbgmQuietTill ? themeBgmVol() / 100 * 0.5 * (PHONE ? 2 : 1) : 0;
+}
+// Straight back (no 2 s wait), e.g. switching BGM Clip to another mode or day.
+function themeBgmNow() {
+  tbgmQuietTill = 0;
+  if (!tbgm.master) return;
+  tbgmLevel = themeBgmLevel();
+  tbgm.master.gain.setTargetAtTime(tbgmLevel, tbgm.ctx.currentTime, 0.05);
 }
 let tbgmLevel = null;
 setInterval(() => {   // fades to / from quiet when one of those starts or stops
@@ -1162,13 +1173,13 @@ function limboSwap(white = false) {   // the light and dark side (background + b
     setTimeout(() => w.remove(), 250);
     return;
   }
-  document.body.classList.add('limboswap');
+  bgSwapClass(true);
   setTimeout(() => {
     limboDarkSide = !limboDarkSide;
     applyTheme(0.15);
     drawCustomFx(false);
   }, 120);
-  setTimeout(() => document.body.classList.remove('limboswap'), 320);
+  setTimeout(() => bgSwapClass(false), 320);
 }
 // Limbo's transition (Limbo mode, between its sides): a dark pool spreads along the bottom of the screen, Limbo bursts
 // out of it in three places (left, middle, right), then a dome of light breaks and the sides swap under its flash.

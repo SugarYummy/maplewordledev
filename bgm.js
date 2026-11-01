@@ -410,6 +410,7 @@ function start(d) {
   title = saved.title;
   for (const name of saved.g) if (!over) record(name);
   loadTrack();
+  themeBgmNow();   // another mode or day: the background's music comes straight back (if this one doesn't keep it quiet)
   renderEnd();
   if (!over) updateStatus();
   else loadStats();
@@ -733,9 +734,9 @@ function limboSwaps() {   // every 5-8 s the map swaps sides (a flash), while th
   clearTimeout(limbo.swap);
   limbo.swap = setTimeout(() => {
     if (!limbo.on || limbo.leaving) return;
-    document.body.classList.add('limboswap');
+    bgSwapClass(true);
     setTimeout(() => limboSide(!limbo.dark), 120);   // swap in the middle of the flash
-    setTimeout(() => document.body.classList.remove('limboswap'), 320);
+    setTimeout(() => bgSwapClass(false), 320);
     limboSwaps();
   }, 5000 + Math.random() * 3000);
 }
@@ -773,7 +774,7 @@ async function limboExit() {
   clearTimeout(limbo.swap);
   clearTimeout(limbo.wait);
   Object.assign($('mashupPlay'), { disabled: true, title: 'Wait for the transition to finish' });
-  document.body.classList.remove('limboswap');
+  bgSwapClass(false);
   glitch(false);
   const border = $('limboborder');
   for (const el of border?.querySelectorAll('.loop') ?? []) el.hidden = true;
@@ -797,7 +798,7 @@ function limboKill() {   // right away (another day or mode)
   clearTimeout(limbo.swap);
   clearTimeout(limbo.wait);
   Object.assign($('mashupPlay'), { disabled: false, title: '' });
-  document.body.classList.remove('limboswap');
+  bgSwapClass(false);
   for (const el of document.querySelectorAll('#limboborder video, #limboborder img, .limboscreen')) limboGone(el);
   $('limboborder')?.remove();
   $('limbobg')?.remove();

@@ -9,6 +9,7 @@ button, input, select, textarea { font-family: inherit; }
 h1 { font-weight: 900; }
 body { text-align: center; margin: 0; min-height: 100vh; display: flex; flex-direction: column; align-items: center;
        background: #3b8fe0 url("images/background.webp") center bottom / cover no-repeat fixed; }
+html.inshell body { background: transparent; }   /* inside the main page (shell.js), which draws the background */
 .panel { background: rgba(255, 255, 255, 0.55); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
          border-radius: 12px; padding: 8px 16px 16px; margin: 16px; max-width: calc(100% - 64px); }
 .table-wrap { overflow-x: auto; }
