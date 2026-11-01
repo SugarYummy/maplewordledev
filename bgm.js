@@ -1261,8 +1261,8 @@ function openInfo() {
     ]),
     'It can be from any part of the fight.',
     ...(yellowOn() ? ['🟨 yellow:<ul><li>Right track</li><li>Wrong boss (still a miss)</li></ul>'] : []),
-    ...(titleOn() ? ["<b>Bonus 2:</b> guess the track's title for <b>+70 mesos</b>."] : []),
     '<b>Bonus:</b> guess which part of the fight it plays in (after the game).',
+    ...(titleOn() ? ["<b>Bonus 2:</b> guess the track's title."] : []),
     'Win in 1 guess for a ⭐. Get the bonus too for a 💎.',
     'Streak resets when you lose.',
   ];
