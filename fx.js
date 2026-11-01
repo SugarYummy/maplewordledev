@@ -336,9 +336,9 @@ function soundFile(src) {
   soundBytes[src] ??= fetch(src).then((r) => (r.ok ? r.arrayBuffer() : Promise.reject())).catch((e) => { delete soundBytes[src]; throw e; });
   return soundBytes[src];
 }
-let failMutesLose = false;   // (limboOver: a loss with Limbo's fail screen coming)
+let loseAfterFail = 0;   // (limboOver: a loss with Limbo's fail screen coming: when it's over, in ms from now)
 function resultSound(won, delay, file) {
-  if (failMutesLose && !won && !file?.startsWith('fail')) return;
+  if (loseAfterFail && !won && !file?.startsWith('fail')) delay = Math.max(delay ?? 0, loseAfterFail);
   if (muted()) return;
   const ctx = soundCtx();
   if (!ctx) return;
@@ -1131,8 +1131,8 @@ function limboOver(won, delay = 0) {   // game over (called by the games, with w
   const release = (ms) => setTimeout(() => { cfxHold = false; drawCustomFx(); }, ms);
   if (won) return release(delay);
   failPending = true;
-  failMutesLose = true;   // the game's own lose sound, called right after this, stays quiet: the fail screen has its own
-  setTimeout(() => { failMutesLose = false; });
+  loseAfterFail = delay + LIMBO_FAIL_MS + 100;   // the game's own lose sound, called right after this, waits until the fail screen is over
+  setTimeout(() => { loseAfterFail = 0; });
   setTimeout(() => {   // the fail screen in the colour showing now, over (and instead of) any transition on its way
     failPending = false;
     limboTransitionStop();
@@ -1141,8 +1141,9 @@ function limboOver(won, delay = 0) {   // game over (called by the games, with w
   release(delay + 600);   // by then the fail screen covers everything
 }
 const cfxClips = {};
+const CFX_V = { 'fail-black': 2 };   // a clip that was replaced (so browsers fetch the new one)
 function cfxClip(name) {
-  cfxClips[name] ??= fetch(`video/limbo/${name}.${SAFARI ? 'webp' : 'webm'}`).then((r) => (r.ok ? r.blob() : null)).catch(() => null);
+  cfxClips[name] ??= fetch(`video/limbo/${name}.${SAFARI ? 'webp' : 'webm'}${CFX_V[name] ? '?v=' + CFX_V[name] : ''}`).then((r) => (r.ok ? r.blob() : null)).catch(() => null);
   return cfxClips[name];
 }
 let cfxGen = 0;
@@ -1389,7 +1390,9 @@ function setLimboAll(on) {
 function limboAllOff() { if (limboAllOn()) { lsSet(LIMBO_ALL_KEY, '0'); applyTheme(true); drawCustomFx(); halloweenFx(); limboTransitions(); limboDragons(); hecate = null; loadHecate(); } }   // you picked something yourself
 // Losing with the alert border on plays Limbo's fail screen full screen, in the border's colour (white or black).
 const LIMBO_FAIL_MS = 3900;
-const FAIL_END_AT = 1920;   // the end sound, when Limbo's face comes up (both colours)
+// The end sound comes right after the pre sound, with the screen's end part (Limbo's mouth, then its face): white 1.74 s,
+// black 1.56 s (its clip had 0.18 s taken out before the mouth so the two line up).
+const FAIL_END_AT = { white: 1740, black: 1560 };
 const failSounds = (color) => (color === 'black' ? ['failBlackPre', 'failBlackEnd'] : ['failWhitePre', 'failWhiteEnd']);
 function limboFailLoad() { cfxClip('fail-white'); cfxClip('fail-black'); for (const c of ['white', 'black']) for (const k of failSounds(c)) soundFile(SOUNDS[k]).catch(() => {}); if (limboAllOn()) TRANS_CLIPS.forEach(cfxClip); }   // ready when needed
 async function limboFail(color, delay = 0) {
@@ -1405,7 +1408,7 @@ async function limboFail(color, delay = 0) {
   else { Object.assign(el, { muted: true, playsInline: true, autoplay: true }); el.addEventListener('ended', done); setTimeout(done, LIMBO_FAIL_MS + 1500); }
   // Its sounds, in step with the screen (from when the video really starts)
   const [pre, end] = failSounds(color);
-  const sound = () => { resultSound(false, 0, pre); resultSound(false, FAIL_END_AT, end); };
+  const sound = () => { resultSound(false, 0, pre); resultSound(false, FAIL_END_AT[color], end); };
   if (SAFARI) sound(); else el.addEventListener('playing', sound, { once: true });
   el.src = url;
   document.body.appendChild(el);
