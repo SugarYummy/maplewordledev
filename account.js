@@ -315,31 +315,6 @@ function acctAvatarCall() {   // the cog (fx.js calls this when it's made and af
   btn.querySelector('.newtag')?.remove();
   if (on) btn.insertAdjacentHTML('beforeend', acctNewTag);
 }
-// Easter egg: clicking the credit sometimes (5%) brings out your own character (or shop avatar) in one of the peek
-// spots instead, swapped back when it goes down. One at a time, and only into a spot that isn't already out.
-function acctPeek(who, all) {
-  const m = acct() && acctMaple();
-  const src = m?.avatar ? (ACCT_AVATARS[m.avatar]?.owned() ? ACCT_AVATARS[m.avatar].src + '.webp' : null) : m?.img;
-  if (!src || [...all].some((c) => c.dataset.me)) return who;
-  const free = [...all].filter((c) => !c.classList.contains('up'));
-  if (!free.length || Math.random() >= (window.mwPeekChance ?? 0.05)) return who;
-  const clip = free[Math.floor(Math.random() * free.length)], img = clip.querySelector('img');
-  clip.dataset.me = img.getAttribute('src');
-  img.src = src;
-  img.classList.add('peekme', m.avatar ? 'peeksprite' : 'peekchar');
-  const back = new MutationObserver(() => {
-    if (clip.classList.contains('up')) return;
-    setTimeout(() => {
-      if (clip.classList.contains('up')) return;
-      back.disconnect();
-      img.src = clip.dataset.me;
-      img.classList.remove('peekme', 'peeksprite', 'peekchar');
-      delete clip.dataset.me;
-    }, 400);   // (after it has slid away)
-  });
-  back.observe(clip, { attributes: true, attributeFilter: ['class'] });
-  return clip;
-}
 function acctMaple() { try { return JSON.parse(localStorage.getItem(ACCT_MAPLE)); } catch { return null; } }
 const acctMapleKey = (m) => (m.avatar ? 'avatar:' + m.avatar : `${m.region}:${String(m.name).toLowerCase()}`);
 function acctMapleSaved() {

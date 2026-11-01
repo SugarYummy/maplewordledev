@@ -1244,8 +1244,7 @@ async function openChangelog() {
 const peekTimers = new Map();
 $('credit').addEventListener('click', () => {
   const allPeek = document.querySelectorAll('.peekclip');
-  let who = allPeek[Math.floor(Math.random() * allPeek.length)];
-  if (typeof acctPeek === 'function') who = acctPeek(who, allPeek);   // sometimes your own character instead (account.js)
+  const who = allPeek[Math.floor(Math.random() * allPeek.length)];
   who.classList.add('up');
   clearTimeout(peekTimers.get(who));
   peekTimers.set(who, setTimeout(() => who.classList.remove('up'), 350 + 2000));
