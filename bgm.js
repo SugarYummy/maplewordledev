@@ -583,7 +583,7 @@ function renderEnd() {
   const trackLine = titleShown() ? `The track is "${answer.t.title}".` : '';
   $('mashupRow').hidden = b?.kind !== 'mashup';
   $('limboTip').hidden = !isLimboEgg() || bonus != null;   // Limbo's mashup only, until it's answered
-  if (isLimboEgg()) { limboLoad(); limboCutLoad(); TRANS_CLIPS.forEach(cfxClip); }   // ready before Play is pressed (Limbo's cutscene for a right answer, its transition for a long pause)
+  if (isLimboEgg()) { limboLoad(); limboCutLoad(); limboFailLoad(); TRANS_CLIPS.forEach(cfxClip); }   // ready before Play is pressed (Limbo's cutscene for a right answer, its fail screen for a wrong one, its transition for a long pause)
   $('bonusAsk').hidden = !b || bonus != null;
   if (!b) {
     $('bonusTitle').textContent = 'The whole track is unlocked';
@@ -973,6 +973,7 @@ $('bonusGo').addEventListener('click', (window.acctGate ?? ((f) => f))(() => {
   // Limbo's wrong guess effect (if it's on) eats a wrong answer; on Limbo's mashup everyone gets to see it.
   limboGuess($('bonusResult'), !ok, undefined, isLimboEgg());
   if (ok && isLimboEgg()) limboWin(guesses.length === 1 && won());   // right: Limbo's cutscene, then the meso show (not again after a guess in 1)
+  if (!ok && isLimboEgg()) { limboTransitionStop(); limboFail(limbo.dark ? 'black' : 'white'); }   // wrong: Limbo's fail screen, in the side showing (dark: black, light: white)
   noteResult();
   if (limbo.on) limboExit();
   sendBonus(ok);

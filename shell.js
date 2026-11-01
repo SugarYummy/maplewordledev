@@ -28,11 +28,20 @@ window.mwShell = true;
   else src = 'boss' + location.search;
   history.replaceState({ src }, '', here + location.hash);
   const frame = document.getElementById('game');
+  // Remember the game and its mode (for a reload), when it opens and again when leaving (you may have switched modes).
+  const keep = (opening) => {
+    try {   // (opening: the game hasn't picked its mode yet, so the one it was asked for)
+      const w = frame.contentWindow, mode = opening ? w.archiveRequest?.mode : w.archiveHere?.current?.();
+      const page = w.location.pathname.split('/').pop() || 'boss';
+      history.replaceState({ src: page + (mode ? '?mode=' + mode : '') }, '', here + location.hash);
+    } catch {}
+  };
+  addEventListener('beforeunload', () => keep());
   frame.addEventListener('load', () => {
     try {
       const w = frame.contentWindow;
       document.title = w.document.title;
-      history.replaceState({ src: w.location.pathname.split('/').pop() + w.location.search }, '', here + location.hash);
+      keep(true);
       if (!document.documentElement.classList.contains('devlock')) w.focus();   // typing goes to the game right away
     } catch {}
   });
