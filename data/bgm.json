@@ -6479,10 +6479,10 @@
     "bonus": [
      "lucid"
     ],
-    "win": [
+    "guess": [
      "lucidSet"
     ],
-    "winAny": [
+    "play": [
      "lucidBg"
     ]
    },

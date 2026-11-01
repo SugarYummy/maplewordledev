@@ -1813,10 +1813,14 @@ const SHOP = {
   mimica: { name: 'Sol Hecate: Mimica', kind: 'Guess in 1 win effect (Bundle of 5)', price: 2000, always: true, effect: true, added: Date.UTC(2026, 9, 25),
             img: 'images/fx/hecate/mimica-bundle.webp', zoom: 'images/fx/hecate/mimica-bundle-big.webp' },
   limboP1: { hidden: true, name: 'Limbo Background', kind: 'Moving background + BGM', price: 1000, limboClock: true },   // also from the Archive (full price)
-  lucid: { hidden: true, name: 'Garden of Eternal Dream', kind: 'Moving background + BGM', price: 5000 },
-  // Lucid's day won: Lucid Garden + Lucid Night together (on the day itself); from the Archive: Lucid Background
-  lucidSet: { hidden: true, name: 'Lucid Garden & Lucid Night', kind: 'Backgrounds (Bundle of 2)', price: 5000, contents: ['Lucid Garden', 'Lucid Night'],
-              themes: ['lucidBloom', 'lucidNight'], img: 'images/fx/lucid-bundle.webp', zoom: 'images/fx/lucid-bundle-big.webp' },
+  // Lucid's bonus right on its day: Garden of Eternal Dream (moving background + its music) and Lucid's animated sprite as
+  // your account's avatar (account.js ACCT_AVATARS: yours while you have this background)
+  lucid: { hidden: true, name: "Lucid's Eternal Dream", kind: 'Background + avatar (Bundle of 2)', price: 10000,
+           contents: ['Garden of Eternal Dream (moving background + BGM)', 'Lucid (animated avatar for your account)'], themes: ['lucid'],
+           img: 'images/fx/lucid-eternal-bundle.webp', zoom: 'images/fx/lucid-eternal-bundle-big.webp' },
+  // Lucid's day: a guess on the day itself finds Lucid Garden + Lucid Night together; finishing it (the Archive too) finds Lucid Background
+  lucidSet: { hidden: true, name: 'Lucid Garden & Lucid Night', kind: 'Backgrounds (Bundle of 2)', price: 2000, contents: ['Lucid Garden', 'Lucid Night'],
+              themes: ['lucidBloom', 'lucidNight'], img: 'images/fx/lucid-bundle.webp?v=2', zoom: 'images/fx/lucid-bundle-big.webp?v=2' },
   lucidBg: { hidden: true, name: 'Lucid Background', kind: 'Background', price: 500 },
 };
 // Owned: an effect pack in your effects; a bundle of backgrounds when you have all of them; a background in your themes.
@@ -1835,9 +1839,9 @@ limboTransitions();
 const SHOP_KEY = 'mapleWordle:shop';   // items found so far
 function shopFound() {
   let found = [];
-  try { found = JSON.parse(lsGet(SHOP_KEY) || '[]').filter((t) => t in SHOP && !(t in HOLIDAYS)); } catch {}
+  try { found = JSON.parse(lsGet(SHOP_KEY) || '[]').filter((t) => t in SHOP && (!(t in HOLIDAYS) || window.mwDevHolidays)); } catch {}
   const always = Object.keys(SHOP).filter((t) => SHOP[t].always && !found.includes(t));
-  return [...(holidayToday() ? [holidayToday()] : []), ...always, ...found];
+  return [...new Set([...(holidayToday() ? [holidayToday()] : []), ...always, ...found])];
 }
 // A bundle's "(Bundle of N)" in the shop: hover it (or tap it) for the list of what's inside, plus its bonus if it has one.
 const bundleList = (t) => SHOP[t].contents ?? Object.keys(HECATE).filter((id) => HECATE[id].pack === t).map((id) => HECATE[id].name);
@@ -1982,12 +1986,13 @@ function itemPopup(t, title, withPrice, [okText, okClass], [noText, noClass]) {
     const win = document.createElement('div');
     win.className = 'popup buyask';
     win.innerHTML = `<div class="panel"><h2>${title}</h2>` +
-      `<span class="themepic" style="background-image:url('${it.img ?? THEME_IMG[t]}')"></span><b class="buyname">${it.name}</b>` +
+      `<span class="themepic zoomable" title="Click to zoom in" style="background-image:url('${it.img ?? THEME_IMG[t]}')"></span><b class="buyname">${it.name}</b>` +
       (withPrice ? priceHtml(t) : '') +
       `<p class="buybtns"><button class="${okClass}">${okText}</button><button class="${noClass}">${noText}</button></p></div>`;
     const [ok, no] = win.querySelectorAll('.buybtns button');
+    win.querySelector('.themepic').addEventListener('click', () => zoomItem(t));   // like the shop's pictures
     const close = (yes) => { win.remove(); removeEventListener('keydown', esc, true); done(yes); };
-    const esc = (e) => { if (e.key === 'Escape') { e.stopImmediatePropagation(); close(false); } };
+    const esc = (e) => { if (e.key === 'Escape' && !document.querySelector('.zoomview')) { e.stopImmediatePropagation(); close(false); } };
     ok.addEventListener('click', () => close(true));
     no.addEventListener('click', () => close(false));
     hoverSound(ok);

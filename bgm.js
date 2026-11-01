@@ -1184,11 +1184,14 @@ const noteResult = () => {
     if (titleRight()) earnBonus(MODE, day, false, 'title');
   }
   mesoGain(MODE, day, over);   // the spinning "+mesos" under the result (game + bonus)
-  // Shop items this track's day finds by winning: "win" on the day itself, "winAny" from the Archive too (fx.js).
+  // Shop items this track's day finds: "win" by winning on the day itself, "winAny" by winning (the Archive too), "play" by
+  // finishing it, won or lost (the Archive too), "guess" by guessing at all on the day itself. From the Archive: unlocked, but full price (fx.js).
   if (over && won()) {
     if (live) answer.t.unlock?.win?.forEach((t) => shopUnlock(t));
-    answer.t.unlock?.winAny?.forEach((t) => shopUnlock(t, live));   // from the Archive: unlocked, but full price
+    answer.t.unlock?.winAny?.forEach((t) => shopUnlock(t, live));
   }
+  if (over) answer.t.unlock?.play?.forEach((t) => shopUnlock(t, live));
+  if (live && guesses.length) answer.t.unlock?.guess?.forEach((t) => shopUnlock(t));   // "guess": any guess on the day itself
 };
 const closeArchive = () => { $('archive').hidden = true; };
 

@@ -21,7 +21,7 @@
     constructor(...a) { if (a.length) super(...a); else super(RealDate.now() - BEHIND); }
     static now() { return RealDate.now() - BEHIND; }
   };
-  const BUILD = 'alphaTest v4.5.1.31102026.192831', STAMP = BUILD.split(' v')[1];
+  const BUILD = 'alphaTest v4.5.1.31102026.194156', STAMP = BUILD.split(' v')[1];
   const ROOT = location.pathname.match(/^(.*?\/maplewordledev\/)/)?.[1] ?? '/';
   const kept = window.localStorage;   // the browser's own storage: only the test login ('mwdev:login') goes here
   Object.defineProperty(window, 'localStorage', { value: window.sessionStorage, configurable: true });
@@ -139,6 +139,7 @@
       }
     }
   } catch {}
+  window.mwDevHolidays = !!ss.getItem('mwdev:holidays');   // /unlock all found the holiday items too (fx.js shopFound)
   window.devEgg = ss.getItem('mwdev:egg');   // read by bgm.js (bonusFor)
   const DEV_HELP = '/meso 5000 — add mesos (minus works too)\n/egg limbo — Limbo\'s mashup as today\'s BGM Clip Extreme bonus\n/egg lucid — today\'s BGM Clip Extreme clip is Lucid\'s Garden of Eternal Dream\n/egg off — back to the real one\n/unlock all — unlock every hidden shop item (to buy at full price)\n/reset — wipe this tab\'s test saves (like opening a new tab) and reload\n/help — this list';
   function devRun(line) {
@@ -164,6 +165,8 @@
     }
     if (cmd === '/unlock') {
       if (a !== 'all') return 'Try: /unlock all';
+      ss.setItem('mwdev:holidays', '1');   // holiday items too (outside their day; fx.js keeps them found while this is set)
+      window.mwDevHolidays = true;
       const got = Object.keys(SHOP).filter((t) => SHOP[t].hidden && !shopFound().includes(t) && !shopOwned(t));
       for (const t of got) shopUnlock(t, false);
       return got.length ? `Unlocked in the shop: ${got.map((t) => SHOP[t].name).join(', ')}.` : 'Every hidden shop item is already unlocked.';

@@ -290,15 +290,43 @@ function acctSettings() {
 
 // MapleStory Character: find your character in Nexon's rankings (North America or Europe) and show its avatar on your
 // account. Saved in the account like progress; its look is refreshed at most once a day (when Account Settings opens).
-const ACCT_MAPLE = 'mapleWordle:maple';   // { region, name, level, job, world, img, at }
+// Every character you've found is kept in a list to switch between (and delete), along with avatars from the shop.
+const ACCT_MAPLE = 'mapleWordle:maple';   // the one shown: { region, name, level, job, world, img, at }, or { avatar } (a shop avatar)
+const ACCT_MAPLE_SAVED = 'mapleWordle:mapleSaved';   // every character found before (same shape)
 const ACCT_REGIONS = { na: 'North America', eu: 'Europe' };
+// Shop avatars: animated sprites (.webm, .webp on Safari), yours while you own what they came with; they can't be deleted.
+const ACCT_AVATARS = {
+  lucid: { name: 'Lucid', from: "Lucid's Eternal Dream", src: 'images/avatars/lucid', owned: () => typeof ownedThemes === 'function' && ownedThemes().includes('lucid') },
+};
 function acctMaple() { try { return JSON.parse(localStorage.getItem(ACCT_MAPLE)); } catch { return null; } }
+const acctMapleKey = (m) => (m.avatar ? 'avatar:' + m.avatar : `${m.region}:${String(m.name).toLowerCase()}`);
+function acctMapleSaved() {
+  let list = [];
+  try { list = JSON.parse(localStorage.getItem(ACCT_MAPLE_SAVED)) || []; } catch {}
+  const cur = acctMaple();   // (one picked before the list existed)
+  if (cur && !cur.avatar && !list.some((x) => acctMapleKey(x) === acctMapleKey(cur))) {
+    list.push(cur);
+    localStorage.setItem(ACCT_MAPLE_SAVED, JSON.stringify(list));
+  }
+  return list;
+}
+function acctMapleKeep(m) {   // add (or update) a found character in the list
+  const list = acctMapleSaved().filter((x) => acctMapleKey(x) !== acctMapleKey(m));
+  localStorage.setItem(ACCT_MAPLE_SAVED, JSON.stringify([...list, m]));
+}
+const acctSprite = (av, cls) => (typeof SAFARI !== 'undefined' && SAFARI
+  ? `<img class="${cls} acctsprite" src="${av.src}.webp" alt="" title="${acctEsc(av.name)}">`
+  : `<video class="${cls} acctsprite" src="${av.src}.webm" autoplay muted loop playsinline disablepictureinpicture aria-hidden="true" title="${acctEsc(av.name)}"></video>`);
 const acctMapleImg = (cls = 'acctava') => {
   const m = acct() && acctMaple();
+  if (m?.avatar) { const av = ACCT_AVATARS[m.avatar]; return av?.owned() ? acctSprite(av, cls) : ''; }
   return m?.img ? `<img class="${cls}" src="${acctEsc(m.img)}" alt="" title="${acctEsc(m.name)}">` : '';
 };
-const acctMapleCard = (m) => `<div class="acctmaple"><img src="${acctEsc(m.img)}" alt=""><div><b>${acctEsc(m.name)}</b>` +
-  `<span>Lv. ${m.level} ${acctEsc(m.job)}</span><span>${acctEsc(m.world ? m.world + ' · ' : '')}${ACCT_REGIONS[m.region]}</span></div></div>`;
+const acctMapleCard = (m) => (m.avatar
+  ? `<div class="acctmaple">${acctSprite(ACCT_AVATARS[m.avatar], 'acctmapleimg')}<div><b>${acctEsc(ACCT_AVATARS[m.avatar].name)}</b>` +
+    `<span>Avatar from ${acctEsc(ACCT_AVATARS[m.avatar].from)}</span></div></div>`
+  : `<div class="acctmaple"><img src="${acctEsc(m.img)}" alt=""><div><b>${acctEsc(m.name)}</b>` +
+    `<span>Lv. ${m.level} ${acctEsc(m.job)}</span><span>${acctEsc(m.world ? m.world + ' · ' : '')}${ACCT_REGIONS[m.region]}</span></div></div>`);
 async function acctMapleFind(region, name) {
   const r = await acctApi(`maple?region=${region}&name=${encodeURIComponent(name)}`, null, acct().token);
   if (r.status === 401) { acctGone(); return { bad: 'offline' }; }
@@ -306,24 +334,45 @@ async function acctMapleFind(region, name) {
   if (!r.ok) return { bad: r.d.error || 'nexon' };
   return { m: { region, ...r.d, at: Date.now() } };
 }
+// The list: your characters (✕ deletes one) and your shop avatars (can't be deleted). Click one to show it on your account.
 function acctMapleWin() {
-  const m = acctMaple();
-  if (m) {
-    const { panel, close } = acctWin('<h2>MapleStory Character</h2>' + acctMapleCard(m) +
-      '<p class="acctchoices"><button class="acctbtn" data-do="change">Change Character</button><button class="acctbtn acctout" data-do="unlink">Remove</button></p>' +
-      '<p class="buybtns"><button class="plain" data-close>Close</button></p>');
-    panel.querySelector('[data-close]').addEventListener('click', () => close());
-    panel.querySelector('[data-do="change"]').addEventListener('click', () => { close(); acctMapleSearch(); });
-    panel.querySelector('[data-do="unlink"]').addEventListener('click', async () => {
-      close();
-      if (await acctAsk('Remove your character?', `<b>${acctEsc(m.name)}</b> won't show on your account anymore.`, ['Remove', 'no'], ['Cancel', 'plain'])) {
-        localStorage.removeItem(ACCT_MAPLE);
-        acctRefresh();
-      }
-    });
-    return;
+  const saved = acctMapleSaved();
+  const avatars = Object.keys(ACCT_AVATARS).filter((id) => ACCT_AVATARS[id].owned()).map((id) => ({ avatar: id }));
+  if (!saved.length && !avatars.length) return acctMapleSearch();
+  const items = [...saved, ...avatars], cur = acctMaple(), curKey = cur && acctMapleKey(cur);
+  const { panel, close } = acctWin('<h2>MapleStory Character</h2><p class="accttext">Pick which one shows on your account</p><div class="acctpick">' +
+    items.map((m, i) => `<div class="acctpickrow${acctMapleKey(m) === curKey ? ' on' : ''}" data-i="${i}" role="button" tabindex="0">${acctMapleCard(m)}` +
+      (m.avatar ? '<span class="accttag">Shop</span>' : `<button class="acctdel" data-del="${i}" title="Delete" aria-label="Delete ${acctEsc(m.name)}">✕</button>`) + '</div>').join('') +
+    '</div><p class="acctchoices"><button class="acctbtn" data-do="add">Add Character</button>' +
+    (cur ? '<button class="acctbtn acctout" data-do="none">Show None</button>' : '') + '</p>' +
+    '<p class="buybtns"><button class="plain" data-close>Close</button></p>');
+  const again = () => { close(); acctMapleWin(); };
+  panel.querySelector('[data-close]').addEventListener('click', () => close());
+  panel.querySelector('[data-do="add"]').addEventListener('click', () => { close(); acctMapleSearch(); });
+  panel.querySelector('[data-do="none"]')?.addEventListener('click', () => { localStorage.removeItem(ACCT_MAPLE); acctRefresh(); again(); });
+  for (const row of panel.querySelectorAll('.acctpickrow')) {
+    const pick = (e) => {
+      if (e.target.closest('.acctdel')) return;
+      const m = items[row.dataset.i];
+      localStorage.setItem(ACCT_MAPLE, JSON.stringify(m.avatar ? { avatar: m.avatar } : m));
+      for (const r of panel.querySelectorAll('.acctpickrow')) r.classList.toggle('on', r === row);
+      if (!panel.querySelector('[data-do="none"]')) again();   // (now there's one to hide)
+      acctRefresh();
+    };
+    row.addEventListener('click', pick);
+    row.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(e); } });
   }
-  acctMapleSearch();
+  for (const b of panel.querySelectorAll('.acctdel')) b.addEventListener('click', async () => {
+    const m = items[b.dataset.del];
+    close();
+    if (await acctAsk(`Delete ${acctEsc(m.name)}?`, 'It comes off your list (you can add it again later).', ['Delete', 'no'], ['Cancel', 'plain'])) {
+      localStorage.setItem(ACCT_MAPLE_SAVED, JSON.stringify(acctMapleSaved().filter((x) => acctMapleKey(x) !== acctMapleKey(m))));
+      const now = acctMaple();   // (what's shown now: maybe picked since this list opened)
+      if (now && acctMapleKey(now) === acctMapleKey(m)) localStorage.removeItem(ACCT_MAPLE);
+      acctRefresh();
+    }
+    acctMapleWin();
+  });
 }
 // first: right after Create an Account (optional: Skip instead of Cancel), end(saved) when it's over.
 function acctMapleSearch(region = acctMaple()?.region || 'na', name = '', first = null) {
@@ -346,6 +395,7 @@ function acctMapleSearch(region = acctMaple()?.region || 'na', name = '', first 
     () => acctAsk('Is this you?', acctMapleCard(found), ['Yes, that\'s me!', 'yes'], ['Search again', 'plain']).then((yes) => {
       if (yes) {
         localStorage.setItem(ACCT_MAPLE, JSON.stringify(found));
+        acctMapleKeep(found);
         acctRefresh();
         acctAsk('Character saved!', acctMapleCard(found), ['OK', 'yes']).then(() => first?.(true));
       } else if (yes === false) acctMapleSearch(found.region, found.name, first);
@@ -356,11 +406,12 @@ function acctMapleSearch(region = acctMaple()?.region || 'na', name = '', first 
 // The character's look (outfit, level) changes in game: look it up again at most once a day.
 async function acctMapleRefresh() {
   const m = acctMaple();
-  if (!m || Date.now() - (m.at || 0) < 86400000) return;
+  if (!m || m.avatar || Date.now() - (m.at || 0) < 86400000) return;
   try {
     const r = await acctMapleFind(m.region, m.name);
     if (r.m && acctMaple()?.name === m.name) {
       localStorage.setItem(ACCT_MAPLE, JSON.stringify(r.m));
+      acctMapleKeep(r.m);
       for (const img of document.querySelectorAll('.acctava')) img.src = r.m.img;
     }
   } catch {}
