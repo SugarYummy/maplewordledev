@@ -278,11 +278,14 @@ const SOUNDS = { win: 'sounds/star-force-success.mp3', lose: 'sounds/star-force-
   firstTry: 'sounds/the-unblessed-cathedral-descend.mp3',   // Mayrin's The Unblessed Cathedral -Descend- 1:07-1:42 (1 s fade-in), any first-guess win
   classWin: 'sounds/succession-bloom.mp3',   // First Adversary's Succession Bloom 1:03-1:27 (1 s fade-in), Class Wordle win on guess 2-5
   purchase: 'sounds/purchase.mp3',   // the Cash Shop's buy sound (0.8 s), when you buy something in the shop
-  limboCut: 'sounds/limbo-cut.mp3' };   // Limbo's skill sound (5.4 s) with Limbo's cutscene, 0.15 s in: its big hit lands on the burst
+  limboCut: 'sounds/limbo-cut.mp3',
+  // Limbo's fail screen (limboFail), each colour its own: the pre with the screen coming in, the end with Limbo's face (1.92 s)
+  failBlackPre: 'sounds/limbo-fail-black-pre.mp3', failBlackEnd: 'sounds/limbo-fail-black-end.mp3',
+  failWhitePre: 'sounds/limbo-fail-white-pre.mp3', failWhiteEnd: 'sounds/limbo-fail-white-end.mp3' };   // Limbo's skill sound (5.4 s) with Limbo's cutscene, 0.15 s in: its big hit lands on the burst
 // Tracks that play longer than SOUND_SECONDS: seconds before the fade-out starts (fade-out is SOUND_FADE).
-const SOUND_LENGTH = { animWin: 19, classLose: 16, firstTry: 33, classWin: 22 };
+const SOUND_LENGTH = { animWin: 19, classLose: 16, firstTry: 33, classWin: 22, failBlackPre: 3, failBlackEnd: 4, failWhitePre: 3, failWhiteEnd: 4 };
 // Tracks louder than SOUND_VOLUME.
-const SOUND_LOUDER = { firstTry: 0.30, purchase: 0.6, limboCut: 0.5 };   // limboCut: as loud as the first-guess music it plays with
+const SOUND_LOUDER = { firstTry: 0.30, purchase: 0.6, limboCut: 0.5, failBlackPre: 0.5, failBlackEnd: 0.5, failWhitePre: 0.5, failWhiteEnd: 0.5 };   // limboCut: as loud as the first-guess music it plays with
 // Phone and tablet speakers are much quieter, so they play everything twice as loud (12%, and 60% for a first-guess win).
 const PHONE = matchMedia('(hover: none) and (pointer: coarse)').matches;
 const muteKey = 'mapleWordle:muted';
@@ -1382,7 +1385,9 @@ function setLimboAll(on) {
 function limboAllOff() { if (limboAllOn()) { lsSet(LIMBO_ALL_KEY, '0'); applyTheme(true); drawCustomFx(); halloweenFx(); limboTransitions(); limboDragons(); hecate = null; loadHecate(); } }   // you picked something yourself
 // Losing with the alert border on plays Limbo's fail screen full screen, in the border's colour (white or black).
 const LIMBO_FAIL_MS = 3900;
-function limboFailLoad() { cfxClip('fail-white'); cfxClip('fail-black'); if (limboAllOn()) TRANS_CLIPS.forEach(cfxClip); }   // ready when needed
+const FAIL_END_AT = 1920;   // the end sound, when Limbo's face comes up (both colours)
+const failSounds = (color) => (color === 'black' ? ['failBlackPre', 'failBlackEnd'] : ['failWhitePre', 'failWhiteEnd']);
+function limboFailLoad() { cfxClip('fail-white'); cfxClip('fail-black'); for (const c of ['white', 'black']) for (const k of failSounds(c)) soundFile(SOUNDS[k]).catch(() => {}); if (limboAllOn()) TRANS_CLIPS.forEach(cfxClip); }   // ready when needed
 async function limboFail(color, delay = 0) {
   const start = performance.now();
   const [blob] = await Promise.all([cfxClip(`fail-${color}`), new Promise((ok) => setTimeout(ok, delay))]);
@@ -1394,6 +1399,10 @@ async function limboFail(color, delay = 0) {
   const done = () => { el.remove(); URL.revokeObjectURL(url); };
   if (SAFARI) setTimeout(done, LIMBO_FAIL_MS + 50);
   else { Object.assign(el, { muted: true, playsInline: true, autoplay: true }); el.addEventListener('ended', done); setTimeout(done, LIMBO_FAIL_MS + 1500); }
+  // Its sounds, in step with the screen (from when the video really starts)
+  const [pre, end] = failSounds(color);
+  const sound = () => { resultSound(false, 0, pre); resultSound(false, FAIL_END_AT, end); };
+  if (SAFARI) sound(); else el.addEventListener('playing', sound, { once: true });
   el.src = url;
   document.body.appendChild(el);
   el.play?.().catch(done);
