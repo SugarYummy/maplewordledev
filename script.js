@@ -275,7 +275,8 @@ function record(g) {
 }
 
 // "Best so far" row pinned above the guesses: every category already found (green, from a guess or a hint),
-// otherwise the best clue so far (Region: a yellow overlap; numbers: the closest guess with its arrow).
+// otherwise the best clue so far (Region: a yellow overlap; numbers: the range between guesses on both sides, or the
+// closest guess with its arrow).
 // Removed once the game is over.
 function renderBest() {
   $('rows').querySelector('.bestrow')?.remove();
@@ -299,7 +300,17 @@ function renderBest() {
       if (v[key] == null || answer[key] == null) return;
       if (best < 0 || dist[key](v[key], answer[key]) < dist[key](vals[best][key], answer[key])) best = j;
     });
-    cells.push(best < 0 ? ['', 'grey'] : gs[best][i]);
+    // Guesses on both sides of the answer: the range it's in (highest guess below – lowest guess above), yellow if
+    // either end is close. Otherwise the closest guess with its arrow.
+    const text = (v) => (key === 'hp' ? formatHp(v) : key === 'level' ? levelText(v) : v[key]);
+    let lo = -1, hi = -1;
+    vals.forEach((v, j) => {
+      if (v[key] == null || answer[key] == null) return;
+      if (v[key] < answer[key] && (lo < 0 || v[key] > vals[lo][key])) lo = j;
+      if (v[key] > answer[key] && (hi < 0 || v[key] < vals[hi][key])) hi = j;
+    });
+    if (lo >= 0 && hi >= 0) cells.push([`${text(vals[lo])} – ${text(vals[hi])}`, gs[lo][i][1] === 'yellow' || gs[hi][i][1] === 'yellow' ? 'yellow' : 'red']);
+    else cells.push(best < 0 ? ['', 'grey'] : gs[best][i]);
   }
   if (mode === 'extreme') {
     const tierDist = (j) => Math.abs(DIFF_TIER[vals[j].difficulty] - DIFF_TIER[answer.difficulty]) || (DIFF_TIER[vals[j].difficulty] === DIFF_TIER[answer.difficulty] ? 0 : Infinity);

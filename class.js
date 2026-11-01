@@ -149,8 +149,17 @@ function renderBest() {
     if (v.year == null || answer.year == null) return;
     if (best < 0 || Math.abs(v.year - answer.year) < Math.abs(vals[best].year - answer.year)) best = j;
   });
+  // Years on both sides of the answer: the range it's in (latest year before – earliest year after), yellow if either is close.
+  let lo = -1, hi = -1;
+  vals.forEach((v, j) => {
+    if (v.year == null || answer.year == null) return;
+    if (v.year < answer.year && (lo < 0 || v.year > vals[lo].year)) lo = j;
+    if (v.year > answer.year && (hi < 0 || v.year < vals[hi].year)) hi = j;
+  });
   const green = gs.find((c) => c[4][1] === 'green');
-  cells.splice(4, 0, green ? green[4] : best < 0 ? ['', 'grey'] : gs[best][4]);
+  cells.splice(4, 0, green ? green[4] : lo >= 0 && hi >= 0
+    ? [`${yearText(vals[lo])} – ${yearText(vals[hi])}`, gs[lo][4][1] === 'yellow' || gs[hi][4][1] === 'yellow' ? 'yellow' : 'red']
+    : best < 0 ? ['', 'grey'] : gs[best][4]);
   addRow(cells, 'bestrow');
 }
 
