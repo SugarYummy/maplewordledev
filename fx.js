@@ -662,9 +662,9 @@ function showTimer(label, s) {
 const THEMES = { default: 'Default', deepsea: 'Unglamoured Ruins', limbo: "Limbo's Subconscious Background (Light)", limboDark: "Limbo's Subconscious Background (Dark)",
   limboP1: 'Limbo Background',
   vonbon: "Von Bon's Realm", bellona: 'Solatum',
-  lucid: 'Garden of Eternal Dream', lucidBloom: 'Lucid in Bloom', lucidNight: "Lucid's Starry Night", halloween: 'Haunted Mansion' };
+  lucid: 'Garden of Eternal Dream', lucidBloom: 'Lucid Garden', lucidNight: 'Lucid Night', lucidBg: 'Lucid Background', halloween: 'Haunted Mansion' };
 const THEME_IMG = { deepsea: 'images/deepsea.webp', limbo: 'images/limbo.webp', limboDark: 'images/limbo-dark.webp', limboP1: 'images/limbo-p1.webp', vonbon: 'images/vonbon.webp', bellona: 'images/bellona.webp',
-  lucid: 'images/lucid-dream.jpg?v=2', lucidBloom: 'images/lucid-bloom.webp', lucidNight: 'images/lucid-night.webp',
+  lucid: 'images/lucid-dream.jpg?v=2', lucidBloom: 'images/lucid-bloom.webp', lucidNight: 'images/lucid-night.webp', lucidBg: 'images/lucid-bg.webp',
   halloween: 'images/holiday/halloween.webp' };
 // Moving backgrounds: a looping video over the still picture (which shows until the video starts).
 const THEME_VIDEO = { lucid: ['video/lucid-dream.webm?v=2', 'video/lucid-dream.mp4?v=2'],
@@ -1814,10 +1814,14 @@ const SHOP = {
             img: 'images/fx/hecate/mimica-bundle.webp', zoom: 'images/fx/hecate/mimica-bundle-big.webp' },
   limboP1: { hidden: true, name: 'Limbo Background', kind: 'Moving background + BGM', price: 1000, limboClock: true },   // also from the Archive (full price)
   lucid: { hidden: true, name: 'Garden of Eternal Dream', kind: 'Moving background + BGM', price: 5000 },
-  lucidBloom: { hidden: true, name: 'Lucid in Bloom', kind: 'Background', price: 2500 },
-  lucidNight: { hidden: true, name: "Lucid's Starry Night", kind: 'Background', price: 2500 },
+  // Lucid's day won: Lucid Garden + Lucid Night together (on the day itself); from the Archive: Lucid Background
+  lucidSet: { hidden: true, name: 'Lucid Garden & Lucid Night', kind: 'Backgrounds (Bundle of 2)', price: 5000, contents: ['Lucid Garden', 'Lucid Night'],
+              themes: ['lucidBloom', 'lucidNight'], img: 'images/fx/lucid-bundle.webp', zoom: 'images/fx/lucid-bundle-big.webp' },
+  lucidBg: { hidden: true, name: 'Lucid Background', kind: 'Background', price: 500 },
 };
-const shopOwned = (t) => (SHOP[t]?.effect ? ownedEffects() : ownedThemes()).includes(t);
+// Owned: an effect pack in your effects; a bundle of backgrounds when you have all of them; a background in your themes.
+const shopOwned = (t) => (SHOP[t]?.effect ? ownedEffects().includes(t)
+  : SHOP[t]?.themes ? SHOP[t].themes.every((x) => ownedThemes().includes(x)) : ownedThemes().includes(t));
 drawThemeButton();   // here, not with applyTheme above: the Customize window needs SHOP
 drawCustomFx();
 if (limboGuessOn()) gfxClips();   // ready for the first guess
@@ -2010,10 +2014,11 @@ async function buy(t, btn) {
     lsSet(EFFECTS_KEY, JSON.stringify([...ownedEffects(), t]));
     if (it.themes) lsSet(THEMES_KEY, JSON.stringify([...new Set([...ownedThemes().filter((x) => x !== 'default'), ...it.themes])]));
   } else {
-    lsSet(THEMES_KEY, JSON.stringify(ownedThemes().filter((x) => x !== 'default').concat(t)));
+    lsSet(THEMES_KEY, JSON.stringify([...new Set([...ownedThemes().filter((x) => x !== 'default'), ...(it.themes ?? [t])])]));
   }
   resultSound(true, 0, 'purchase');
   markCustomNew(t);
+  if (!it.effect) it.themes?.forEach(markCustomNew);   // a bundle of backgrounds: each one NEW in Customize
   drawThemeButton();
   applyTheme(true);
   drawMeso();
