@@ -653,7 +653,7 @@ function infoHtml(m) {
     'Colors:<ul><li>🟩 Right</li><li>🟨 Close<ul><li>Phases ±1</li><li>HP within 3×</li><li>Entry Lv ±10</li><li>Region partly overlaps</li></ul></li><li>🟥 Wrong</li><li>↑↓ Higher / Lower</li></ul>',
     'HP = all phases added up.',
     ...(m === 'extreme' ? ['Also guess the difficulty:<ul><li>Hard = Chaos</li><li>Extreme = Hell</li></ul>',
-                           'Daily twist:<ul><li>4 guesses</li><li>or a hidden column</li></ul>',
+                           'Daily twist:<ul><li>4 guesses</li><li>A hidden column</li></ul>',
                            'These bosses can appear:<ul><li>Unreleased</li><li>Removed</li><li>Special</li></ul>'] : []),
     ...(m === 'story' ? ['A hint every 3 guesses.'] : []),
     m === 'story' ? 'Streak resets if you miss a day.' : 'Streak resets when you lose.',
