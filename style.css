@@ -183,7 +183,7 @@ td.flip { animation: flip 0.5s ease both; }
 /* Animation Attack: the two skill clips side by side (stacked on narrow screens). */
 #clips { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; margin: 12px 0; }
 #clips[hidden] { display: none; }
-#clips figure { margin: 0; width: min(360px, 100%); }
+#clips figure { margin: 0; width: 360px; max-width: 100%; }   /* (a plain width: the box around them sizes to 360, not to the video's own size) */
 #clips figcaption { font-size: 15px; margin-top: 2px; }
 #clips video, #clips .locked { display: block; width: 100%; aspect-ratio: 16 / 9; border-radius: 8px; background: #222; object-fit: contain; }
 #clips .locked { display: flex; align-items: center; justify-content: center; color: #ddd; background: rgba(0, 0, 0, 0.45); font-size: 14px; }

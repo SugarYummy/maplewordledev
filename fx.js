@@ -32,17 +32,21 @@ function flipUntil(ms) { flipEnd = Math.max(flipEnd, performance.now() + ms); re
 // before it.
 function revealStats(el) {
   const wait = fxHoldTill + 700 - Date.now();
-  if (wait > 0) revealAfter(el, wait);
+  if (wait > 0) revealAfter(el, wait, true);
 }
 // Keep something that would give the result away (status text, Best so far row) hidden until the flip is done.
-// Hidden outright until then (not only by the fade), so it waits even where animations don't run.
-function revealAfter(el, ms) {
+// Hidden outright until then (not only by the fade), so it waits even where animations don't run. When the game has just
+// ended (fxHold), it's out of the page altogether (no empty space where it'll be); during the game it keeps its place, so
+// the table doesn't jump with every guess.
+function revealAfter(el, ms, gone = fxHoldTill > Date.now()) {
   if (!el) return;
   clearTimeout(el.revealT);
   el.classList.remove('later');
-  el.style.visibility = 'hidden';
+  const prop = gone ? 'display' : 'visibility';
+  el.style.display = el.style.visibility = '';
+  el.style[prop] = prop === 'display' ? 'none' : 'hidden';
   el.revealT = setTimeout(() => {
-    el.style.visibility = '';
+    el.style[prop] = '';
     void el.offsetWidth;   // restart the fade if it already ran
     el.style.animationDelay = '0ms';
     el.classList.add('later');

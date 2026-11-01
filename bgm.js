@@ -513,6 +513,7 @@ function guess(name) {
   $('rows').firstElementChild.classList.add('flip');   // the new bar flips in
   limboGuess($('rows').firstElementChild, !name || !isRight(name));   // Limbo's wrong guess effect, if it's on (skips too)
   const flipMs = flipUntil(FLIP_TIME);
+  if (over) fxHold(flipMs);   // the win border and "+mesos" wait for the flip
   for (const el of [$('status'), $('share')]) revealAfter(el, flipMs);
   if (!over) {
     // Stopped at the end of what was unlocked: Play now carries on from there into the new part (not from the start).
@@ -525,7 +526,6 @@ function guess(name) {
   // Game over: the whole track unlocks (a playing BGM keeps playing) and the bonus round opens.
   drawTicks();
   setTimeout(renderEnd, flipMs);
-  fxHold(flipMs);   // the win border and "+mesos" wait for the flip
   scheduleEnd();
   limboOver(won(), flipMs);   // Limbo's alert border: gone on a win, its fail screen on a loss
   if (won()) {
