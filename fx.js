@@ -339,8 +339,9 @@ function resultSound(won, delay, file) {
   const ready = soundFile(SOUNDS[file] || (won ? SOUNDS.win : SOUNDS.lose)).then((b) => ctx.decodeAudioData(b.slice(0)));
   const due = Date.now() + delay;
   const gen = resultGen;
-  resultActive++;
-  const done = () => { resultActive = Math.max(0, resultActive - 1); };
+  const duck = file !== 'purchase';   // a shop purchase plays over the background's music (it doesn't stop it)
+  if (duck) resultActive++;
+  const done = () => { if (duck) resultActive = Math.max(0, resultActive - 1); };
   ready.then((buffer) => {
     if (gen !== resultGen) return done();   // stopped before it started
     const start = ctx.currentTime + Math.max(0, due - Date.now()) / 1000;
