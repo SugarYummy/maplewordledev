@@ -973,9 +973,15 @@ $('bonusGo').addEventListener('click', (window.acctGate ?? ((f) => f))(() => {
   // Limbo's wrong guess effect (if it's on) eats a wrong answer; on Limbo's mashup everyone gets to see it.
   limboGuess($('bonusResult'), !ok, undefined, isLimboEgg());
   if (ok && isLimboEgg()) limboWin(guesses.length === 1 && won());   // right: Limbo's cutscene, then the meso show (not again after a guess in 1)
-  if (!ok && isLimboEgg()) { limboTransitionStop(); limboFail(limbo.dark ? 'black' : 'white'); }   // wrong: Limbo's fail screen, in the side showing (dark: black, light: white)
   noteResult();
-  if (limbo.on) limboExit();
+  if (!ok && isLimboEgg()) {
+    // Wrong: the dragon swallows the answer and stays a second, then Limbo's fail screen in the side showing then (dark:
+    // black, light: white). Limbo's scene stays on until the fail screen covers it, then goes underneath it.
+    const failAt = 500 + GFX_RUSH + 1000, here = MODE + day;
+    const still = () => MODE + day === here;   // (not if you've gone to another mode or day meanwhile)
+    setTimeout(() => { if (still()) { limboTransitionStop(); limboFail(limbo.dark ? 'black' : 'white'); } }, failAt);
+    setTimeout(() => { if (still() && limbo.on) limboExit(); }, failAt + 600);
+  } else if (limbo.on) limboExit();
   sendBonus(ok);
   if (ok && live) answer.t.unlock?.bonus?.forEach((t) => shopUnlock(t));   // shows up in the meso shop (fx.js)
 }));   // (checked first, like a guess)
