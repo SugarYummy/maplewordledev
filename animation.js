@@ -422,17 +422,13 @@ $('credit').addEventListener('click', () => {
 const DISCORD = 'https://discord.gg/f22H4UJ';
 function openInfo() {
   const rules = [
-    "Watch the skill clip and guess today's class. <b>Unlimited</b> guesses. New class every day at 00:00 UTC (same as Maple reset).",
-    'A wrong guess only tells you it\'s wrong, but each one unlocks the next hint:<ul>' +
-      '<li>a second clip (some classes)</li><li>the name of each clip\'s skill</li><li>then one category per guess (Faction, Job Branch, Main Stat, Release Year, Region), in a random order</li>' +
-      "<li>last: the class's first letter</li></ul>",
-    `Win within ${CELEBRATE_UP_TO} guesses for confetti and the win sound.`,
-    'Every class is on its own here (Hero, Paladin and Dark Knight are separate answers).',
-    'Removed, event and upcoming classes can appear.',
-    'Win streak resets if you miss a day.',
+    "Watch the skill clip and guess today's class. <b>Unlimited</b> guesses. New class daily at 00:00 UTC.",
+    'Each wrong guess unlocks a hint: another clip, skill names, a category, then the first letter.',
+    'Hero, Paladin and Dark Knight are separate answers.',
+    'Streak resets if you miss a day.',
   ];
   $('infoBody').innerHTML = '<ul>' + rules.map((x) => `<li>${x}</li>`).join('') + '</ul>' +
-    `<p class="warn">⚠️ Some info may not be accurate. If you spot a mistake, please report it on the <a href="${DISCORD}" target="_blank" rel="noopener">Discord</a>.</p>`;
+    `<p class="warn">⚠️ Spot a mistake? Report it on <a href="${DISCORD}" target="_blank" rel="noopener">Discord</a>.</p>`;
   $('info').hidden = false;
 }
 // Click a clip or the win-screen picture to see it as big as the window allows (closes like the Changelog).

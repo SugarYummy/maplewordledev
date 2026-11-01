@@ -439,18 +439,15 @@ $('credit').addEventListener('click', () => {
 const DISCORD = 'https://discord.gg/f22H4UJ';
 function openInfo() {
   const rules = [
-    "Guess today's class in <b>5</b> guesses. New class every day at 00:00 UTC (same as Maple reset).",
-    'Each guess shows how close you are:<ul><li>🟩 right · 🟨 close · 🟥 wrong</li><li>↑ / ↓ = the answer is newer / older</li></ul>',
-    '🟨 Job Branch, Main Stat, Region: partly matches (e.g. Xenon is Thief / Pirate).',
-    '🟨 Release Year: within 4 years.',
-    'Release Year is when the class came to GMS. Not in GMS = red with no arrow.',
-    'Classes that match in every column share one card (e.g. Hero / Paladin / Dark Knight). Type any of their names.',
-    'Removed, event and upcoming classes can appear.',
-    'The <b>Best so far</b> row shows your best clue for each column.',
-    'Win streak resets when you lose.',
+    "Guess today's class in <b>5</b> guesses. New class daily at 00:00 UTC.",
+    '🟩 right · 🟨 close · 🟥 wrong · ↑↓ newer / older',
+    'Close: partly matches, or Release Year within 4 years.',
+    'Release Year = GMS release.',
+    'Identical classes share a card (e.g. Hero / Paladin / Dark Knight).',
+    'Streak resets when you lose.',
   ];
   $('infoBody').innerHTML = '<ul>' + rules.map((x) => `<li>${x}</li>`).join('') + '</ul>' +
-    `<p class="warn">⚠️ Some info may not be accurate. If you spot a mistake, please report it on the <a href="${DISCORD}" target="_blank" rel="noopener">Discord</a>.</p>`;
+    `<p class="warn">⚠️ Spot a mistake? Report it on <a href="${DISCORD}" target="_blank" rel="noopener">Discord</a>.</p>`;
   $('info').hidden = false;
 }
 $('infoBtn').addEventListener('click', openInfo);

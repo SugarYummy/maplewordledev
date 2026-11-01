@@ -460,15 +460,15 @@ applyBox();
     // The (i) after each name explains it: hover on a computer, tap on a phone.
     const tip = (text) => `<button class="infotip" type="button" aria-label="What is this?" data-tip="${text}">i</button>`;
     body.innerHTML = (typeof acctRow === 'function' ? acctRow(tip) : '') +   // Account (account.js)
-      `<div class="setrow"><span class="setlabel">Sound ${tip('The sound effects when a game ends (the win / lose music). The slider sets how loud they are. BGM Clip has its own volume next to Play.')}</span>` +
+      `<div class="setrow"><span class="setlabel">Sound ${tip('Win / lose sounds. BGM Clip has its own volume.')}</span>` +
       '<button id="setMute"></button><input id="setVol" type="range" min="0" max="100"><span id="setVolPct"></span></div>' +
-      (ownsThemeBgm() ? `<div class="setrow"><span class="setlabel">Background BGM ${tip("Music for backgrounds that come with their own (Limbo's Subconscious: Phase 3's White and Black tracks; Limbo Background: Phase 1's; Garden of Eternal Dream: its own). It plays while that background is on, from your first click. Mute one background's music with the speaker on its card in Customize > Background. It goes quiet while a game's sound plays (the win / lose music, BGM Clip's clip, the VIP player), then comes back.")}</span>` +
+      (ownsThemeBgm() ? `<div class="setrow"><span class="setlabel">Background BGM ${tip("Music for backgrounds that have it. Mute one in Customize > Background.")}</span>` +
         '<button id="setBgm"></button><input id="setBgmVol" type="range" min="0" max="100"><span id="setBgmPct"></span></div>' : '') +
-      `<div class="setrow"><span class="setlabel">Box opacity ${tip('How see-through the main game box is. 0%: no box, the whole background shows. 50%: the usual frosted box. 100%: solid, no background inside the box.')}</span>` +
+      `<div class="setrow"><span class="setlabel">Box opacity ${tip('How see-through the game box is.')}</span>` +
       '<input id="setBox" type="range" min="0" max="100" step="5"><span id="setBoxPct"></span></div>' +
-      `<div class="setrow"><span class="setlabel">Background effect ${tip('Falling maple leaves in the background while 2x meso weekends are on, and holiday effects on holidays.')}</span>` +
+      `<div class="setrow"><span class="setlabel">Background effect ${tip('Maple leaves on 2x weekends, effects on holidays.')}</span>` +
       '<span class="seg"><button data-fx="on">On</button><button data-fx="off">Off</button></span></div>' +
-      `<div class="setrow"><span class="setlabel">Secret passcode ${tip('VIP access given to those who help make this website!')}</span>` +
+      `<div class="setrow"><span class="setlabel">Secret passcode ${tip('VIP access for helpers of the site!')}</span>` +
       (vip.on ? '<span class="vipon">✨ VIP unlocked</span>'
         : '<span class="vipfield"><input id="vipCode" type="text" placeholder="Passcode" autocomplete="off" spellcheck="false" autocapitalize="off" data-1p-ignore data-lpignore="true" data-form-type="other"><span id="vipMsg"></span></span><button id="vipGo">Enter</button>') + '</div>' +
       '<div id="vipBox" hidden><div class="vipctl"><button id="vipPlay"></button><button id="vipReplay" title="Start this song over">⏮ Replay</button>' +
@@ -529,6 +529,7 @@ applyBox();
     show();
   });
   document.body.appendChild(btn);
+  if (typeof acctAvatarCall === 'function') acctAvatarCall();   // a new shop avatar to look at (account.js)
 })();
 
 // VIP (the secret passcode in Settings): a player for every BGM we have, in random order, each from start to end.
@@ -2025,6 +2026,7 @@ async function buy(t, btn) {
   markCustomNew(t);
   if (!it.effect) it.themes?.forEach(markCustomNew);   // a bundle of backgrounds: each one NEW in Customize
   drawThemeButton();
+  if (typeof acctAvatarCall === 'function') acctAvatarCall();   // it came with an avatar: the cog glows NEW (account.js)
   applyTheme(true);
   drawMeso();
   openShop();

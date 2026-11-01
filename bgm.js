@@ -997,7 +997,7 @@ $('bonusGo').addEventListener('click', (window.acctGate ?? ((f) => f))(() => {
     }, failAt);
   } else if (limbo.on) limboExit();
   sendBonus(ok);
-  if (ok && live) answer.t.unlock?.bonus?.forEach((t) => shopUnlock(t));   // shows up in the meso shop (fx.js)
+  if (live) answer.t.unlock?.bonus?.forEach((t) => shopUnlock(t));   // any bonus guess on the day (right or wrong): shows up in the meso shop (fx.js)
 }));   // (checked first, like a guess)
 
 // ---- Boss picker (every boss, A-Z) ----
@@ -1252,29 +1252,22 @@ $('credit').addEventListener('click', () => {
 const DISCORD = 'https://discord.gg/f22H4UJ';
 function openInfo() {
   const rules = [
-    `Listen to today's BGM clip and guess which boss fight it's from. You get <b>${maxGuesses()}</b> guesses. Normal and Extreme each have their own BGM every day at 00:00 UTC (same as Maple reset).`,
+    `Guess which boss fight today's BGM is from in <b>${maxGuesses()}</b> guesses. New clip daily at 00:00 UTC.`,
     ...(newRules() ? [
-      'Your first guess gets <b>1 second</b> of the clip. Each wrong guess or Skip unlocks more: 5s, 10s, 30s, 60s, then the <b>whole track</b>. Miss all 7 and you lose.',
-      'Hints: after your <b>3rd</b> guess, and after every wrong guess after that, one more of the boss\'s World, Gender, Region, Phases, HP or Entry Lv opens (like Boss Wordle\'s columns). Your <b>6th</b> guess always gets its Entry Lv.',
-      'Play starts and pauses the clip. It stops at what you\'ve unlocked; a wrong guess or Skip lets it carry on from there, and once it\'s all played, Play starts it over. Click or drag the bar to jump around what you\'ve unlocked (not ahead).',
-      'The clip always starts at the very beginning of the track.',
+      'Each wrong guess or Skip plays more: 1s, 5s, 10s, 30s, 60s, then all.',
+      'From your 3rd guess, each miss reveals a boss clue.',
     ] : [
-      'Your first guess gets <b>0.5 seconds</b> of the clip. Each wrong guess or Skip unlocks more: 1s, 2s, 5s, 10s, then 30s. Miss all 6 and you lose.',
-      'A wrong guess only tells you it\'s wrong. Nothing else is revealed.',
-      'Play starts and pauses the clip. It stops at what you\'ve unlocked; a wrong guess or Skip lets it carry on from there, and once it\'s all played, Play starts it over. Click or drag the bar to jump around what you\'ve unlocked (not ahead).',
-      'The clip starts either at the very beginning of the track or somewhere in the middle (50/50).',
+      'Each wrong guess or Skip plays more: 0.5s, 1s, 2s, 5s, 10s, then 30s.',
     ]),
-    'The BGM can be from any part of the fight: the waiting room, any phase, the loot room and more.',
-    ...(yellowOn() ? ['A few tracks play in two boss fights (Horntail and Balrog, Ursus and Inferno Wolf). Picking the other boss shows <b>yellow</b>: right track, wrong boss. It still counts as a miss.'] : []),
-    ...(titleOn() ? ["<b>Bonus 2:</b> type the track's <b>title</b> (it suggests every BGM title as you type). One guess, and it pays <b>+70 mesos</b>. The title stays hidden until you answer."] : []),
-    '<b>Bonus:</b> when the game is over the whole track unlocks (click the bar to jump around). Guess which part of the fight it plays in. It\'s just for fun and won\'t change your result. ' +
-      (newRules() ? 'Bosses with only one BGM have no bonus.' : 'Bosses with only one BGM have no bonus, except on the rare day a <b>mashup</b> shows up instead: guess whose BGM mashup it is, with one guess.'),
-    'Win on your first guess for a ⭐ in the Archive. Get the bonus right too for a 💎.',
-    'The volume bar next to Play is only for this game\'s BGM (separate from the sound button).',
-    'Win streak resets when you lose.',
+    'It can be from any part of the fight.',
+    ...(yellowOn() ? ['🟨 yellow: right track, wrong boss (still a miss).'] : []),
+    ...(titleOn() ? ["<b>Bonus 2:</b> guess the track's title for <b>+70 mesos</b>."] : []),
+    '<b>Bonus:</b> after the game, guess which part of the fight it plays in.',
+    'Win in 1 guess for a ⭐. Get the bonus too for a 💎.',
+    'Streak resets when you lose.',
   ];
   $('infoBody').innerHTML = '<ul>' + rules.map((x) => `<li>${x}</li>`).join('') + '</ul>' +
-    `<p class="warn">⚠️ Some info may not be accurate. If you spot a mistake, please report it on the <a href="${DISCORD}" target="_blank" rel="noopener">Discord</a>.</p>`;
+    `<p class="warn">⚠️ Spot a mistake? Report it on <a href="${DISCORD}" target="_blank" rel="noopener">Discord</a>.</p>`;
   $('info').hidden = false;
 }
 $('infoBtn').addEventListener('click', openInfo);
