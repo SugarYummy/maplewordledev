@@ -639,7 +639,7 @@ function infoHtml(m) {
   const guesses = { story: '<b>unlimited</b> guesses', normal: '<b>6</b> guesses', hard: '<b>5</b> guesses', extreme: '<b>5</b> guesses' }[m];
   const rules = [
     `Guess today's boss in ${guesses}. New boss daily at 00:00 UTC.`,
-    '🟩 right · 🟨 close · 🟥 wrong · ↑↓ higher / lower',
+    'Colors:<ul><li>🟩 right</li><li>🟨 close</li><li>🟥 wrong</li><li>↑↓ higher / lower</li></ul>',
     'Close:<ul><li>Phases ±1</li><li>HP within 3×</li><li>Entry Lv ±10</li><li>Region partly overlaps</li></ul>',
     'HP = all phases added up.',
     ...(m === 'extreme' ? ['Also guess the difficulty (Hard = Chaos, Extreme = Hell).',

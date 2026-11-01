@@ -440,7 +440,7 @@ const DISCORD = 'https://discord.gg/f22H4UJ';
 function openInfo() {
   const rules = [
     "Guess today's class in <b>5</b> guesses. New class daily at 00:00 UTC.",
-    '🟩 right · 🟨 close · 🟥 wrong · ↑↓ newer / older',
+    'Colors:<ul><li>🟩 right</li><li>🟨 close</li><li>🟥 wrong</li><li>↑↓ newer / older</li></ul>',
     'Close: partly matches, or Release Year within 4 years.',
     'Release Year = GMS release.',
     'Identical classes share a card (e.g. Hero / Paladin / Dark Knight).',
