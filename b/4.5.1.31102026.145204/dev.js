@@ -140,7 +140,7 @@
     }
   } catch {}
   window.devEgg = ss.getItem('mwdev:egg');   // read by bgm.js (bonusFor)
-  const DEV_HELP = '/meso 5000 — add mesos (minus works too)\n/egg limbo — Limbo\'s mashup as today\'s BGM Clip Extreme bonus\n/egg lucid — today\'s BGM Clip Extreme clip is Lucid\'s Garden of Eternal Dream\n/egg off — back to the real one\n/unlock all — unlock every hidden shop item (to buy at full price)\n/help — this list';
+  const DEV_HELP = '/meso 5000 — add mesos (minus works too)\n/egg limbo — Limbo\'s mashup as today\'s BGM Clip Extreme bonus\n/egg lucid — today\'s BGM Clip Extreme clip is Lucid\'s Garden of Eternal Dream\n/egg off — back to the real one\n/unlock all — unlock every hidden shop item (to buy at full price)\n/reset — wipe this tab\'s test saves (like opening a new tab) and reload\n/help — this list';
   function devRun(line) {
     const [cmd, a] = line.trim().split(/\s+/);
     if (cmd === '/help') return DEV_HELP;
@@ -167,6 +167,11 @@
       const got = Object.keys(SHOP).filter((t) => SHOP[t].hidden && !shopFound().includes(t) && !shopOwned(t));
       for (const t of got) shopUnlock(t, false);
       return got.length ? `Unlocked in the shop: ${got.map((t) => SHOP[t].name).join(', ')}.` : 'Every hidden shop item is already unlocked.';
+    }
+    if (cmd === '/reset') {   // the test site keeps saves in this tab only, so this is what a new tab starts with
+      ss.clear();
+      setTimeout(() => window.top.location.reload(), 600);
+      return 'Test saves wiped. Reloading…';
     }
     return 'Unknown command. Type /help';
   }
