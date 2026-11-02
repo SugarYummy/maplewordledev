@@ -143,7 +143,7 @@ td.cardcell { background: #b9bdc6; }
 td.flip { animation: flip 0.5s ease both; }
 @keyframes flip { from { transform: rotateX(90deg); } to { transform: rotateX(0); } }
 /* Win confetti (fx.js). */
-.confetti { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 21; }   /* one canvas */
+.confetti { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 21; image-rendering: pixelated; }   /* one canvas */
 /* First-guess win: a Sol Hecate skill screen over the whole page (fx.js playHecate), under the mesos */
 .hecatefx { position: fixed; inset: 0; width: 100vw; height: 100vh; object-fit: cover; z-index: 20; pointer-events: none; }
 /* First-guess win: the game box shakes once; a puzzle won on the first guess glows gold for good. */
@@ -627,7 +627,7 @@ body.glitch :is(button, input, select) { text-shadow: inherit; }   /* the browse
 .setrow:has(.vipfield) { margin-bottom: 24px; }   /* room for "Wrong passcode" under the box */
 /* 🌈 (BGM Clip: first guess + both bonuses right): a rainbow that spins clockwise around the game box's border (with a
    soft glow outside it and a faint tint in the see-through panel), and around the Archive row's border. */
-.game.rainbow { background: linear-gradient(rgba(255, 255, 255, var(--boxRA, .42)), rgba(255, 255, 255, var(--boxRA, .42))),   /* static light pastel rainbow panel */
+.game.rainbow { background: linear-gradient(rgba(255, 255, 255, min(1, calc(var(--boxRA, .42) * var(--fxk, 1)))), rgba(255, 255, 255, min(1, calc(var(--boxRA, .42) * var(--fxk, 1))))),   /* static light pastel rainbow panel */
   linear-gradient(90deg, rgba(255, 60, 60, var(--boxT, .38)), rgba(255, 160, 30, var(--boxT, .38)), rgba(255, 230, 40, var(--boxT, .38)), rgba(60, 210, 90, var(--boxT, .38)), rgba(50, 140, 255, var(--boxT, .38)), rgba(170, 80, 255, var(--boxT, .38))), #fff0; }
 /* the border: a 3 px spinning rainbow ring just around the box, and the glow: the same rainbow, blurred, only outside
    the box (bgm.js adds both). The rainbow is drawn (and blurred) once and only turns: animating its angle redrew and
@@ -664,7 +664,7 @@ body.glitch .game.glow.rainbow, body.glitch .game.glow.limborb { animation: glit
   .rbring i, .rbglow i, #archiveList button.rainbow::before, #archiveList button.limborb::before { animation: none; transform: translate(-50%, -50%); } }
 /* Limbo's border (BGM Clip, Limbo's mashup day: first guess + the mashup right): the 🌈 ring and glow in Limbo's
    colours, turning slower, a Limbo tint in the panel; the Archive row the same. */
-.game.limborb { background: linear-gradient(rgba(255, 255, 255, var(--boxRA, .42)), rgba(255, 255, 255, var(--boxRA, .42))),
+.game.limborb { background: linear-gradient(rgba(255, 255, 255, min(1, calc(var(--boxRA, .42) * var(--fxk, 1)))), rgba(255, 255, 255, min(1, calc(var(--boxRA, .42) * var(--fxk, 1))))),
   linear-gradient(120deg, rgba(74, 26, 140, var(--boxT, .38)), rgba(123, 47, 247, var(--boxT, .38)), rgba(214, 36, 159, var(--boxT, .38)), rgba(41, 211, 255, var(--boxT, .38))), #fff0; }
 .game.limborb .rbring i, .game.limborb .rbglow i, #archiveList button.limborb::before {
   background: conic-gradient(#7b2ff7, #d6249f, #ff6ad5, #4a1a8c, #29d3ff, #7b2ff7); animation-duration: 7s; }
@@ -684,7 +684,11 @@ body.glitch .game.glow.rainbow, body.glitch .game.glow.limborb { animation: glit
 #titleAsk[hidden] { display: none; } #titleGo { font-family: inherit; } #titleHead { margin: 14px 0 4px; }
 /* Settings > Transparent box: the main game box has no background (borders and glows stay). */
 /* Settings > Box opacity (fx.js sets the variables). */
-.game { background: rgba(255, 255, 255, var(--boxA, .55)); backdrop-filter: blur(var(--boxBlur, 10px)); -webkit-backdrop-filter: blur(var(--boxBlur, 10px)); }
+.game { background: rgba(255, 255, 255, min(1, calc(var(--boxA, .55) * var(--fxk, 1)))); backdrop-filter: blur(var(--boxBlur, 10px)); -webkit-backdrop-filter: blur(var(--boxBlur, 10px)); }
+/* Something moving on screen (fx.js fxBusySync): no frosted glass (re-blurring it every frame kept the GPU busy); the
+   boxes get a bit whiter instead so the background behind still doesn't get in the way. */
+body.fxbusy .game, body.fxbusy .panel, body.fxbusy .closebar { backdrop-filter: none; -webkit-backdrop-filter: none; }
+body.fxbusy .game { --fxk: 1.4; }
 #setBox { width: 120px; accent-color: #e0a000; }
 #setBoxPct { min-width: 3em; font-variant-numeric: tabular-nums; }
 .vipctl { flex-wrap: wrap; } .vipctl button.on { font-weight: 700; outline: 2px solid #333; background: rgba(255, 255, 255, 0.95); }

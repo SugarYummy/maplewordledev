@@ -69,6 +69,13 @@ const rand = (a, b) => a + Math.random() * (b - a);
 // All the mesos of one show are drawn on a single canvas, in one loop: thousands of page elements (one per meso)
 // made phones lag and use a lot of memory. A layer: { parts, jobs }. jobs run every frame (they throw new mesos)
 // until they say they're done; parts are the mesos in the air. The canvas goes once both are empty, or after `ms`.
+// While anything moves on screen (mesos, a win video, the weekend leaves, a glowing border), the frosted glass
+// (backdrop blur) behind the game box and the buttons is turned off (style.css body.fxbusy): the browser re-blurs
+// everything behind every frosted box on every frame something moves, which kept the GPU very busy.
+function fxBusySync() {
+  document.body.classList.toggle('fxbusy', !!document.querySelector('body > .confetti, body > .hecatefx, #leaves, .game.glow, .game.rainbow, .game.limborb'));
+}
+new MutationObserver(fxBusySync).observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
 function fxLayer(ms) {
   const cv = document.createElement('canvas');
   cv.className = 'confetti';
@@ -77,11 +84,14 @@ function fxLayer(ms) {
   const L = { parts: [], jobs: [] };
   const end = performance.now() + ms;
   let last = performance.now();
+  // Drawn at 1 canvas pixel per CSS pixel (the sprites are pixel art: style.css scales it up pixel-sharp) and at most
+  // ~60 times a second: a full-screen canvas at a sharp screen's full resolution and refresh rate kept the GPU busy.
   const frame = (now) => {
     if (now > end || (!L.jobs.length && !L.parts.length)) { cv.remove(); return; }
+    if (now - last < 15) { requestAnimationFrame(frame); return; }
     const dt = Math.min(0.05, (now - last) / 1000);
     last = now;
-    const W = innerWidth, H = innerHeight, dpr = devicePixelRatio || 1;
+    const W = innerWidth, H = innerHeight, dpr = 1;
     if (cv.width !== Math.round(W * dpr) || cv.height !== Math.round(H * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.imageSmoothingEnabled = false;   // pixel-sharp sprites
