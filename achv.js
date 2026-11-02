@@ -140,6 +140,11 @@
     ], true],
   ];
   const ALL = SECTIONS.flatMap(([, list]) => list);
+  // Tiers, like MapleStory's achievements: each gives its achievement points (AP) when done. (Ranking up by AP: later.)
+  const TIERS = { common: ['Common', 10], rare: ['Rare', 20], epic: ['Epic', 30], unique: ['Unique', 40], legendary: ['Legendary', 100] };
+  const TIER_OF = {"col:bgm": "legendary", "col:boss": "legendary", "col:class": "unique", "col:anim": "unique", "win1": "common", "wins10": "common", "wins50": "rare", "wins100": "epic", "wins500": "unique", "first1": "common", "first10": "rare", "first50": "epic", "diamond": "rare", "rainbow": "rare", "allgames": "rare", "days7": "common", "days30": "rare", "days100": "epic", "streak3": "common", "streak7": "rare", "streak30": "epic", "streak100": "unique", "meso1k": "common", "meso10k": "rare", "meso50k": "epic", "buy1": "common", "buy5": "rare", "buy10": "epic", "kill:Jupiter": "epic", "limbo": "epic"};
+  for (const a of ALL) a.tier = TIER_OF[a.id] || (a.id.startsWith('kill:') ? 'epic' : 'common');
+  const apOf = (got) => ALL.reduce((t, a) => t + (got[a.id] != null ? TIERS[a.tier][1] : 0), 0);
 
   // Newly unlocked ones get saved (with the day) and announced. Only signed in.
   async function check(announce = true) {
@@ -237,7 +242,7 @@
     const done = ALL.filter((a) => got[a.id] != null).length;
     const tiles = [['Days played', s.days.size], ['Games played', s.played], ['Wins', s.wins],
       ['Win rate', s.played ? Math.round((s.wins / s.played) * 100) + '%' : '-'], ['First-guess wins', s.firstTry],
-      ['Best streak', s.streak], ['Mesos earned', fmt(s.mesos)], ['Achievements', `${done} / ${ALL.length}`]];
+      ['Best streak', s.streak], ['Mesos earned', fmt(s.mesos)], ['Achievements', `${done} / ${ALL.length}`], ['Achievement Points', fmt(apOf(got))]];
     body.innerHTML = '<div class="achvstats">' + tiles.map(([k, v]) => `<div><small>${k}</small><b>${typeof v === 'number' ? fmt(v) : v}</b></div>`).join('') + '</div>';
     for (const [title, list, hidden] of SECTIONS) {
       const n = list.filter((a) => got[a.id] != null).length;
@@ -253,6 +258,7 @@
           (on && a.reward && hidden ? (got._claimed?.[a.id] ? '<span class="achvdate">Claimed</span>' : '<button class="achvclaim">Claim</button>') :
           on ? `<span class="achvdate">${dayText(got[a.id])}</span>` : '');
         row.querySelector('b').textContent = on ? a.full || a.name : a.name;
+        row.querySelector('b').insertAdjacentHTML('afterend', `<span class="achvtier t-${a.tier}">${TIERS[a.tier][0]} · ${TIERS[a.tier][1]} AP</span>`);
         row.querySelector('small').textContent = hide ? '???' : a.how;
         if (hide) row.querySelector('small').classList.add('achvq');
         if (a.reward && !hide) {   // the reward itself coloured: a win effect by its full name in purple, mesos in meso gold

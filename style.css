@@ -1091,3 +1091,12 @@ html.dark .achvstats div { border-color: rgba(255, 255, 255, 0.12); }
 .acctpickrow.acctfxrow { padding-right: 104px; }
 .acctpick:empty { display: none; }
 .acctappeartop { position: fixed; margin: 0; z-index: 21; pointer-events: none; }   /* your character, over its appearance effect */
+/* Achievement tiers: MapleStory's grade colours */
+.achvtier { font-size: 11px; font-weight: 800; letter-spacing: 0.2px; }
+.achvtier.t-common { color: #6b6f7a; }
+.achvtier.t-rare { color: #2f7fd6; }
+.achvtier.t-epic { color: #8a3fd1; }
+.achvtier.t-unique { color: #c99400; }
+.achvtier.t-legendary { color: #3a9d23; }
+html.dark .achvtier.t-common { color: #b8bcc8; } html.dark .achvtier.t-rare { color: #66b0ff; } html.dark .achvtier.t-epic { color: #c08bff; }
+html.dark .achvtier.t-unique { color: #ffcc33; } html.dark .achvtier.t-legendary { color: #7fe05a; }
