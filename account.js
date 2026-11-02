@@ -310,7 +310,7 @@ const acctAppearOn = () => { const id = acct() && localStorage.getItem(ACCT_APPE
 function acctAppearPlay(into) {   // once, then gone (Settings, when it opens)
   const id = acctAppearOn(), fx = ACCT_EFFECTS[id];
   if (!fx || !into || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  document.querySelector('.acctappear')?.remove();
+  for (const x of document.querySelectorAll('.acctappear, .acctappeartop')) x.remove();
   const safari = typeof SAFARI !== 'undefined' && SAFARI;
   const el = Object.assign(document.createElement(safari ? 'img' : 'video'), { className: 'acctappear', src: `${fx.src}.${safari ? 'webp' : 'webm'}?v=1`, alt: '' });
   if (!safari) Object.assign(el, { muted: true, autoplay: true, playsInline: true });
@@ -324,7 +324,19 @@ function acctAppearPlay(into) {   // once, then gone (Settings, when it opens)
   el.style.left = (ava ? r.left + r.width / 2 : r.left - 46) + 'px';
   el.style.top = r.top + r.height / 2 + 'px';
   document.body.appendChild(el);
-  document.getElementById('settings')?.querySelector('.closebar button')?.addEventListener('click', () => el.remove(), { once: true });
+  // Behind your character: a copy of your character sits on top of it, right over the real one, while it plays
+  let top = null;
+  if (ava) {
+    top = ava.cloneNode(true);
+    top.classList.add('acctappeartop');
+    Object.assign(top.style, { left: r.left + 'px', top: r.top + 'px', width: r.width + 'px', height: r.height + 'px' });
+    document.body.appendChild(top);
+    if (top.tagName === 'VIDEO') { top.currentTime = ava.currentTime; top.play?.().catch(() => {}); }
+  }
+  const gone = () => { el.remove(); top?.remove(); };
+  el.addEventListener('ended', gone); el.addEventListener('error', gone);
+  if (safari) setTimeout(gone, 3700);
+  document.getElementById('settings')?.querySelector('.closebar button')?.addEventListener('click', gone, { once: true });
 }
 // A shop avatar you haven't looked at yet (new in the MapleStory Character list): the Settings cog glows with NEW, and
 // Account Settings, MapleStory Character and the avatar itself say NEW, until that list is opened.
