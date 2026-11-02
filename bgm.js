@@ -1241,7 +1241,7 @@ function resultIn(d) {
 }
 window.archiveHere = { modes: Object.keys(MODES), current: () => MODE, result: resultFor, style: rowStyleFor, play: (m, d) => { MODE = m; start(d); } };
 // For the achievements (achv.js): every BGM you've won in Extreme (the Archive too; the bonus doesn't matter), and
-// whether you've ever got Limbo's glitch mashup right.
+// whether you've ever answered Limbo's glitch mashup (right or wrong).
 const TRACKS_KEY = 'mapleWordle:bgmTracks', LIMBO_MASH_KEY = 'mapleWordle:limboMash';
 function saveTracks() {
   const won = new Set();
@@ -1251,7 +1251,7 @@ function saveTracks() {
     if (!m || !(m[1] in MODES)) continue;
     const d = +m[2];
     if (m[1] === 'bgm' && /^Won/.test(localStorage.getItem(localStorage.key(i)))) won.add(inMode('bgm', () => answerFor(d).track));
-    if (!mash) mash = inMode(m[1], () => { const a = answerFor(d), b = load(d).bonus; return a.bonus?.mashup?.egg === 'limbo' && b != null && a.bonus.right.includes(b); });
+    if (!mash) mash = inMode(m[1], () => answerFor(d).bonus?.mashup?.egg === 'limbo' && load(d).bonus != null);   // answered at all (right or wrong)
   }
   const v = JSON.stringify([...won].sort());
   try {
