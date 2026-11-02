@@ -2112,7 +2112,7 @@ function tooPoor(btn, t) {
 // A small window over the shop about one item: its picture and name (and price), then two buttons. Resolves true for
 // the first button; the second, Esc or a click outside resolve false (and only close this, the shop stays open).
 function itemPopup(t, title, withPrice, [okText, okClass], [noText, noClass]) {
-  const it = SHOP[t];
+  const it = typeof t === 'object' ? t : SHOP[t];   // or { name, img }: an achievement's reward (achv.js)
   return new Promise((done) => {
     const win = document.createElement('div');
     win.className = 'popup buyask';
@@ -2121,7 +2121,8 @@ function itemPopup(t, title, withPrice, [okText, okClass], [noText, noClass]) {
       (withPrice ? priceHtml(t) : '') +
       `<p class="buybtns"><button class="${okClass}">${okText}</button><button class="${noClass}">${noText}</button></p></div>`;
     const [ok, no] = win.querySelectorAll('.buybtns button');
-    win.querySelector('.themepic').addEventListener('click', () => zoomItem(t));   // like the shop's pictures
+    if (typeof t !== 'object') win.querySelector('.themepic').addEventListener('click', () => zoomItem(t));   // like the shop's pictures
+    else win.querySelector('.themepic').classList.remove('zoomable');
     const close = (yes) => { win.remove(); removeEventListener('keydown', esc, true); done(yes); };
     const esc = (e) => { if (e.key === 'Escape' && !document.querySelector('.zoomview')) { e.stopImmediatePropagation(); close(false); } };
     ok.addEventListener('click', () => close(true));
@@ -2204,6 +2205,24 @@ function mesoGain(mode, day, show) {
   el.classList.toggle('none', !got);
   if (!got) el.querySelector('span').textContent = `+0 (you already earned more on another mode ${isArchive(day) ? 'that day' : 'today'})`;
   if (fxHoldTill > Date.now()) revealAfter(el, fxHoldTill - Date.now());
+}
+// A few mesos burst out of the meso count's icon (e.g. an achievement's meso reward claimed).
+function mesoFly(n = 10) {
+  const icon = document.querySelector('#mesoBtn img');
+  if (!icon || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const r = icon.getBoundingClientRect();
+  for (let i = 0; i < n; i++) {
+    const m = Object.assign(document.createElement('img'), { src: 'images/fx/meso-gold.png', className: 'mesofly', alt: '' });
+    m.style.left = r.left + r.width / 2 - 9 + 'px';
+    m.style.top = r.top + r.height / 2 - 9 + 'px';
+    document.body.appendChild(m);
+    const a = Math.PI * (1.05 + Math.random() * 0.9), d = 40 + Math.random() * 50;   // up and out (left, right, up)
+    const x = Math.cos(a) * d, y = Math.sin(a) * d;
+    m.animate([{ transform: 'translate(0, 0) scale(0.6)', opacity: 1 },
+      { transform: `translate(${x}px, ${y}px) scale(1) rotate(${Math.random() * 360}deg)`, opacity: 1, offset: 0.55 },
+      { transform: `translate(${x * 1.2}px, ${y + 40}px) scale(0.9) rotate(${Math.random() * 540}deg)`, opacity: 0 }],
+      { duration: 800 + Math.random() * 300, delay: i * 25, easing: 'ease-out', fill: 'both' }).onfinish = () => m.remove();
+  }
 }
 // Under the Mode buttons (Boss Wordle, BGM Clip): only your best mode each day pays.
 (() => {

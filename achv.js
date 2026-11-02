@@ -1,4 +1,4 @@
-// ---- Achievements (the trophy next to Archive): accounts only. Worked out from what the games already save (results, guesses,
+// ---- Achievements (the trophy under Settings): accounts only. Worked out from what the games already save (results, guesses,
 // streaks, the meso log), so everything played before counts too. Which ones are unlocked (and when) is saved in
 // mapleWordle:achv, so it goes to the account like every other save; a new one pops up a small "Achievement unlocked"
 // note (the first look ever unlocks what was earned before quietly). Logged out, the window just says to make an account.
@@ -131,15 +131,16 @@
     if (!loggedIn()) return;
     const L = await loadLists();
     const first = read(ACHV_KEY) == null;   // first look ever: what was earned before unlocks quietly
-    const s = stats(L), got = json(ACHV_KEY, {}), fresh = [];
+    const s = stats(L), got = json(ACHV_KEY, {}), unlocked = [];
     for (const a of ALL) {
       const [have, need] = a.prog(s, L);
-      if (have >= need && got[a.id] == null) { got[a.id] = today(); fresh.push(a.full || a.name); }
+      if (have >= need && got[a.id] == null) { got[a.id] = today(); unlocked.push(a.full || a.name); }
     }
-    const changed = fresh.length || s.streak > (got._bestStreak || 0);
+    const changed = unlocked.length || s.streak > (got._bestStreak || 0);
     got._bestStreak = Math.max(s.streak, got._bestStreak || 0);
     if (changed || first) { try { localStorage.setItem(ACHV_KEY, JSON.stringify(got)); } catch {} }
-    if (announce && !first) fresh.forEach((n, i) => setTimeout(() => toast(n), 2500 + i * 2600));
+    if (announce && !first) unlocked.forEach((n, i) => setTimeout(() => toast(n), 2500 + i * 2600));
+    noteClaims();
   }
   function toast(name, head = 'Achievement unlocked') {
     const t = Object.assign(document.createElement('div'), { className: 'achvtoast' });
@@ -157,6 +158,24 @@
     if (typeof k === 'string' && (k.startsWith('mapleWordle:result:') || k === 'mapleWordle:mesoLog' || k === 'mapleWordle:bgmTracks' || k === 'mapleWordle:limboMash')) { clearTimeout(check.t); check.t = setTimeout(check, 300); }
   };
 
+  // NEW on the trophy button: a reward to claim that you haven't been shown yet. It's shown once (gone after a reload
+  // even if you don't claim it; mapleWordle:achvSeen remembers), and goes when you claim it.
+  const SEEN_KEY = 'mapleWordle:achvSeen', fresh = new Set();
+  const claimable = (got) => ALL.filter((a) => a.reward && got[a.id] != null && got._claimed?.[a.id] == null).map((a) => a.id);
+  function newTag() {
+    btn.querySelector('.newtag')?.remove();
+    const got = json(ACHV_KEY, {});
+    if (loggedIn() && claimable(got).some((id) => fresh.has(id))) btn.appendChild(Object.assign(document.createElement('span'), { className: 'newtag', textContent: 'NEW' }));
+  }
+  function noteClaims() {
+    if (!loggedIn()) return;
+    const seen = json(SEEN_KEY, []), add = claimable(json(ACHV_KEY, {})).filter((id) => !seen.includes(id));
+    if (add.length) {
+      add.forEach((id) => fresh.add(id));
+      try { localStorage.setItem(SEEN_KEY, JSON.stringify([...seen, ...add])); } catch {}
+    }
+    newTag();
+  }
   // Claim a finished Hidden achievement's reward: its win effect (fx.js HECATE, in Customize > Win Effect, NEW until
   // reload) or its mesos.
   function claim(a, btn) {
@@ -172,10 +191,17 @@
         drawMeso(a.mesos);
       }
     }
-    if (a.fx && typeof drawThemeButton === 'function') { customFresh.add(a.fx); customTab = 'win'; drawThemeButton(); }
-    if (typeof resultSound === 'function') resultSound(true, 0, 'purchase');
-    toast(a.full || a.name, 'Reward claimed');
+    if (typeof resultSound === 'function') resultSound(true, 0, 'purchase');   // (for now: the shop's purchase sound)
     btn?.replaceWith(Object.assign(document.createElement('span'), { className: 'achvdate', textContent: 'Claimed' }));
+    fresh.delete(a.id);
+    newTag();
+    if (a.mesos) { if (typeof mesoFly === 'function') mesoFly(); toast(a.full || a.name, `+${fmt(a.mesos)} mesos`); }
+    if (a.fx && typeof drawThemeButton === 'function') {
+      customFresh.add(a.fx); customTab = 'win'; drawThemeButton();
+      // Like a shop purchase: its picture, and Customize takes you there
+      itemPopup({ name: a.full || a.name, img: `images/fx/hecate/${a.fx}.webp?v=3` }, 'Successfully Claimed!', false, ['Customize', 'yes'], ['Close', 'plain'])
+        .then((go) => { if (go) { document.getElementById('achv').hidden = true; document.getElementById('themeBtn')?.click(); } });
+    }
   }
   async function open() {
     const body = popup('achv', 'Achievements');
@@ -208,7 +234,8 @@
         row.querySelector('small').textContent = hide ? '???' : a.how;
         if (hide) row.querySelector('small').classList.add('achvq');
         if (a.reward && !hide) row.querySelector('.achvreward').textContent = 'Reward: ' + a.reward;
-        row.querySelector('.achvclaim')?.addEventListener('click', (e) => claim(a, e.currentTarget));
+        const cb = row.querySelector('.achvclaim');
+        if (cb) { cb.addEventListener('click', () => claim(a, cb)); if (typeof hoverSound === 'function') hoverSound(cb); }   // (the shop's hover sound, for now)
       }
     }
   }
@@ -217,9 +244,5 @@
   btn.setAttribute('aria-label', 'Achievements');
   btn.addEventListener('click', open);
   document.body.appendChild(btn);
-  const place = () => { const a = document.getElementById('archiveBtn'); if (a) btn.style.left = a.getBoundingClientRect().right + 8 + 'px'; };
-  place();
-  addEventListener('resize', place);
-  if (document.fonts) document.fonts.ready.then(place);
   check();
 })();
