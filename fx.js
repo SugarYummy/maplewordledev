@@ -69,13 +69,6 @@ const rand = (a, b) => a + Math.random() * (b - a);
 // All the mesos of one show are drawn on a single canvas, in one loop: thousands of page elements (one per meso)
 // made phones lag and use a lot of memory. A layer: { parts, jobs }. jobs run every frame (they throw new mesos)
 // until they say they're done; parts are the mesos in the air. The canvas goes once both are empty, or after `ms`.
-// While anything moves on screen (mesos, a win video, the weekend leaves, a glowing border), the frosted glass
-// (backdrop blur) behind the game box and the buttons is turned off (style.css body.fxbusy): the browser re-blurs
-// everything behind every frosted box on every frame something moves, which kept the GPU very busy.
-function fxBusySync() {
-  document.body.classList.toggle('fxbusy', !!document.querySelector('body > .confetti, body > .hecatefx, #leaves, .game.glow, .game.rainbow, .game.limborb'));
-}
-new MutationObserver(fxBusySync).observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
 function fxLayer(ms) {
   const cv = document.createElement('canvas');
   cv.className = 'confetti';
@@ -474,7 +467,6 @@ function applyBox() {
   st.setProperty('--boxA', lerp(0.55).toFixed(3));     // plain box: white
   st.setProperty('--boxRA', lerp(0.42).toFixed(3));    // 🌈 box: white layer
   st.setProperty('--boxT', (0.38 * Math.min(1, k)).toFixed(3));   // 🌈 box: pastel rainbow tint
-  st.setProperty('--boxBlur', v ? '10px' : '0px');
 }
 applyBox();
 (() => {

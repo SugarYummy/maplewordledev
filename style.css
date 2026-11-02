@@ -10,7 +10,7 @@ h1 { font-weight: 900; }
 body { text-align: center; margin: 0; min-height: 100vh; display: flex; flex-direction: column; align-items: center;
        background: #3b8fe0 url("images/background.webp") center bottom / cover no-repeat fixed; }
 html.inshell body { background: transparent; }   /* inside the main page (shell.js), which draws the background */
-.panel { background: rgba(255, 255, 255, 0.55); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+.panel { background: rgba(255, 255, 255, 0.55);
          border-radius: 12px; padding: 8px 16px 16px; margin: 16px; max-width: calc(100% - 64px); }
 .table-wrap { overflow-x: auto; }
 footer.panel { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); z-index: 3; margin: 0;
@@ -50,7 +50,7 @@ footer.panel { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%
 #changelogBody h3, #infoBody h3 { margin: 12px 0 4px; }
 /* Close button stays visible at the bottom while the window scrolls. */
 .closebar { position: sticky; bottom: -16px; margin: 0 -16px -16px; padding: 10px 0 14px;
-            background: rgba(255, 255, 255, 0.35); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+            background: rgba(255, 255, 255, 0.92); }
 /* Every window's Close: like the shop popups' buttons (light grey, see .buybtns .plain) */
 .closebar button { font-family: inherit; font-size: 15px; font-weight: 700; min-width: 96px; padding: 6px 18px; border-radius: 8px;
                    cursor: pointer; color: #222; background: #f2f2f2; border: 1px solid rgba(0, 0, 0, 0.25);
@@ -60,6 +60,8 @@ footer.panel { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%
 #changelogBody ul, #infoBody ul { margin: 0; padding-left: 20px; }
 #infoBody li { margin: 2px 0; }
 #infoBody .warn { margin: 12px 0 0; }
+/* Windows: nearly solid now that there's no frosted glass, so the page behind doesn't show through the text. */
+:is(#archive, #changelog, #info, #themes, .popup) > .panel { background: rgba(255, 255, 255, 0.92); }
 #archive .panel, #changelog .panel, #info .panel { margin-top: 48px; max-height: calc(100vh - 96px); overflow-y: auto; min-width: 280px; }
 /* Hide the scrollbar but keep scrolling (wheel, trackpad, touch). */
 #archive .panel, #changelog .panel, #info .panel { scrollbar-width: none; }
@@ -684,11 +686,10 @@ body.glitch .game.glow.rainbow, body.glitch .game.glow.limborb { animation: glit
 #titleAsk[hidden] { display: none; } #titleGo { font-family: inherit; } #titleHead { margin: 14px 0 4px; }
 /* Settings > Transparent box: the main game box has no background (borders and glows stay). */
 /* Settings > Box opacity (fx.js sets the variables). */
-.game { background: rgba(255, 255, 255, min(1, calc(var(--boxA, .55) * var(--fxk, 1)))); backdrop-filter: blur(var(--boxBlur, 10px)); -webkit-backdrop-filter: blur(var(--boxBlur, 10px)); }
-/* Something moving on screen (fx.js fxBusySync): no frosted glass (re-blurring it every frame kept the GPU busy); the
-   boxes get a bit whiter instead so the background behind still doesn't get in the way. */
-body.fxbusy .game, body.fxbusy .panel, body.fxbusy .closebar { backdrop-filter: none; -webkit-backdrop-filter: none; }
-body.fxbusy .game { --fxk: 1.4; }
+.game { background: rgba(255, 255, 255, min(1, calc(var(--boxA, .55) * var(--fxk, 1)))); --fxk: 1.4; }
+/* No frosted glass (backdrop blur) anywhere: the browser re-blurred everything behind every frosted box on every frame
+   anything moved (mesos, leaves, a glowing border, scrolling), which kept the GPU very busy. The game box is a bit
+   whiter instead, so the background behind it still doesn't get in the way. */
 #setBox { width: 120px; accent-color: #e0a000; }
 #setBoxPct { min-width: 3em; font-variant-numeric: tabular-nums; }
 .vipctl { flex-wrap: wrap; } .vipctl button.on { font-weight: 700; outline: 2px solid #333; background: rgba(255, 255, 255, 0.95); }
