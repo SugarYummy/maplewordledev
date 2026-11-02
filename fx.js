@@ -1096,14 +1096,14 @@ function drawThemeButton() {
         if (pack === 'limboSub' && limboAllOn()) {   // Special toggle on: a slow spinning Limbo-coloured ring + glow around the box (style.css)
           sum.classList.add('special');
           const label = name.firstChild;   // the name, glitching (style.css draws the split colour copies from data-text)
-          const g = Object.assign(document.createElement('span'), { className: 'glitch', textContent: label.textContent });
+          const g = Object.assign(document.createElement('span'), { className: 'gtext', textContent: label.textContent });
           g.dataset.text = label.textContent;
           label.replaceWith(g);
           sum.insertAdjacentHTML('afterbegin', '<span class="spglow"><i></i></span><span class="spring"><i></i></span>');
         }
         if (pack === 'limboSub') {   // one switch for everything in Limbo's set, on the box itself (no need to open it)
           const row = Object.assign(document.createElement('label'), { className: 'fxswitch onbox', title: 'Enable all Limbo effects, including hidden ones' });
-          row.innerHTML = '<input type="checkbox"><span class="knob"></span><span class="glitch" data-text="Special toggle">Special toggle</span>';
+          row.innerHTML = '<input type="checkbox"><span class="knob"></span><span class="gtext" data-text="Special toggle">Special toggle</span>';
           row.querySelector('input').checked = limboAllOn();
           row.addEventListener('click', (e) => {   // (not the box's open / close)
             e.preventDefault();

@@ -945,13 +945,13 @@ input[type="search"]::-webkit-search-cancel-button, input[type="search"]::-webki
 /* glitching text (Limbo): glows, and every 1.6 s for a moment it jitters while cyan and pink copies jump out in slices
    (copies drawn from data-text; small text, so cheap to redraw). Used on Limbo's Subconscious box with the Special toggle
    on (its name and "Special toggle"). */
-.glitch { position: relative; display: inline-block; }
-.glitch::before, .glitch::after { content: attr(data-text); position: absolute; inset: 0; pointer-events: none; opacity: 0; color: #00e5ff; text-shadow: none; }
-.glitch::after { color: #ff2fd0; }
-.themecard.special .glitch { animation: glitchjit 1.6s steps(1) infinite; }
-.themecard.special .glitch::before { animation: glitcha 1.6s steps(1) infinite; }
-.themecard.special .glitch::after { animation: glitchb 1.6s steps(1) infinite; }
-.themecard.special .fxswitch .glitch, .themecard.special .fxswitch .glitch::before, .themecard.special .fxswitch .glitch::after { animation-delay: -0.7s; }   /* not in step with the name */
+.gtext { position: relative; display: inline-block; }
+.gtext::before, .gtext::after { content: attr(data-text); position: absolute; inset: 0; pointer-events: none; opacity: 0; color: #00e5ff; text-shadow: none; }
+.gtext::after { color: #ff2fd0; }
+.themecard.special .gtext { animation: glitchjit 1.6s steps(1) infinite; }
+.themecard.special .gtext::before { animation: glitcha 1.6s steps(1) infinite; }
+.themecard.special .gtext::after { animation: glitchb 1.6s steps(1) infinite; }
+.themecard.special .fxswitch .gtext, .themecard.special .fxswitch .gtext::before, .themecard.special .fxswitch .gtext::after { animation-delay: -0.7s; }   /* not in step with the name */
 @keyframes glitchjit { 0%, 68%, 84%, 100% { transform: none; } 70% { transform: translate(1px, 0) skewX(-6deg); } 76% { transform: translate(-2px, 0); } 80% { transform: skewX(4deg); } }
 @keyframes glitcha { 0%, 68%, 86%, 100% { opacity: 0; transform: none; clip-path: none; }
   70% { opacity: 0.9; transform: translate(-3px, -1px); clip-path: inset(8% 0 58% 0); }
@@ -963,6 +963,6 @@ input[type="search"]::-webkit-search-cancel-button, input[type="search"]::-webki
   74% { opacity: 0.9; transform: translate(-3px, 0); clip-path: inset(5% 0 70% 0); }
   78% { opacity: 0.9; transform: translate(2px, -1px); clip-path: inset(62% 0 10% 0); }
   82% { opacity: 0.7; transform: translate(-2px, 0); clip-path: inset(18% 0 52% 0); } }
-@media (prefers-reduced-motion: reduce) { .glitch, .glitch::before, .glitch::after { animation: none !important; } }
+@media (prefers-reduced-motion: reduce) { .gtext, .gtext::before, .gtext::after { animation: none !important; } }
 .themecard.special .themename { color: #fff; text-shadow: 0 0 2px #7b2ff7, 0 0 6px rgba(160, 60, 255, 0.95), 0 0 14px rgba(214, 36, 159, 0.8), 0 0 22px rgba(123, 47, 247, 0.6); }
 .fxbundle > summary.special::after { color: #fff; opacity: 1; text-shadow: 0 0 4px rgba(214, 36, 159, 0.95), 0 0 9px rgba(123, 47, 247, 0.8); }
