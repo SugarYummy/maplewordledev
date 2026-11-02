@@ -1100,3 +1100,15 @@ html.dark .achvstats div { border-color: rgba(255, 255, 255, 0.12); }
 .achvtier.t-legendary { color: #3a9d23; }
 html.dark .achvtier.t-common { color: #b8bcc8; } html.dark .achvtier.t-rare { color: #66b0ff; } html.dark .achvtier.t-epic { color: #c08bff; }
 html.dark .achvtier.t-unique { color: #ffcc33; } html.dark .achvtier.t-legendary { color: #7fe05a; }
+/* Achievement complete banner (MapleStory's, 1366 x 231; the front is 693 x 194 at 336, 31 over it): scaled to fit */
+.achvbanner { position: fixed; top: 6px; left: 50%; z-index: 23; width: 1366px; height: 231px; pointer-events: none;
+              --s: min(0.75, calc((100vw - 8px) / 640px)); transform: translateX(-50%) scale(var(--s)); transform-origin: top center; transition: opacity 0.45s; }
+.achvbanner.out { opacity: 0; }
+.achvbannerin { position: absolute; inset: 0; }
+.achvbanner .back { position: absolute; left: 0; top: 0; width: 1366px; height: 231px; }
+.achvbanner .front { position: absolute; left: 336px; top: 31px; width: 693px; height: 194px; z-index: 2; }
+.achvbanner .achvap { position: absolute; left: 665px; top: 131px; width: 36px; height: 20px; z-index: 1; text-align: center; font: 700 15px/20px system-ui, sans-serif; color: #e9ecef; animation: achvtext 0.3s 0.15s both; }
+.achvbanner .achvname { position: absolute; left: 393px; top: 163px; width: 580px; height: 36px; z-index: 1; text-align: center; font: 700 22px/36px system-ui, sans-serif;
+                        color: #e9ecef; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; animation: achvtext 0.3s 0.15s both; }
+@keyframes achvtext { from { opacity: 0; } to { opacity: 1; } }
+.achvbanner.t-legendary .achvname, .achvbanner.t-legendary .achvap { color: #e6f28a; }

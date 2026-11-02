@@ -154,16 +154,40 @@
     const s = stats(L), got = json(ACHV_KEY, {}), unlocked = [];
     for (const a of ALL) {
       const [have, need] = a.prog(s, L);
-      if (have >= need && got[a.id] == null) { got[a.id] = today(); unlocked.push(a.full || a.name); }
+      if (have >= need && got[a.id] == null) { got[a.id] = today(); unlocked.push(a); }
     }
     const changed = unlocked.length || s.streak > (got._bestStreak || 0);
     got._bestStreak = Math.max(s.streak, got._bestStreak || 0);
     if (changed || first) { try { localStorage.setItem(ACHV_KEY, JSON.stringify(got)); } catch {} }
-    if (announce && !first) unlocked.forEach((n, i) => setTimeout(() => toast(n), 2500 + i * 2600));
+    if (announce && !first) unlocked.forEach((a) => banner(a, 2500));
     noteClaims();
   }
+  // Achievement complete: MapleStory's own banner (its back and front played together, the front over it), the name in
+  // its bar and the points under the trophy, with its sound. Several: one after another (each waits for the last).
+  // Every tier uses the Common banner until the others' are added (images/achv/fx/<tier>-back/-front).
+  const BANNER_MS = 4200;
+  let bannerFree = 0;
+  function banner(a, wait = 0) {
+    const at = Math.max(Date.now() + wait, bannerFree);
+    bannerFree = at + BANNER_MS;
+    setTimeout(() => {
+      const safari = typeof SAFARI !== 'undefined' && SAFARI, ext = safari ? 'webp' : 'webm', art = 'common';
+      const el = Object.assign(document.createElement('div'), { className: `achvbanner t-${a.tier}` });
+      const media = (part) => safari ? `<img class="${part}" src="images/achv/fx/${art}-${part}.webp" alt="">`
+        : `<video class="${part}" src="images/achv/fx/${art}-${part}.webm" muted autoplay playsinline disablepictureinpicture></video>`;
+      el.innerHTML = `<div class="achvbannerin">${media('back')}<b class="achvap">${TIERS[a.tier][1]}</b><span class="achvname"></span>${media('front')}</div>`;
+      el.querySelector('.achvname').textContent = a.full || a.name;
+      el.setAttribute('role', 'status');
+      el.setAttribute('aria-label', `Achievement complete: ${a.full || a.name}`);
+      const front = el.querySelector('.front');
+      if (safari) setTimeout(() => front.remove(), 340); else front.addEventListener('ended', () => front.remove());
+      document.body.appendChild(el);
+      if (typeof resultSound === 'function') resultSound(true, 0, 'achvComplete');
+      setTimeout(() => el.classList.add('out'), BANNER_MS - 500);
+      setTimeout(() => el.remove(), BANNER_MS);
+    }, at - Date.now());
+  }
   function toast(name, head = 'Achievement unlocked') {
-    if (head === 'Achievement unlocked' && typeof resultSound === 'function') resultSound(true, 0, 'achvComplete');
     const t = Object.assign(document.createElement('div'), { className: 'achvtoast' });
     t.innerHTML = '<img src="images/achv/4000038.png" alt=""><div><b></b><span></span></div>';
     t.querySelector('b').textContent = head;
@@ -284,14 +308,14 @@
     if (pick === '*') {   // every one at once (one note, not dozens)
       for (const a of locked) got[a.id] = today();
       try { localStorage.setItem(ACHV_KEY, JSON.stringify(got)); } catch {}
-      toast(`All ${ALL.length} achievements`);
+      banner({ name: `All ${ALL.length} achievements`, tier: 'legendary' });
       noteClaims();
       return locked.length;
     }
     const a = pick ? ALL.find((x) => (x.full || x.name).toLowerCase().includes(pick)) : locked[0] ?? ALL[Math.floor(Math.random() * ALL.length)];
     if (!a) return null;
     if (got[a.id] == null) { got[a.id] = today(); try { localStorage.setItem(ACHV_KEY, JSON.stringify(got)); } catch {} }
-    toast(a.full || a.name);
+    banner(a);
     noteClaims();
     return a.full || a.name;
   };
