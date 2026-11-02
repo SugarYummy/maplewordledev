@@ -75,7 +75,7 @@
   // ??? and N / M; unlocked: its full name (the boss's finishing attack) and what you did.
   const kill = (boss, name, full, img, fx) => A(`kill:${boss}`, name, `Played all versions of ${boss}'s BGM in Extreme mode.`,
     (s, L) => { const t = L?.tracksOf[boss] || []; return [t.filter((x) => s.tracks.has(x)).length, t.length || 1]; },
-    `images/bosses/${img}.png`, { full, fx, reward: `${full} (Guess in 1 win effect)` });
+    `images/bosses/${img}.png`, { full, fx, reward: 'Guess in 1 win effect' });
   const SECTIONS = [
     ['Collections', [
       A('col:bgm', 'MMF Meister', 'Win BGM Clip with every boss.', (s, L) => [count(s.won.bgm, L?.bgm), L?.bgm.length || 1], '1142989'),
