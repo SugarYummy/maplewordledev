@@ -240,12 +240,18 @@ const HECATE = {   // ms: clip length, burst: ms into the clip when it bursts (f
   // Limbo's set: its cutscene (a wide banner, shown whole). Also what a win in 1 plays in Limbo mode, and what getting
   // Limbo's glitch mashup right plays for everyone. The mesos come as it fades out (frame 54 of 65).
   limboCut: { name: 'Limbo Transition', ms: 4200, burst: 3480, pack: 'limboSub', wide: true, solo: true, v: 2 },   // solo: its own card, no box
+  // Boss finishing effects (Pre into End, 60 ms frames): yours once you unlock that boss's Hidden achievement (achv.js)
+  sirenSong: { name: "Siren's Song", ms: 5520, burst: 3240, achv: 'kill:Malefic Star' },
+  iaidoAlpha: { name: 'Kai-ryu Sword: Iaido Alpha', ms: 2640, burst: 1920, achv: 'kill:Kai' },
+  mayrinKill: { name: 'Mayrin (Placeholder)', ms: 3600, burst: 1800, achv: 'kill:Mayrin' },
+  bellonaKill: { name: 'Bellona (Placeholder)', ms: 4980, burst: 2160, achv: 'kill:Bellona' },
 };
+const achvGot = (id) => { try { return JSON.parse(lsGet('mapleWordle:achv') || '{}')[id] != null; } catch { return false; } };
 const EFFECTS_KEY = 'mapleWordle:effects', WINFX_KEY = 'mapleWordle:winFx';   // packs bought; win effects picked
 function ownedEffects() {
   try { return JSON.parse(lsGet(EFFECTS_KEY) || '[]'); } catch { return []; }
 }
-const ownedSkins = () => Object.keys(HECATE).filter((id) => !HECATE[id].pack || ownedEffects().includes(HECATE[id].pack));
+const ownedSkins = () => Object.keys(HECATE).filter((id) => (HECATE[id].achv ? achvGot(HECATE[id].achv) : !HECATE[id].pack || ownedEffects().includes(HECATE[id].pack)));
 function pickedSkins() {
   let got = [];
   try { got = JSON.parse(lsGet(WINFX_KEY) || '[]'); } catch {}
@@ -1018,7 +1024,7 @@ function themeBgm(t = tbgm.cur) {
 // Something you just got (bought or unlocked) is "NEW" on the button, on its tab and on itself until the page reloads.
 let customTab = 'bg';
 const customFresh = new Set();   // shop item / theme ids got since this page loaded
-const customTabOf = (id) => (CUSTOM_FX_PACKS.includes(id) || id === 'halloween' ? 'fx' : SHOP[id]?.effect ? 'win' : 'bg');
+const customTabOf = (id) => (CUSTOM_FX_PACKS.includes(id) || id === 'halloween' ? 'fx' : SHOP[id]?.effect || HECATE[id] ? 'win' : 'bg');
 function markCustomNew(id) {
   customFresh.add(id);
   customTab = customTabOf(id);   // the window opens on its tab
@@ -1029,7 +1035,7 @@ function drawThemeButton() {
   document.getElementById('themeBtn')?.remove();
   document.getElementById('themes')?.remove();
   const own = ownedThemes();
-  if (own.length < 2 && !ownedEffects().length) return;
+  if (own.length < 2 && !ownedEffects().length && !ownedSkins().some((x) => HECATE[x].achv)) return;
   const btn = document.createElement('button');
   btn.id = 'themeBtn';
   btn.className = 'panel';
@@ -1108,7 +1114,7 @@ function drawThemeButton() {
         fill();
         toast(`${HECATE[id].name}: ${on ? 'Off' : 'On'}`, on ? 'no' : 'yes');
       };
-      const skinCard = (into, id) => onOff(card(into, `images/fx/hecate/${id}.webp`, HECATE[id].name, false, () => toggle(id)), !all && picked.includes(id));
+      const skinCard = (into, id) => onOff(card(into, `images/fx/hecate/${id}.webp`, HECATE[id].name, false, () => toggle(id), customFresh.has(id)), !all && picked.includes(id));
       for (const id of ownedSkins().filter((x) => !HECATE[x].pack || HECATE[x].solo)) skinCard(list, id);
       for (const pack of ownedEffects().filter((x) => Object.values(HECATE).some((h) => h.pack === x && !h.solo))) {
         const ids = ownedSkins().filter((x) => HECATE[x].pack === pack && !HECATE[x].solo);

@@ -72,9 +72,9 @@
   const upTo = (n, need) => [Math.min(n, need), need];
   // Hidden: win every BGM of the boss (waiting room, each phase, loot room) in BGM Clip Extreme. Locked: its short name,
   // ??? and N / M; unlocked: its full name (the boss's finishing attack) and what you did.
-  const kill = (boss, name, full, img) => A(`kill:${boss}`, name, `Played all versions of ${boss}'s BGM in Extreme mode.`,
+  const kill = (boss, name, full, img, fx) => A(`kill:${boss}`, name, `Played all versions of ${boss}'s BGM in Extreme mode.`,
     (s, L) => { const t = L?.tracksOf[boss] || []; return [t.filter((x) => s.tracks.has(x)).length, t.length || 1]; },
-    `images/bosses/${img}.png`, { full, reward: 'Kill effect win effect (coming soon)' });
+    `images/bosses/${img}.png`, { full, fx, reward: `${full} (Guess in 1 win effect)` });
   const SECTIONS = [
     ['Collections', [
       A('col:bgm', 'MMF Meister', 'Win BGM Clip with every boss.', (s, L) => [count(s.won.bgm, L?.bgm), L?.bgm.length || 1], '1142989'),
@@ -113,10 +113,10 @@
       A('buy10', 'Richie Rich', 'Buy 10 items in the shop.', (s) => upTo(s.buys, 10), '1142161'),
     ]],
     ['Hidden', [
-      kill('Malefic Star', "Siren's Song", "Siren's Song", 'malefic-star'),
-      kill('Kai', 'Iaido Alpha', 'Kai-ryu Sword: Iaido Alpha', 'kai'),
-      kill('Mayrin', 'Mayrin (Placeholder)', 'Mayrin (Placeholder)', 'mayrin'),
-      kill('Bellona', 'Bellona (Placeholder)', 'Bellona (Placeholder)', 'bellona'),
+      kill('Malefic Star', "Siren's Song", "Siren's Song", 'malefic-star', 'sirenSong'),
+      kill('Kai', 'Iaido Alpha', 'Kai-ryu Sword: Iaido Alpha', 'kai', 'iaidoAlpha'),
+      kill('Mayrin', 'Mayrin (Placeholder)', 'Mayrin (Placeholder)', 'mayrin', 'mayrinKill'),
+      kill('Bellona', 'Bellona (Placeholder)', 'Bellona (Placeholder)', 'bellona', 'bellonaKill'),
       A('limbo', 'Subconscious', 'Something stirred in the abyss.', (s) => [s.limbo ? 1 : 0, 1], 'images/fx/limbo-bundle.webp', { full: "Limbo's Subconscious" }),
     ], true],
   ];
@@ -127,14 +127,16 @@
     if (!loggedIn()) return;
     const L = await loadLists();
     const first = read(ACHV_KEY) == null;   // first look ever: what was earned before unlocks quietly
-    const s = stats(L), got = json(ACHV_KEY, {}), fresh = [];
+    const s = stats(L), got = json(ACHV_KEY, {}), fresh = [], newFx = [];
     for (const a of ALL) {
       const [have, need] = a.prog(s, L);
-      if (have >= need && got[a.id] == null) { got[a.id] = today(); fresh.push(a.full || a.name); }
+      if (have >= need && got[a.id] == null) { got[a.id] = today(); fresh.push(a.full || a.name); if (a.fx) newFx.push(a.fx); }
     }
     const changed = fresh.length || s.streak > (got._bestStreak || 0);
     got._bestStreak = Math.max(s.streak, got._bestStreak || 0);
     if (changed || first) { try { localStorage.setItem(ACHV_KEY, JSON.stringify(got)); } catch {} }
+    // A boss finishing effect just unlocked: it's in Customize > Win Effect now (fx.js), NEW until reload
+    if (newFx.length && typeof drawThemeButton === 'function') { newFx.forEach((x) => customFresh.add(x)); customTab = 'win'; drawThemeButton(); }
     if (announce && !first) fresh.forEach((n, i) => setTimeout(() => toast(n), 2500 + i * 2600));
   }
   function toast(name) {
