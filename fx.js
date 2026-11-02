@@ -100,6 +100,40 @@ function fpsTick(t) {
   }
 }
 if (fps30()) requestAnimationFrame(fpsTick);
+// On Limbo's mashup day (every game, every mode) the "Mapledle" title glitches for half a second now and then (every
+// 25-90 s at random), rare enough to barely notice. Only a hash of that day is kept here (the BGM page works the day
+// out from its schedule; the other pages can't), so the day itself isn't written anywhere. The BGM page also counts
+// that day's mashup opened from the Archive; the test build's /egg limbo counts too.
+const LIMBO_DAY_HASH = '70c79fa9c8384640b353ed924d86de2684741fe9ec37ff1012d3230dc59eb43e';
+let limboDayToday = null;
+async function isLimboDay() {
+  if (window.devEgg === 'limbo' || (typeof isLimboEgg === 'function' && isLimboEgg())) return true;
+  const d = Math.floor(Date.now() / 86400000);
+  if (limboDayToday?.d !== d) {
+    let yes = false;
+    try {
+      const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('mapledle|limbo-day|' + d));
+      yes = [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, '0')).join('') === LIMBO_DAY_HASH;
+    } catch {}
+    limboDayToday = { d, yes };
+  }
+  return limboDayToday.yes;
+}
+(function titleGlitch() {
+  setTimeout(async () => {
+    const h = document.querySelector('h1');
+    if (h && !document.hidden && !matchMedia('(prefers-reduced-motion: reduce)').matches && await isLimboDay()) {
+      if (!h.querySelector('.gtext')) {
+        const g = Object.assign(document.createElement('span'), { className: 'gtext', textContent: h.textContent });
+        g.dataset.text = h.textContent;
+        h.replaceChildren(g);
+      }
+      h.classList.remove('tglitch'); void h.offsetWidth; h.classList.add('tglitch');
+      setTimeout(() => h.classList.remove('tglitch'), 500);
+    }
+    titleGlitch();
+  }, 25000 + Math.random() * 65000);
+})();
 function fxLayer(ms) {
   const cv = document.createElement('canvas');
   cv.className = 'confetti';
