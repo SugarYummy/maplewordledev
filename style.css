@@ -624,10 +624,10 @@ body.glitch .game { animation: glitchslice 2.3s steps(1) infinite; }
   mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); }
 .game.rainbow > .rbring, .game.rainbow > .rbglow { display: block; }
 .rbring { inset: -3px; padding: 3px; border-radius: 15px; }
-.rbglow { inset: -5px; z-index: -1; padding: 5px; border-radius: 17px; opacity: 0.4; }
+.rbglow { inset: -24px; z-index: -1; padding: 24px; border-radius: 36px; opacity: 0.9; animation: glow 0.8s ease-in-out infinite alternate; }
 .rbring i, .rbglow i, #archiveList button.rainbow::before { position: absolute; left: 50%; top: 50%; width: 150cqmax; height: 150cqmax;
   background: conic-gradient(#ff3c3c, #ffa01e, #ffe628, #3cd25a, #328cff, #aa50ff, #ff3c3c); animation: rbturn 4s linear infinite; }
-.rbglow i { filter: blur(3px); }
+.rbglow i { filter: blur(14px); }
 @keyframes rbturn { from { transform: translate(-50%, -50%) rotate(0); } to { transform: translate(-50%, -50%) rotate(360deg); } }
 .game.glow.rainbow { animation: none; box-shadow: none; }   /* the rainbow glow replaces the gold one */
 .game.shake.glow.rainbow { animation: shake 0.5s cubic-bezier(.36, .07, .19, .97) both; }
@@ -636,7 +636,7 @@ body.glitch .game.glow.rainbow { animation: glitchslice 2.3s steps(1) infinite; 
 #archiveList button.rainbow::before { content: ''; width: 150%; height: auto; aspect-ratio: 1; z-index: -1; }
 #archiveList button.rainbow::after { content: ''; position: absolute; inset: 2px; border-radius: 4px; z-index: -1; background: rgba(255, 255, 255, 0.75); }
 #archiveList button.rainbow:hover::after { background: rgba(255, 255, 255, 0.85); }
-@media (prefers-reduced-motion: reduce) { .game.rainbow, .game.glow.rainbow { animation: none; }
+@media (prefers-reduced-motion: reduce) { .game.rainbow, .game.glow.rainbow, .rbglow { animation: none; }
   .rbring i, .rbglow i, #archiveList button.rainbow::before { animation: none; transform: translate(-50%, -50%); } }
 #titleAsk { display: flex; gap: 6px; justify-content: center; margin: 6px 0; }
 #titleField { position: relative; flex: 1; max-width: 320px; }
