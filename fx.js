@@ -69,6 +69,37 @@ const rand = (a, b) => a + Math.random() * (b - a);
 // All the mesos of one show are drawn on a single canvas, in one loop: thousands of page elements (one per meso)
 // made phones lag and use a lot of memory. A layer: { parts, jobs }. jobs run every frame (they throw new mesos)
 // until they say they're done; parts are the mesos in the air. The canvas goes once both are empty, or after `ms`.
+// Settings: dark mode and 30 FPS (30 is the default, 60 if chosen; each page's <head> sets html.dark / html.fps30 before it draws, from these keys).
+const DARK_KEY = 'mapleWordle:dark', FPS_KEY = 'mapleWordle:fps';
+const darkOn = () => document.documentElement.classList.contains('dark');
+const fps30 = () => document.documentElement.classList.contains('fps30');
+// 30 FPS: every animation on the page (glows, spinning rings, leaves, glitches...) is moved along by hand 30 times a
+// second instead of the browser drawing it at the screen's full refresh rate. Each one is paused and set to where it
+// should be by now; one that reaches its end is finished, so whatever waits for it still happens.
+const fpsHeld = new WeakMap();   // animation -> the timeline time its start lines up with
+let fpsLast = 0;
+function fpsTick(t) {
+  if (!fps30()) {   // back to normal: let them run on their own again
+    for (const a of document.getAnimations()) if (fpsHeld.has(a)) { fpsHeld.delete(a); if (a.playState === 'paused') a.play(); }
+    return;
+  }
+  requestAnimationFrame(fpsTick);
+  if (t - fpsLast < 32) return;
+  fpsLast = t;
+  const now = document.timeline.currentTime;
+  for (const a of document.getAnimations()) {
+    if (!fpsHeld.has(a)) {
+      if (a.playState !== 'running') continue;   // paused by the page itself, or done
+      fpsHeld.set(a, now - (a.currentTime ?? 0) / (a.playbackRate || 1));
+      a.pause();
+    }
+    const at = (now - fpsHeld.get(a)) * (a.playbackRate || 1);
+    const end = a.effect?.getComputedTiming().endTime;
+    if (end != null && end !== Infinity && at >= end) { fpsHeld.delete(a); a.finish(); continue; }
+    a.currentTime = at;
+  }
+}
+if (fps30()) requestAnimationFrame(fpsTick);
 function fxLayer(ms) {
   const cv = document.createElement('canvas');
   cv.className = 'confetti';
@@ -78,10 +109,10 @@ function fxLayer(ms) {
   const end = performance.now() + ms;
   let last = performance.now();
   // Drawn at 1 canvas pixel per CSS pixel (the sprites are pixel art: style.css scales it up pixel-sharp) and at most
-  // ~60 times a second: a full-screen canvas at a sharp screen's full resolution and refresh rate kept the GPU busy.
+  // ~60 times a second (30 with the 30 FPS setting): a full-screen canvas at a sharp screen's full resolution and refresh rate kept the GPU busy.
   const frame = (now) => {
     if (now > end || (!L.jobs.length && !L.parts.length)) { cv.remove(); return; }
-    if (now - last < 15) { requestAnimationFrame(frame); return; }
+    if (now - last < (fps30() ? 32 : 15)) { requestAnimationFrame(frame); return; }
     const dt = Math.min(0.05, (now - last) / 1000);
     last = now;
     const W = innerWidth, H = innerHeight, dpr = 1;
@@ -488,6 +519,10 @@ applyBox();
       '<input id="setBox" type="range" min="0" max="100" step="5"><span id="setBoxPct"></span></div>' +
       `<div class="setrow"><span class="setlabel">Background effect ${tip('Maple leaves on 2x weekends, effects on holidays.')}</span>` +
       '<span class="seg"><button data-fx="on">On</button><button data-fx="off">Off</button></span></div>' +
+      `<div class="setrow"><span class="setlabel">Theme ${tip('Light or dark boxes and windows.')}</span>` +
+      '<span class="seg"><button data-dark="0">Light</button><button data-dark="1">Dark</button></span></div>' +
+      `<div class="setrow"><span class="setlabel">Effects ${tip('How smooth the glows, mesos and leaves are. 30 (default) is easier on your computer; 60 is smoother but heavier.')}</span>` +
+      '<span class="seg"><button data-fps="30">30 FPS</button><button data-fps="60">60 FPS</button></span></div>' +
       `<div class="setrow"><span class="setlabel">Secret passcode ${tip('VIP access for helpers of the site!')}</span>` +
       (vip.on ? '<span class="vipon">✨ VIP unlocked</span>'
         : '<span class="vipfield"><input id="vipCode" type="text" placeholder="Passcode" autocomplete="off" spellcheck="false" autocapitalize="off" data-1p-ignore data-lpignore="true" data-form-type="other"><span id="vipMsg"></span></span><button id="vipGo">Enter</button>') + '</div>' +
@@ -522,6 +557,8 @@ applyBox();
       vol.disabled = muted();
       pct.textContent = vol.value + '%';
       for (const b of body.querySelectorAll('[data-fx]')) b.classList.toggle('on', (b.dataset.fx === 'on') === bgEffectOn());
+      for (const b of body.querySelectorAll('[data-dark]')) b.classList.toggle('on', (b.dataset.dark === '1') === darkOn());
+      for (const b of body.querySelectorAll('[data-fps]')) b.classList.toggle('on', (b.dataset.fps === '30') === fps30());
       body.querySelector('#setBoxPct').textContent = boxOpacity() + '%';
       if (bgmBtn) {
         bgmBtn.textContent = themeBgmOn() ? '🎵 On' : '🔇 Off';
@@ -543,6 +580,18 @@ applyBox();
     });
     vol.addEventListener('input', () => { saveSliderVolume(vol.value); show(); });
     for (const b of body.querySelectorAll('[data-fx]')) b.addEventListener('click', () => { lsSet(FX_KEY, b.dataset.fx); show(); leaves(); halloweenFx(); });
+    for (const b of body.querySelectorAll('[data-dark]')) b.addEventListener('click', () => {
+      lsSet(DARK_KEY, b.dataset.dark);
+      document.documentElement.classList.toggle('dark', b.dataset.dark === '1');
+      show();
+    });
+    for (const b of body.querySelectorAll('[data-fps]')) b.addEventListener('click', () => {
+      const was = fps30();
+      lsSet(FPS_KEY, b.dataset.fps);
+      document.documentElement.classList.toggle('fps30', b.dataset.fps === '30');
+      if (!was && fps30()) requestAnimationFrame(fpsTick);
+      show();
+    });
     const boxIn = body.querySelector('#setBox');
     boxIn.value = boxOpacity();
     boxIn.addEventListener('input', () => { lsSet(BOX_KEY, boxIn.value); applyBox(); show(); });

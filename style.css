@@ -10,7 +10,7 @@ h1 { font-weight: 900; }
 body { text-align: center; margin: 0; min-height: 100vh; display: flex; flex-direction: column; align-items: center;
        background: #3b8fe0 url("images/background.webp") center bottom / cover no-repeat fixed; }
 html.inshell body { background: transparent; }   /* inside the main page (shell.js), which draws the background */
-.panel { background: rgba(255, 255, 255, 0.55);
+.panel { background: rgba(var(--wb), 0.55);
          border-radius: 12px; padding: 8px 16px 16px; margin: 16px; max-width: calc(100% - 64px); }
 .table-wrap { overflow-x: auto; }
 footer.panel { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); z-index: 3; margin: 0;
@@ -71,15 +71,15 @@ footer.panel { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%
 html:has(#archive:not([hidden]), #changelog:not([hidden]), #info:not([hidden]), #themes:not([hidden])) { overflow: hidden; }
 #archiveTabs { margin-bottom: 8px; }
 #archiveList button { display: block; width: 100%; margin: 4px 0; padding: 6px; text-align: left;
-                      background: rgba(255, 255, 255, 0.4); border: 1px solid rgba(0, 0, 0, 0.15); border-radius: 6px; cursor: pointer; }
-#archiveList button:hover { background: rgba(255, 255, 255, 0.65); }
+                      background: rgba(var(--wb), 0.4); border: 1px solid rgba(0, 0, 0, 0.15); border-radius: 6px; cursor: pointer; }
+#archiveList button:hover { background: rgba(var(--wb), 0.65); }
 #archiveList button.firsttry { border-color: rgba(230, 160, 0, 0.9); background: rgba(255, 236, 160, 0.55); }
 /* the row's glow only fades in and out (a pre-drawn shadow), so it costs nothing to keep going */
 #archiveList button.firsttry, #archiveList button.diamond { position: relative; box-shadow: 0 0 2px 1px rgba(255, 200, 40, .5); }
 #archiveList button.firsttry::after, #archiveList button.diamond::after { content: ''; position: absolute; inset: -1px; border-radius: inherit; pointer-events: none;
   box-shadow: 0 0 10px 4px rgba(255, 200, 40, 1); animation: glow 0.8s ease-in-out infinite alternate; }
 @media (prefers-reduced-motion: reduce) { #archiveList button.firsttry::after, #archiveList button.diamond::after { animation: none; opacity: .9; } }
-th { background: rgba(255, 255, 255, 0.6); }
+th { background: rgba(var(--wb), 0.6); }
 td, th { border: 1px solid #999; padding: 4px 8px; }
 table { border-collapse: collapse; margin: 8px auto; }
 .green { background: #6c6; }
@@ -97,7 +97,7 @@ table { border-collapse: collapse; margin: 8px auto; }
 .grey { background: #9a9a9a; }
 td.cardcell { background: #b9bdc6; }
 .bestrow td { border-bottom: 3px solid #333; }
-.bestrow .best { font-weight: bold; background: rgba(255, 255, 255, 0.7); }
+.bestrow .best { font-weight: bold; background: rgba(var(--wb), 0.7); }
 .hintrow .card .noimg { font-size: 22px; }
 .statrow .pct { width: 40px; text-align: left; }
 .card { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 90px; }
@@ -105,11 +105,11 @@ td.cardcell { background: #b9bdc6; }
 .card .noimg { display: flex; align-items: center; justify-content: center; background: #555; color: #fff; font-size: 28px; }
 #games { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin: -8px 0 8px; }
 #games button { padding: 6px 14px; font-size: 15px; border-radius: 8px; border: 1px solid rgba(0, 0, 0, 0.2);
-                background: rgba(255, 255, 255, 0.5); font-family: inherit; }
-#games button.on { font-weight: bold; outline: 2px solid #333; background: rgba(255, 255, 255, 0.8); }
+                background: rgba(var(--wb), 0.5); font-family: inherit; }
+#games button.on { font-weight: bold; outline: 2px solid var(--ol); background: rgba(var(--wb), 0.8); }
 #games button:disabled { color: #555; opacity: 0.7; cursor: not-allowed; }
 #games small { display: block; font-size: 11px; }
-#modes .on, #archiveTabs .on { font-weight: bold; outline: 2px solid #333; }
+#modes .on, #archiveTabs .on { font-weight: bold; outline: 2px solid var(--ol); }
 /* Boss picker: search box with a dropdown of photo + name rows (plain styling for now). */
 #picker { position: relative; display: block; width: min(420px, 100%); margin: 8px auto; }
 #picker[hidden] { display: none; }
@@ -130,8 +130,8 @@ td.cardcell { background: #b9bdc6; }
 #list .item img.wide { width: auto; max-width: 96px; }
 #subgames { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin: 0 0 8px; }
 #subgames button { padding: 4px 12px; font-size: 14px; border-radius: 8px; border: 1px solid rgba(0, 0, 0, 0.2);
-                   background: rgba(255, 255, 255, 0.5); font-family: inherit; }
-#subgames button.on { font-weight: bold; outline: 2px solid #333; background: rgba(255, 255, 255, 0.8); }
+                   background: rgba(var(--wb), 0.5); font-family: inherit; }
+#subgames button.on { font-weight: bold; outline: 2px solid var(--ol); background: rgba(var(--wb), 0.8); }
 #subgames button:disabled { color: #555; opacity: 0.7; cursor: not-allowed; }
 #subgames small { display: block; font-size: 11px; }
 #games a { text-decoration: none; color: inherit; }
@@ -140,7 +140,7 @@ td.cardcell { background: #b9bdc6; }
 #games button:not(.on):not(:disabled), #subgames button:not(.on):not(:disabled) { cursor: pointer;
   transition: background 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease; }
 #games button:not(.on):not(:disabled):hover, #subgames button:not(.on):not(:disabled):hover {
-  background: rgba(255, 255, 255, 0.85); transform: translateY(-2px); box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2); }
+  background: rgba(var(--wb), 0.85); transform: translateY(-2px); box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2); }
 /* A new guess row flips in cell by cell (fx.js sets each cell's delay). */
 td.flip { animation: flip 0.5s ease both; }
 @keyframes flip { from { transform: rotateX(90deg); } to { transform: rotateX(0); } }
@@ -179,8 +179,8 @@ td.flip { animation: flip 0.5s ease both; }
 .pickrow { display: flex; justify-content: center; align-items: center; gap: 8px; margin: 8px auto; }
 .pickrow #picker { margin: 0; width: min(420px, calc(100% - 44px)); }
 #infoBtn { flex: none; width: 34px; height: 34px; border-radius: 4px; border: 1px solid rgba(0, 0, 0, 0.25);
-           background: rgba(255, 255, 255, 0.7); font-family: inherit; font-size: 17px; font-weight: bold; cursor: pointer; }
-#infoBtn:hover { background: rgba(255, 255, 255, 0.95); }
+           background: rgba(var(--wb), 0.7); font-family: inherit; font-size: 17px; font-weight: bold; cursor: pointer; }
+#infoBtn:hover { background: rgba(var(--wb), 0.95); }
 /* Animation Attack: the two skill clips side by side (stacked on narrow screens). */
 #clips { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; margin: 12px 0; }
 #clips[hidden] { display: none; }
@@ -192,7 +192,7 @@ td.flip { animation: flip 0.5s ease both; }
 #clues[hidden], #guessTable[hidden] { display: none; }
 #guessTable .card { flex-direction: row; gap: 8px; }
 /* Animation Attack win screen. */
-#congrats { margin: 12px auto; padding: 10px 16px 14px; max-width: 420px; border-radius: 12px; background: rgba(255, 255, 255, 0.6); }
+#congrats { margin: 12px auto; padding: 10px 16px 14px; max-width: 420px; border-radius: 12px; background: rgba(var(--wb), 0.6); }
 #congrats[hidden] { display: none; }
 #congrats h2 { margin: 4px 0; }
 #congrats p { margin: 4px 0; font-size: 17px; }
@@ -260,11 +260,11 @@ td.flip { animation: flip 0.5s ease both; }
 #play:hover { background: #f2f2f2; }
 #bgmVol { width: 120px; accent-color: #e0a000; cursor: pointer; }
 #skip { flex: none; height: 34px; padding: 0 12px; border-radius: 4px; border: 1px solid rgba(0, 0, 0, 0.25);
-        background: rgba(255, 255, 255, 0.9); font-family: inherit; font-size: 15px; cursor: pointer; }
+        background: rgba(var(--wb), 0.9); font-family: inherit; font-size: 15px; cursor: pointer; }
 #skip:hover { background: #fff; }
 #skip[hidden] { display: none; }
 #rows .gbar.grey { color: #222; }
-#bonus { margin: 12px auto; padding: 8px 16px 12px; max-width: 420px; border-radius: 12px; background: rgba(255, 255, 255, 0.6); }
+#bonus { margin: 12px auto; padding: 8px 16px 12px; max-width: 420px; border-radius: 12px; background: rgba(var(--wb), 0.6); }
 #bonus h3 { margin: 4px 0; }
 #bonus p { margin: 6px 0; }
 #bonusAsk { display: flex; gap: 6px; justify-content: center; align-items: center; margin: 6px 0; }
@@ -351,7 +351,7 @@ body.limboswap #limbobg, body.limboswap #limboborder, body.limboswap #cfx, body.
                          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3); transition: transform 0.2s ease; }
 .fxswitch input:checked + .knob { background: #2fa84f; }
 .fxswitch input:checked + .knob::after { transform: translateX(18px); }
-.fxswitch input:focus-visible + .knob { outline: 2px solid #333; outline-offset: 2px; }
+.fxswitch input:focus-visible + .knob { outline: 2px solid var(--ol); outline-offset: 2px; }
 body.egg-vonbon::before { opacity: 1; background-color: #2c4544; background-image: url("images/vonbon.webp"); }
 body.egg-bellona::before { opacity: 1; background-color: #23292a; background-image: url("images/bellona.webp"); }
 body.glitch::after { content: ''; position: fixed; inset: 0; z-index: 10; pointer-events: none; mix-blend-mode: overlay;
@@ -399,7 +399,7 @@ body.glitch :is(button, input, select) { text-shadow: inherit; }   /* the browse
 /* Theme button: just above the credit box, only once you have a theme besides Default. It opens a window like the Changelog. */
 #themeBtn { position: fixed; bottom: 40px; right: 10px; z-index: 5; margin: 0; max-width: none; width: 34px; height: 34px; padding: 0;
             display: flex; align-items: center; justify-content: center; font-size: 18px; line-height: 1; border: none; border-radius: 8px; cursor: pointer; }
-#themeBtn:hover { background: rgba(255, 255, 255, 0.8); }
+#themeBtn:hover { background: rgba(var(--wb), 0.8); }
 #themeBtn img { width: 24px; height: 24px; object-fit: contain; }
 #themes { position: fixed; inset: 0; z-index: 6; background: rgba(0, 0, 0, 0.4); display: flex; align-items: flex-start; justify-content: center; }
 #themes[hidden] { display: none; }
@@ -408,9 +408,9 @@ body.glitch :is(button, input, select) { text-shadow: inherit; }   /* the browse
 .themehelp { margin: 0 0 10px; font-size: 14px; max-width: 360px; margin-inline: auto; }
 .themetabs { display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; margin: 0 0 10px; }
 .themetabs button { font-family: inherit; font-size: 14px; padding: 5px 12px; border-radius: 8px; border: 1px solid rgba(0, 0, 0, 0.25);
-                    background: rgba(255, 255, 255, 0.55); cursor: pointer; }
-.themetabs button:hover { background: rgba(255, 255, 255, 0.85); }
-.themetabs button.on { font-weight: bold; outline: 2px solid #333; background: rgba(255, 255, 255, 0.9); }
+                    background: rgba(var(--wb), 0.55); cursor: pointer; }
+.themetabs button:hover { background: rgba(var(--wb), 0.85); }
+.themetabs button.on { font-weight: bold; outline: 2px solid var(--ol); background: rgba(var(--wb), 0.9); }
 /* "NEW" tags (fx.js newTag): the Shop button, shop items, the Customize tabs and cards */
 #shopBtn, .shopitem, .themetabs button, .themecard { position: relative; }
 .shopitem .newtag, .themecard .newtag { top: -5px; left: -5px; font-size: 9px; line-height: 13px; padding: 0 4px; }
@@ -424,9 +424,9 @@ body.glitch :is(button, input, select) { text-shadow: inherit; }   /* the browse
 .fxbundlelist .themecard { font-size: 14px; }
 #themeList { display: flex; flex-direction: column; gap: 8px; width: min(360px, calc(100vw - 96px)); margin: 0 auto 8px; }
 .themecard { display: flex; align-items: center; gap: 12px; padding: 6px; border-radius: 8px; cursor: pointer; font-family: inherit;
-             font-size: 15px; text-align: left; border: 1px solid rgba(0, 0, 0, 0.2); background: rgba(255, 255, 255, 0.5); }
-.themecard:hover { background: rgba(255, 255, 255, 0.8); }
-.themecard.on { font-weight: bold; outline: 2px solid #333; background: rgba(255, 255, 255, 0.85); }
+             font-size: 15px; text-align: left; border: 1px solid rgba(0, 0, 0, 0.2); background: rgba(var(--wb), 0.5); }
+.themecard:hover { background: rgba(var(--wb), 0.8); }
+.themecard.on { font-weight: bold; outline: 2px solid var(--ol); background: rgba(var(--wb), 0.85); }
 .themepic { flex: none; width: 112px; height: 63px; border-radius: 5px; background: center / cover no-repeat; }
 .themepic.default { background-image: url("images/background.webp"); }
 @media (max-width: 700px) { #themeBtn { bottom: 96px; } }
@@ -474,13 +474,13 @@ body.glitch :is(button, input, select) { text-shadow: inherit; }   /* the browse
 .popupbody h3 { margin: 14px 0 4px; }
 .popupbody h3 small { font-weight: normal; opacity: 0.7; }
 #shopBtn { font-family: inherit; font-size: 13px; font-weight: 600; padding: 3px 10px; border-radius: 10px; cursor: pointer;
-           border: 1px solid rgba(0, 0, 0, 0.2); background: rgba(255, 255, 255, 0.7); }
-#shopBtn:hover { background: rgba(255, 255, 255, 0.95); }
+           border: 1px solid rgba(0, 0, 0, 0.2); background: rgba(var(--wb), 0.7); }
+#shopBtn:hover { background: rgba(var(--wb), 0.95); }
 .shopempty { text-align: center; opacity: 0.75; margin: 18px 0; }
 .pager { display: flex; justify-content: center; align-items: center; gap: 4px; margin: 8px 0 0; }
 .pager button { min-width: 30px; height: 30px; padding: 0 6px; font-family: inherit; font-size: 14px; border-radius: 6px; cursor: pointer;
-                border: 1px solid rgba(0, 0, 0, 0.2); background: rgba(255, 255, 255, 0.6); }
-.pager button.on { font-weight: 700; outline: 2px solid #333; background: rgba(255, 255, 255, 0.95); }
+                border: 1px solid rgba(0, 0, 0, 0.2); background: rgba(var(--wb), 0.6); }
+.pager button.on { font-weight: 700; outline: 2px solid var(--ol); background: rgba(var(--wb), 0.95); }
 .pager button:disabled { opacity: 0.35; cursor: default; }
 .pager .gap { padding: 0 2px; opacity: 0.6; }
 .mesototal { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 0 0 8px; font-size: 30px; font-weight: 900; color: #ffd23f;
@@ -493,7 +493,7 @@ body.glitch :is(button, input, select) { text-shadow: inherit; }   /* the browse
 .mesorecent b { color: #8a6000; white-space: nowrap; }
 .mesotable { border-collapse: collapse; font-size: 13px; margin: 0; }
 .mesotable th, .mesotable td { padding: 2px 7px; border: 1px solid rgba(0, 0, 0, 0.15); text-align: center; }
-.mesotable th { text-align: left; background: rgba(255, 255, 255, 0.5); }
+.mesotable th { text-align: left; background: rgba(var(--wb), 0.5); }
 .mesobonus { margin: 4px 0 0; font-size: 13px; }
 @media (max-width: 700px) {
   #mesoCorner { top: 8px; right: 8px; flex-direction: row-reverse; align-items: center; }
@@ -520,7 +520,7 @@ body.glitch :is(button, input, select) { text-shadow: inherit; }   /* the browse
 .mesotag img { width: 12px; height: 12px; image-rendering: pixelated; }
 /* Info strip (fx.js showPuzzle / showTimer): PUZZLE | NEXT ... IN | STREAK in one rounded bar. */
 .infostrip { display: grid; grid-template-columns: 1fr 1.4fr 1fr; width: min(460px, 100%); margin: 6px auto 10px; border-radius: 10px;
-             background: rgba(255, 255, 255, 0.65); border: 1px solid rgba(0, 0, 0, 0.1); }
+             background: rgba(var(--wb), 0.65); border: 1px solid rgba(0, 0, 0, 0.1); }
 .infostrip[hidden] { display: none; }
 .infostrip > div { padding: 6px 4px; min-width: 0; }
 .infostrip > div + div { border-left: 1px solid rgba(0, 0, 0, 0.1); }
@@ -538,7 +538,7 @@ body.glitch :is(button, input, select) { text-shadow: inherit; }   /* the browse
 /* Shop (in the Mesos window). */
 .shoplist { display: flex; flex-direction: column; gap: 8px; }
 .shopitem { display: flex; align-items: center; gap: 12px; padding: 6px; border-radius: 8px; border: 1px solid rgba(0, 0, 0, 0.2);
-            background: rgba(255, 255, 255, 0.6); }
+            background: rgba(var(--wb), 0.6); }
 .shopinfo { flex: 1; display: flex; flex-direction: column; gap: 2px; text-align: left; }
 .shopinfo small { opacity: 0.7; }
 .shopinfo .price { display: flex; align-items: center; gap: 4px; font-weight: 700; color: #8a6000; }
@@ -575,16 +575,16 @@ body.glitch :is(button, input, select) { text-shadow: inherit; }   /* the browse
 /* Settings (fx.js): the ⚙️ in the top-right corner and its window. */
 #settingsBtn { position: fixed; top: 12px; right: 12px; z-index: 5; margin: 0; width: 34px; height: 34px; padding: 0; border: none; border-radius: 10px;
                font-size: 18px; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; max-width: none; }
-#settingsBtn:hover { background: rgba(255, 255, 255, 0.8); }
+#settingsBtn:hover { background: rgba(var(--wb), 0.8); }
 .setrow { display: flex; align-items: center; gap: 10px; margin: 10px 0; flex-wrap: wrap; }
 .setlabel { font-weight: 700; min-width: 160px; }
 #setMute, #setBgm, .seg button { font-family: inherit; font-size: 14px; padding: 4px 10px; border-radius: 8px; cursor: pointer;
-                        border: 1px solid rgba(0, 0, 0, 0.2); background: rgba(255, 255, 255, 0.6); }
+                        border: 1px solid rgba(0, 0, 0, 0.2); background: rgba(var(--wb), 0.6); }
 #setVol, #setBgmVol { width: 120px; accent-color: #e0a000; }
 #setVol:disabled, #setBgmVol:disabled { filter: grayscale(1) opacity(0.5); }
 #setVolPct, #setBgmPct { min-width: 3em; font-variant-numeric: tabular-nums; }
 .seg { display: inline-flex; gap: 4px; }
-.seg button.on { font-weight: 700; outline: 2px solid #333; background: rgba(255, 255, 255, 0.95); }
+.seg button.on { font-weight: 700; outline: 2px solid var(--ol); background: rgba(var(--wb), 0.95); }
 .setnote { font-size: 13px; opacity: 0.75; }
 /* Weekend 2x falling leaves, behind the game (fx.js). */
 #leaves { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
@@ -594,8 +594,8 @@ body.glitch :is(button, input, select) { text-shadow: inherit; }   /* the browse
 @media (max-width: 700px) { #mesoBtn .weekendtag { right: -3px; top: -12px; } }
 /* (i) buttons in Settings: hover (or tap) shows what the setting does. */
 .infotip { width: 22px; height: 22px; padding: 0; margin-left: 4px; border-radius: 4px; border: 1px solid rgba(0, 0, 0, 0.25);   /* like the [?] button */
-           background: rgba(255, 255, 255, 0.7); font-family: inherit; font-size: 13px; font-weight: bold; line-height: 1; cursor: pointer; vertical-align: middle; }
-.infotip:hover { background: rgba(255, 255, 255, 0.95); }
+           background: rgba(var(--wb), 0.7); font-family: inherit; font-size: 13px; font-weight: bold; line-height: 1; cursor: pointer; vertical-align: middle; }
+.infotip:hover { background: rgba(var(--wb), 0.95); }
 .infotip.open { background: #222; color: #fff; }
 .setrow { position: relative; }
 .tiptext { position: absolute; left: 0; width: max-content; max-width: 100%; box-sizing: border-box; top: calc(100% + 2px); z-index: 5; margin: 0; padding: 6px 10px; border-radius: 6px;
@@ -618,12 +618,12 @@ body.glitch :is(button, input, select) { text-shadow: inherit; }   /* the browse
 @media (prefers-reduced-motion: reduce) { #bonusCall button, #bonusCall button::after, #bonus.waiting::after { animation: none; } }
 /* VIP player in Settings (secret passcode). */
 #vipCode { font-family: inherit; font-size: 14px; padding: 4px 8px; width: 120px; border: 1px solid #999; border-radius: 6px; }
-#vipGo, .vipctl button { font-family: inherit; font-size: 14px; padding: 4px 12px; border-radius: 8px; cursor: pointer; border: 1px solid rgba(0, 0, 0, 0.2); background: rgba(255, 255, 255, 0.7); }
+#vipGo, .vipctl button { font-family: inherit; font-size: 14px; padding: 4px 12px; border-radius: 8px; cursor: pointer; border: 1px solid rgba(0, 0, 0, 0.2); background: rgba(var(--wb), 0.7); }
 .vipfield { position: relative; display: inline-block; }
 #vipMsg { position: absolute; left: 2px; top: calc(100% + 2px); font-size: 12px; color: #c22; white-space: nowrap; opacity: 0; transition: opacity 0.4s ease; pointer-events: none; }
 #vipMsg.show { opacity: 1; transition: opacity 0.15s ease; }
 .vipon { font-weight: 700; color: #8a5a00; }
-#vipBox { margin: 4px 0 10px; padding: 10px 12px; border-radius: 10px; background: rgba(255, 255, 255, 0.5); border: 1px solid rgba(176, 120, 0, 0.35); }
+#vipBox { margin: 4px 0 10px; padding: 10px 12px; border-radius: 10px; background: rgba(var(--wb), 0.5); border: 1px solid rgba(176, 120, 0, 0.35); }
 #vipBox[hidden] { display: none; }
 .vipctl { display: flex; gap: 8px; justify-content: center; }
 #vipNow { margin: 8px 0 4px; text-align: center; font-weight: 600; font-size: 14px; }
@@ -635,7 +635,7 @@ body.glitch :is(button, input, select) { text-shadow: inherit; }   /* the browse
 .setrow:has(.vipfield) { margin-bottom: 24px; }   /* room for "Wrong passcode" under the box */
 /* 🌈 (BGM Clip: first guess + both bonuses right): a rainbow that spins clockwise around the game box's border (with a
    soft glow outside it and a faint tint in the see-through panel), and around the Archive row's border. */
-.game.rainbow { background: linear-gradient(rgba(255, 255, 255, min(1, calc(var(--boxRA, .42) * var(--fxk, 1)))), rgba(255, 255, 255, min(1, calc(var(--boxRA, .42) * var(--fxk, 1))))),   /* static light pastel rainbow panel */
+.game.rainbow { background: linear-gradient(rgba(var(--wb), min(1, calc(var(--boxRA, .42) * var(--fxk, 1)))), rgba(var(--wb), min(1, calc(var(--boxRA, .42) * var(--fxk, 1))))),   /* static light pastel rainbow panel */
   linear-gradient(90deg, rgba(255, 60, 60, var(--boxT, .38)), rgba(255, 160, 30, var(--boxT, .38)), rgba(255, 230, 40, var(--boxT, .38)), rgba(60, 210, 90, var(--boxT, .38)), rgba(50, 140, 255, var(--boxT, .38)), rgba(170, 80, 255, var(--boxT, .38))), #fff0; }
 /* the border: a 3 px spinning rainbow ring just around the box, and the glow: the same rainbow, blurred, only outside
    the box (bgm.js adds both). The rainbow is drawn (and blurred) once and only turns: animating its angle redrew and
@@ -666,8 +666,8 @@ body.glitch :is(button, input, select) { text-shadow: inherit; }   /* the browse
 body.glitch .game.glow.rainbow, body.glitch .game.glow.limborb { animation: glitchslice 2.3s steps(1) infinite; }
 #archiveList button.rainbow, #archiveList button.limborb { position: relative; isolation: isolate; overflow: hidden; border: 0; padding: 8px; background: none; }   /* the 2 px ring is the rainbow showing around ::after */
 #archiveList button.rainbow::before, #archiveList button.limborb::before { content: ''; width: 150%; height: auto; aspect-ratio: 1; z-index: -1; }
-#archiveList button.rainbow::after, #archiveList button.limborb::after { content: ''; position: absolute; inset: 2px; border-radius: 4px; z-index: -1; background: rgba(255, 255, 255, 0.75); }
-#archiveList button.rainbow:hover::after, #archiveList button.limborb:hover::after { background: rgba(255, 255, 255, 0.85); }
+#archiveList button.rainbow::after, #archiveList button.limborb::after { content: ''; position: absolute; inset: 2px; border-radius: 4px; z-index: -1; background: rgba(var(--wb), 0.75); }
+#archiveList button.rainbow:hover::after, #archiveList button.limborb:hover::after { background: rgba(var(--wb), 0.85); }
 @media (prefers-reduced-motion: reduce) { .game.rainbow, .game.glow.rainbow, .game.glow.limborb, .rbglow { animation: none; }
   .rbring i, .rbglow i, #archiveList button.rainbow::before, #archiveList button.limborb::before { animation: none; transform: translate(-50%, -50%); } }
 /* Limbo's border (BGM Clip, Limbo's mashup day: first guess + the mashup right): the 🌈 ring and glow in Limbo's
@@ -692,13 +692,13 @@ body.glitch .game.glow.rainbow, body.glitch .game.glow.limborb { animation: glit
 #titleAsk[hidden] { display: none; } #titleGo { font-family: inherit; } #titleHead { margin: 14px 0 4px; }
 /* Settings > Transparent box: the main game box has no background (borders and glows stay). */
 /* Settings > Box opacity (fx.js sets the variables). */
-.game { background: rgba(255, 255, 255, min(1, calc(var(--boxA, .55) * var(--fxk, 1)))); --fxk: 1.4; }
+.game { background: rgba(var(--wb), min(1, calc(var(--boxA, .55) * var(--fxk, 1)))); --fxk: 1.4; }
 /* No frosted glass (backdrop blur) anywhere: the browser re-blurred everything behind every frosted box on every frame
    anything moved (mesos, leaves, a glowing border, scrolling), which kept the GPU very busy. The game box is a bit
    whiter instead, so the background behind it still doesn't get in the way. */
 #setBox { width: 120px; accent-color: #e0a000; }
 #setBoxPct { min-width: 3em; font-variant-numeric: tabular-nums; }
-.vipctl { flex-wrap: wrap; } .vipctl button.on { font-weight: 700; outline: 2px solid #333; background: rgba(255, 255, 255, 0.95); }
+.vipctl { flex-wrap: wrap; } .vipctl button.on { font-weight: 700; outline: 2px solid var(--ol); background: rgba(var(--wb), 0.95); }
 #titleGo { font-size: 15px; padding: 4px 10px; }
 #changelogBody ul ul { list-style-type: circle; }   /* every sub-bullet level is a hollow circle */
 #changelogBody .clnote { margin: 4px 0 0; font-weight: 600; }
@@ -716,9 +716,9 @@ body.glitch .game.glow.rainbow, body.glitch .game.glow.limborb { animation: glit
 /* Changelog boxes (fx.js buildChangelog): a group per major version (alpha v4, v3, ...) holding a box per version, both
    styled like the Archive's day buttons and opened / closed by clicking their title. */
 #changelogBody .clgroup { margin: 8px 0; padding: 4px 8px; border: 1px solid rgba(0, 0, 0, 0.25); border-radius: 8px;
-                          background: rgba(255, 255, 255, 0.2); }
+                          background: rgba(var(--wb), 0.2); }
 #changelogBody .clver { margin: 6px 0; padding: 4px 8px; border: 1px solid rgba(0, 0, 0, 0.15); border-radius: 6px;
-                        background: rgba(255, 255, 255, 0.4); }
+                        background: rgba(var(--wb), 0.4); }
 #changelogBody summary { cursor: pointer; list-style: none; padding: 2px 0; }
 #changelogBody summary::-webkit-details-marker { display: none; }
 #changelogBody summary::before { content: '▸'; display: inline-block; width: 1em; opacity: 0.6; }
@@ -818,8 +818,8 @@ input[type="search"]::-webkit-search-cancel-button, input[type="search"]::-webki
 /* Limbo Transition (a wide win effect) fills the whole screen like the others (.hecatefx: cover): the sides run off a
    normal screen, the top and bottom off a very wide one */
 /* Account (account.js): the row at the top of Settings, and its small windows (Create an Account, Log in, Account Settings). */
-.acctbtn { font-family: inherit; font-size: 14px; padding: 4px 12px; border-radius: 8px; cursor: pointer; border: 1px solid rgba(0, 0, 0, 0.2); background: rgba(255, 255, 255, 0.7); }
-.acctbtn:hover { background: rgba(255, 255, 255, 0.95); }
+.acctbtn { font-family: inherit; font-size: 14px; padding: 4px 12px; border-radius: 8px; cursor: pointer; border: 1px solid rgba(0, 0, 0, 0.2); background: rgba(var(--wb), 0.7); }
+.acctbtn:hover { background: rgba(var(--wb), 0.95); }
 .acctbtn.acctmain { font-weight: 700; background: #2fa84f; color: #fff; }
 .acctbtn.acctmain:hover { background: #2fa84f; filter: brightness(1.08); }
 .acctwelcome { font-size: 15px; }
@@ -827,7 +827,7 @@ input[type="search"]::-webkit-search-cancel-button, input[type="search"]::-webki
 .acctwin .panel { width: 320px; align-items: stretch; }
 .acctwin h2 { text-align: center; }
 .acctfield { display: flex; flex-direction: column; gap: 3px; font-size: 13px; font-weight: 700; }
-.acctfield input { font-family: inherit; font-size: 15px; padding: 6px 9px; border: 1px solid #999; border-radius: 6px; background: rgba(255, 255, 255, 0.9); }
+.acctfield input { font-family: inherit; font-size: 15px; padding: 6px 9px; border: 1px solid #999; border-radius: 6px; background: rgba(var(--wb), 0.9); }
 .acctfield input:focus { outline: 2px solid #2fa84f; outline-offset: -1px; }
 .accthint { margin: 0; font-size: 12px; opacity: 0.7; }
 .acctwarn { margin: 4px 0 0; padding: 6px 9px; border-radius: 6px; font-size: 12.5px; line-height: 1.35; color: #6b3a00; background: rgba(255, 214, 120, 0.55); border: 1px solid rgba(176, 120, 0, 0.4); }
@@ -890,9 +890,9 @@ input[type="search"]::-webkit-search-cancel-button, input[type="search"]::-webki
 /* MapleStory Character: your characters and shop avatars, the one shown with a green border */
 .acctpick { display: flex; flex-direction: column; gap: 6px; max-height: 50vh; overflow-y: auto; margin: 2px -4px 0; padding: 8px 8px 6px; }
 .acctpickrow { position: relative; display: flex; align-items: center; padding: 4px 40px 4px 8px; border-radius: 10px; cursor: pointer;
-  background: rgba(255, 255, 255, 0.55); outline: 2px solid transparent; }
-.acctpickrow:hover { background: rgba(255, 255, 255, 0.85); }
-.acctpickrow.on { outline-color: #1f8a3a; background: rgba(255, 255, 255, 0.9); }
+  background: rgba(var(--wb), 0.55); outline: 2px solid transparent; }
+.acctpickrow:hover { background: rgba(var(--wb), 0.85); }
+.acctpickrow.on { outline-color: #1f8a3a; background: rgba(var(--wb), 0.9); }
 .acctpickrow .acctmaple { margin: 0; justify-content: flex-start; }
 .acctpickrow .acctmaple img, .acctpickrow .acctmaple .acctsprite { width: 72px; height: 72px; }
 .acctdel { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); width: 28px; height: 28px; padding: 0; border: none; border-radius: 50%;
@@ -902,7 +902,7 @@ input[type="search"]::-webkit-search-cancel-button, input[type="search"]::-webki
 .acctregion { display: flex; gap: 6px; }
 .acctregion label { flex: 1; cursor: pointer; }
 .acctregion input { position: absolute; opacity: 0; pointer-events: none; }
-.acctregion span { display: block; padding: 6px 8px; border-radius: 8px; text-align: center; font-size: 14px; border: 1px solid rgba(0, 0, 0, 0.2); background: rgba(255, 255, 255, 0.7); }
+.acctregion span { display: block; padding: 6px 8px; border-radius: 8px; text-align: center; font-size: 14px; border: 1px solid rgba(0, 0, 0, 0.2); background: rgba(var(--wb), 0.7); }
 .acctregion input:checked + span { background: #2fa84f; color: #fff; font-weight: 700; border-color: #2fa84f; }
 .acctregion input:focus-visible + span { outline: 2px solid #2fa84f; outline-offset: 2px; }
 .acctwin h2 small { font-size: 0.6em; font-weight: 400; opacity: 0.7; }
@@ -992,3 +992,28 @@ input[type="search"]::-webkit-search-cancel-button, input[type="search"]::-webki
 @media (prefers-reduced-motion: reduce) { .gtext, .gtext::before, .gtext::after { animation: none !important; } }
 .themecard.special .themename { color: #fff; text-shadow: 0 0 2px #7b2ff7, 0 0 6px rgba(160, 60, 255, 0.95), 0 0 14px rgba(214, 36, 159, 0.8), 0 0 22px rgba(123, 47, 247, 0.6); }
 .fxbundle > summary.special::after { color: #fff; opacity: 1; text-shadow: 0 0 4px rgba(214, 36, 159, 0.95), 0 0 9px rgba(123, 47, 247, 0.8); }
+/* ---- Light (default) / dark mode (Settings; html.dark, set before the page draws by each page's <head>) ----
+   The see-through white boxes take their colour from --wb (white, or a dark slate in dark mode); the browser's own
+   buttons, inputs and default text follow color-scheme. The rest is the few places with a fixed dark text colour. */
+:root { --wb: 255, 255, 255; --ol: #333; }
+html.dark { color-scheme: dark; --wb: 30, 33, 41; --ol: #cfd4dc; color: #e6e8ee; }
+html.dark .game { --fxk: 1.5; }
+html.dark :is(#archive, #changelog, #info, #themes, .popup) > .panel, html.dark .closebar { background: #262a32; }
+html.dark :is(.closebar button, .buybtns .plain) { background: #3a3f4a; color: #eee; border-color: rgba(255, 255, 255, 0.2); }
+html.dark .infostrip .k { color: #9fb0d6; }
+html.dark .infostrip .v { color: #eef2ff; }
+html.dark #twist, html.dark :is(#bonusResult, #titleResult).wrong { color: #ff8a8a; }
+html.dark :is(#bonusResult, #titleResult).right { color: #6fdc6f; }
+html.dark #limboTip { color: #c9a6ff; }
+html.dark :is(.mesorecent b, .shopinfo .price, .buyask .price, .vipon) { color: #f0c050; }
+html.dark #mesoGain.none { color: #d9c38a; }
+html.dark .fxswitch.onbox { color: #ccc; }
+html.dark :is(#games, #subgames) button:disabled { color: #999; }
+html.dark .shopitem.lockeditem b, html.dark .shopitem .locked { color: #aaa; }
+html.dark td.cardcell { background: #3a3f4a; }
+html.dark #bundletipbox { background: #262a32; color: #e6e8ee; }
+html.dark :is(td, th) { border-color: #5a606c; }
+html.dark :is(#archiveList button, .themecard, .acctpickrow, .shopitem) { border-color: rgba(255, 255, 255, 0.15); }
+html.dark #credit { background: #2a3442; }   /* still solid (the peeking characters hide behind it) */
+html.dark #play { background: #3a3f4a; border-color: rgba(255, 255, 255, 0.25); }
+html.dark #play:hover { background: #474d5a; }
