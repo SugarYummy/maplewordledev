@@ -668,7 +668,11 @@ body.glitch .game.glow.rainbow, body.glitch .game.glow.limborb { animation: glit
   linear-gradient(120deg, rgba(74, 26, 140, var(--boxT, .38)), rgba(123, 47, 247, var(--boxT, .38)), rgba(214, 36, 159, var(--boxT, .38)), rgba(41, 211, 255, var(--boxT, .38))), #fff0; }
 .game.limborb .rbring i, .game.limborb .rbglow i, #archiveList button.limborb::before {
   background: conic-gradient(#7b2ff7, #d6249f, #ff6ad5, #4a1a8c, #29d3ff, #7b2ff7); animation-duration: 7s; }
-#archiveList button.limborb::after { background: linear-gradient(rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.72)), linear-gradient(90deg, rgba(123, 47, 247, 0.35), rgba(214, 36, 159, 0.3)); background-color: #fff; }
+#archiveList button.limborb::after { background: linear-gradient(rgba(255, 255, 255, 0.38), rgba(255, 255, 255, 0.38)),
+  linear-gradient(120deg, rgba(74, 26, 140, 0.92), rgba(123, 47, 247, 0.85) 40%, rgba(214, 36, 159, 0.8) 75%, rgba(41, 211, 255, 0.7)); background-color: #fff; }
+#archiveList button.limborb, #archiveList button.limborb:hover { color: #fff; font-weight: 700; text-shadow: 0 0 4px rgba(214, 36, 159, 0.95), 0 0 9px rgba(123, 47, 247, 0.8); }
+#archiveList button.limborb:hover::after { background: linear-gradient(rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.3)),
+  linear-gradient(120deg, rgba(74, 26, 140, 0.92), rgba(123, 47, 247, 0.85) 40%, rgba(214, 36, 159, 0.8) 75%, rgba(41, 211, 255, 0.7)); }
 #titleAsk { display: flex; gap: 6px; justify-content: center; margin: 6px 0; }
 #titleField { position: relative; flex: 1; max-width: 320px; }
 #titlePick { width: 100%; box-sizing: border-box; font-family: inherit; font-size: 15px; padding: 6px 8px; border: 1px solid #999; border-radius: 4px; }
@@ -955,9 +959,9 @@ input[type="search"]::-webkit-search-cancel-button, input[type="search"]::-webki
 .gtext { position: relative; display: inline-block; }
 .gtext::before, .gtext::after { content: attr(data-text); position: absolute; inset: 0; pointer-events: none; opacity: 0; color: #00e5ff; text-shadow: none; }
 .gtext::after { color: #ff2fd0; }
-.themecard.special .gtext { animation: glitchjit 1.6s steps(1) infinite; }
-.themecard.special .gtext::before { animation: glitcha 1.6s steps(1) infinite; }
-.themecard.special .gtext::after { animation: glitchb 1.6s steps(1) infinite; }
+#archiveList .limborb .gtext, .themecard.special .gtext { animation: glitchjit 1.6s steps(1) infinite; }
+#archiveList .limborb .gtext::before, .themecard.special .gtext::before { animation: glitcha 1.6s steps(1) infinite; }
+#archiveList .limborb .gtext::after, .themecard.special .gtext::after { animation: glitchb 1.6s steps(1) infinite; }
 .themecard.special .fxswitch .gtext, .themecard.special .fxswitch .gtext::before, .themecard.special .fxswitch .gtext::after { animation-delay: -0.7s; }   /* not in step with the name */
 @keyframes glitchjit { 0%, 68%, 84%, 100% { transform: none; } 70% { transform: translate(1px, 0) skewX(-6deg); } 76% { transform: translate(-2px, 0); } 80% { transform: skewX(4deg); } }
 @keyframes glitcha { 0%, 68%, 86%, 100% { opacity: 0; transform: none; clip-path: none; }
