@@ -50,7 +50,7 @@ footer.panel { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%
 #changelogBody h3, #infoBody h3 { margin: 12px 0 4px; }
 /* Close button stays visible at the bottom while the window scrolls. */
 .closebar { position: sticky; bottom: -16px; margin: 0 -16px -16px; padding: 10px 0 14px;
-            background: rgba(255, 255, 255, 0.92); }
+            background: #fff; }
 /* Every window's Close: like the shop popups' buttons (light grey, see .buybtns .plain) */
 .closebar button { font-family: inherit; font-size: 15px; font-weight: 700; min-width: 96px; padding: 6px 18px; border-radius: 8px;
                    cursor: pointer; color: #222; background: #f2f2f2; border: 1px solid rgba(0, 0, 0, 0.25);
@@ -61,7 +61,7 @@ footer.panel { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%
 #infoBody li { margin: 2px 0; }
 #infoBody .warn { margin: 12px 0 0; }
 /* Windows: nearly solid now that there's no frosted glass, so the page behind doesn't show through the text. */
-:is(#archive, #changelog, #info, #themes, .popup) > .panel { background: rgba(255, 255, 255, 0.92); }
+:is(#archive, #changelog, #info, #themes, .popup) > .panel { background: #fff; }
 #archive .panel, #changelog .panel, #info .panel { margin-top: 48px; max-height: calc(100vh - 96px); overflow-y: auto; min-width: 280px; }
 /* Hide the scrollbar but keep scrolling (wheel, trackpad, touch). */
 #archive .panel, #changelog .panel, #info .panel { scrollbar-width: none; }
