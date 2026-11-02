@@ -199,7 +199,7 @@
     if (a.fx && typeof drawThemeButton === 'function') {
       customFresh.add(a.fx); customTab = 'win'; drawThemeButton();
       // Like a shop purchase: its picture, and Customize takes you there
-      itemPopup({ name: a.full || a.name, img: `images/fx/hecate/${a.fx}.webp?v=4` }, 'Successfully Claimed!', false, ['Customize', 'yes'], ['Close', 'plain'])
+      itemPopup({ name: a.full || a.name, img: `images/fx/hecate/${a.fx}.webp?v=5` }, 'Successfully Claimed!', false, ['Customize', 'yes'], ['Close', 'plain'])
         .then((go) => { if (go) { document.getElementById('achv').hidden = true; document.getElementById('themeBtn')?.click(); } });
     }
   }
