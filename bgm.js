@@ -629,6 +629,7 @@ function renderEnd() {
   const waiting = over && ((!!answer.bonus && bonus == null) || (titleOn() && title == null));
   $('bonusCall').hidden = !waiting;
   box.classList.toggle('waiting', waiting);
+  box.classList.toggle('limbo', isLimboEgg());   // Limbo's mashup: the waiting glow in Limbo's colours (style.css)
   if (mashupKey !== `${MODE}|${day}|${answer.bonus?.mashup?.file}`) stopMashup();   // keeps playing through a redraw (e.g. answering the bonus)
   trackEgg();
   if (!over) return;

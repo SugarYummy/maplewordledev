@@ -615,6 +615,8 @@ body.glitch :is(button, input, select) { text-shadow: inherit; }   /* the browse
 #bonus.waiting::after { content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
   box-shadow: 0 0 0 3px rgba(255, 200, 60, 0.85), 0 0 18px rgba(255, 190, 40, 0.6); animation: bonusglow 1.6s ease-in-out infinite; }
 @keyframes bonusglow { 50% { opacity: 0.25; } }
+#bonus.waiting.limbo { box-shadow: 0 0 0 3px rgba(160, 80, 255, 0.55); }   /* Limbo's mashup: Limbo's colours */
+#bonus.waiting.limbo::after { box-shadow: 0 0 0 3px rgba(190, 90, 255, 0.95), 0 0 18px rgba(214, 36, 159, 0.7), 0 0 30px rgba(41, 211, 255, 0.3); }
 @media (prefers-reduced-motion: reduce) { #bonusCall button, #bonusCall button::after, #bonus.waiting::after { animation: none; } }
 /* VIP player in Settings (secret passcode). */
 #vipCode { font-family: inherit; font-size: 14px; padding: 4px 8px; width: 120px; border: 1px solid #999; border-radius: 6px; }
