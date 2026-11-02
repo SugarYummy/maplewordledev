@@ -1062,7 +1062,9 @@ html.dark .achvbar { background: rgba(255, 255, 255, 0.15); }
 .achvreward { color: #8a5a00; font-weight: 600; }
 html.dark .achvreward { color: #f0c050; }
 .achv.secret { filter: none; opacity: 1; background: rgba(110, 60, 180, 0.16); border: 1px dashed rgba(110, 60, 180, 0.6); }
-.achv.secret b { color: #6b3cb4; letter-spacing: 0.1em; }
+.achv.secret.on { background: rgba(110, 60, 180, 0.28); border: 1px solid rgba(110, 60, 180, 0.75); }
+.achv.secret b { color: #6b3cb4; }
+.achv.secret .achvq { opacity: 0.35; letter-spacing: 0.15em; }
 .achv.secret .achvbar i { background: #8a5ad8; }
 html.dark .achv.secret { background: rgba(140, 90, 220, 0.18); }
 html.dark .achv.secret b { color: #c2a0ff; }

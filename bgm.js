@@ -1240,13 +1240,13 @@ function resultIn(d) {
   return n ? `In progress (${n}/${maxGuesses()})` : 'Not played';
 }
 window.archiveHere = { modes: Object.keys(MODES), current: () => MODE, result: resultFor, style: rowStyleFor, play: (m, d) => { MODE = m; start(d); } };
-// Every BGM you've won (either mode, the Archive too), for the achievements (achv.js: win all of a boss's BGMs).
+// Every BGM you've won in Extreme (the Archive too), for the achievements (achv.js: win all of a boss's BGMs).
 const TRACKS_KEY = 'mapleWordle:bgmTracks';
 function saveTracks() {
   const won = new Set();
   for (let i = 0; i < localStorage.length; i++) {
     const m = /^mapleWordle:result:([a-z]+):(\d+)$/.exec(localStorage.key(i));
-    if (m && m[1] in MODES && /^Won/.test(localStorage.getItem(localStorage.key(i)))) won.add(inMode(m[1], () => answerFor(+m[2]).track));
+    if (m && m[1] === 'bgm' && /^Won/.test(localStorage.getItem(localStorage.key(i)))) won.add(inMode(m[1], () => answerFor(+m[2]).track));
   }
   const v = JSON.stringify([...won].sort());
   try { if (localStorage.getItem(TRACKS_KEY) !== v) localStorage.setItem(TRACKS_KEY, v); } catch {}

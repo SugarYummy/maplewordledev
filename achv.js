@@ -70,13 +70,12 @@
   // art (images/achv/<item id>.png from maplestory.io), names from Maple medals / items.
   const A = (id, name, how, prog, icon, extra) => ({ id, name, how, prog, icon: /^\d+$/.test(icon) ? `images/achv/${icon}.png` : icon, ...extra });
   const upTo = (n, need) => [Math.min(n, need), need];
-  // Special Kills: win every BGM of the boss (waiting room, each phase, loot room) in BGM Clip (either mode). Hidden
-  // (??? with N/M) until done.
-  const kill = (boss, img) => A(`kill:${boss}`, `${boss} Slayer`, `Win every ${boss} BGM in BGM Clip.`,
+  // Hidden: win every BGM of the boss (waiting room, each phase, loot room) in BGM Clip Extreme. Locked: its short name,
+  // ??? and N / M; unlocked: its full name (the boss's finishing attack) and what you did.
+  const kill = (boss, name, full, img) => A(`kill:${boss}`, name, `Played all versions of ${boss}'s BGM in Extreme mode.`,
     (s, L) => { const t = L?.tracksOf[boss] || []; return [t.filter((x) => s.tracks.has(x)).length, t.length || 1]; },
-    `images/bosses/${img}.png`, { reward: `${boss}'s kill effect as a win effect (coming soon)`, hidden: true });
+    `images/bosses/${img}.png`, { full, reward: 'Kill effect win effect (coming soon)' });
   const SECTIONS = [
-    ['Special Kills', [kill('Kai', 'kai'), kill('Bellona', 'bellona'), kill('Malefic Star', 'malefic-star')]],
     ['Collections', [
       A('col:bgm', 'MMF Meister', 'Win BGM Clip with every boss.', (s, L) => [count(s.won.bgm, L?.bgm), L?.bgm.length || 1], '1142989'),
       A('col:boss', 'Legendary Hunter', 'Win Boss Wordle with every boss.', (s, L) => [count(s.won.boss, L?.bosses), L?.bosses.length || 1], '1142005'),
@@ -89,10 +88,9 @@
       A('wins50', 'Special Training Graduate', 'Win 50 games.', (s) => upTo(s.wins, 50), '1142244'),
       A('wins100', 'Special Training Superior', 'Win 100 games.', (s) => upTo(s.wins, 100), '1142245'),
       A('wins500', 'Special Training Master', 'Win 500 games.', (s) => upTo(s.wins, 500), '1142246'),
-      A('mayrin', 'The Unblessed Cathedral', 'Win on your first guess.', (s) => upTo(s.firstTry, 1), 'images/bosses/mayrin.png'),
-      A('first10', "I'm a Lucky Guy", 'Win on your first guess 10 times.', (s) => upTo(s.firstTry, 10), '1142249'),
-      A('first50', 'Lucky Star', 'Win on your first guess 50 times.', (s) => upTo(s.firstTry, 50), '1142573'),
-      A('first100', "Cassandra's Crystal Ball", 'Win on your first guess 100 times.', (s) => upTo(s.firstTry, 100), '4001305'),
+      A('first1', "I'm a Lucky Guy", 'Win on your first guess.', (s) => upTo(s.firstTry, 1), '1142249'),
+      A('first10', 'Lucky Star', 'Win on your first guess 10 times.', (s) => upTo(s.firstTry, 10), '1142573'),
+      A('first50', "Cassandra's Crystal Ball", 'Win on your first guess 50 times.', (s) => upTo(s.firstTry, 50), '4001305'),
       A('diamond', 'Born to Be Diamond', 'Get a diamond in BGM Clip.', (s) => upTo(s.diamond, 1), '1142914'),
       A('rainbow', 'Rainbow Badge', 'Get a rainbow in BGM Clip.', (s) => upTo(s.rainbow, 1), '1182007'),
       A('allgames', 'Honorable Explorer', 'Win every game once.', (s) => [s.games.size, 4], '1142184'),
@@ -114,9 +112,13 @@
       A('buy5', "Gigatoad's Coin Wallet", 'Buy 5 items in the shop.', (s) => upTo(s.buys, 5), '4000346'),
       A('buy10', 'Richie Rich', 'Buy 10 items in the shop.', (s) => upTo(s.buys, 10), '1142161'),
     ]],
-    ['Secret', [
-      A('limbo', 'Subconscious', 'Something stirred in the abyss.', (s) => [s.limbo ? 1 : 0, 1], 'images/fx/limbo-bundle.webp', { secret: true }),
-    ]],
+    ['Hidden', [
+      kill('Malefic Star', "Siren's Song", "Siren's Song", 'malefic-star'),
+      kill('Kai', 'Iaido Alpha', 'Kai-ryu Sword: Iaido Alpha', 'kai'),
+      kill('Mayrin', 'Mayrin (Placeholder)', 'Mayrin (Placeholder)', 'mayrin'),
+      kill('Bellona', 'Bellona (Placeholder)', 'Bellona (Placeholder)', 'bellona'),
+      A('limbo', 'Subconscious', 'Something stirred in the abyss.', (s) => [s.limbo ? 1 : 0, 1], 'images/fx/limbo-bundle.webp', { full: "Limbo's Subconscious" }),
+    ], true],
   ];
   const ALL = SECTIONS.flatMap(([, list]) => list);
 
@@ -128,7 +130,7 @@
     const s = stats(L), got = json(ACHV_KEY, {}), fresh = [];
     for (const a of ALL) {
       const [have, need] = a.prog(s, L);
-      if (have >= need && got[a.id] == null) { got[a.id] = today(); fresh.push(a.name); }
+      if (have >= need && got[a.id] == null) { got[a.id] = today(); fresh.push(a.full || a.name); }
     }
     const changed = fresh.length || s.streak > (got._bestStreak || 0);
     got._bestStreak = Math.max(s.streak, got._bestStreak || 0);
@@ -164,20 +166,21 @@
       ['Win rate', s.played ? Math.round((s.wins / s.played) * 100) + '%' : '-'], ['First-guess wins', s.firstTry],
       ['Best streak', s.streak], ['Mesos earned', fmt(s.mesos)], ['Achievements', `${done} / ${ALL.length}`]];
     body.innerHTML = '<div class="achvstats">' + tiles.map(([k, v]) => `<div><small>${k}</small><b>${typeof v === 'number' ? fmt(v) : v}</b></div>`).join('') + '</div>';
-    for (const [title, list] of SECTIONS) {
+    for (const [title, list, hidden] of SECTIONS) {
       const n = list.filter((a) => got[a.id] != null).length;
       body.insertAdjacentHTML('beforeend', `<h3 class="achvhead">${title} <small>${n} / ${list.length}</small></h3>`);
       const box = body.appendChild(Object.assign(document.createElement('div'), { className: 'achvlist' }));
       for (const a of list) {
-        const [have, need] = a.prog(s, L), on = got[a.id] != null, hide = (a.secret || a.hidden) && !on;
-        // Hidden: purple ??? row with the Secret Spell Scroll; a hidden kill still shows how far you are (N / M)
-        const row = box.appendChild(Object.assign(document.createElement('div'), { className: 'achv' + (on ? ' on' : '') + (hide ? ' secret' : '') }));
+        const [have, need] = a.prog(s, L), on = got[a.id] != null, hide = hidden && !on;
+        // Hidden: always purple. Locked: the Secret Spell Scroll, its short name, a faint ??? and how far you are (N / M)
+        const row = box.appendChild(Object.assign(document.createElement('div'), { className: 'achv' + (on ? ' on' : '') + (hidden ? ' secret' : '') }));
         row.innerHTML = `<div class="achvicon"><img src="${hide ? 'images/achv/4031348.png' : a.icon}" alt=""></div><div class="achvtext"><b></b><small></small>` +
-          (need > 1 && (!hide || a.hidden) ? `<div class="achvbar"><i style="width:${(have / need) * 100}%"></i></div><small class="achvnum">${fmt(have)} / ${fmt(need)}</small>` : '') +
+          (need > 1 && !(hidden && on) ? `<div class="achvbar"><i style="width:${(have / need) * 100}%"></i></div><small class="achvnum">${fmt(have)} / ${fmt(need)}</small>` : '') +
           (a.reward && !hide ? '<small class="achvreward"></small>' : '') + '</div>' +
           (on ? `<span class="achvdate">${new Date(got[a.id] * DAY_MS).toLocaleDateString(undefined, { timeZone: 'UTC', month: 'short', day: 'numeric' })}</span>` : '');
-        row.querySelector('b').textContent = hide ? '???' : a.name;
-        row.querySelector('small').textContent = hide ? (a.hidden ? 'Hidden. Keep playing BGM Clip…' : 'A secret. Keep playing…') : a.how;
+        row.querySelector('b').textContent = on ? a.full || a.name : a.name;
+        row.querySelector('small').textContent = hide ? '???' : a.how;
+        if (hide) row.querySelector('small').classList.add('achvq');
         if (a.reward && !hide) row.querySelector('.achvreward').textContent = 'Reward: ' + a.reward;
       }
     }
