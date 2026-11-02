@@ -1010,7 +1010,8 @@ function drawThemeButton() {
       const all = limboAllOn();   // Limbo mode: none of these shows as on (its own transition plays instead)
       const picked = pickedSkins();
       const toggle = (id) => {
-        const on = !all && picked.includes(id);   // in Limbo mode a click turns this one on (and Limbo mode off)
+        const on = all ? id === 'limboCut' : picked.includes(id);   // as the card shows it (Limbo mode: a click on another turns it on, and Limbo mode off)
+        if (all && on) { limboAllOff(); drawCustomFx(); fill(); return toast('Limbo mode: Off', 'no'); }
         if (on && picked.length === 1) return toast('Keep at least one win effect on.', 'no');
         setPickedSkins(on ? picked.filter((x) => x !== id) : [...new Set([...picked, id])]);
         if (limboAllOn()) { limboAllOff(); drawCustomFx(); }
