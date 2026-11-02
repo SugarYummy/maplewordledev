@@ -236,22 +236,21 @@ function bigWin() {
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   setTimeout(mesoShow, playHecate());
 }
-// Limbo's glitch mashup answered right (BGM Clip): Limbo's cutscene for everyone, then the meso show.
+// Limbo's glitch mashup answered right (BGM Clip): Limbo's cutscene for everyone (only that: no meso show or glow).
 let limboCutBlob = null;
 function limboCutLoad() {
   soundFile(SOUNDS.limboCut).catch(() => {});
   limboCutBlob ??= fetch(`video/hecate/limboCut.${SAFARI ? 'webp' : 'webm'}?v=2`).then((r) => (r.ok ? r.blob() : null)).catch(() => null);
   return limboCutBlob;
 }
-async function limboWin(noShow = false) {   // noShow: the meso show already played (a guess-in-1 win): just the cutscene
+async function limboWin() {
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   const blob = await limboCutLoad();
-  if (!blob) return noShow || mesoShow();
+  if (!blob) return;
   const keep = hecate;
   hecate = { id: 'limboCut', skin: HECATE.limboCut, blob };
   const was = hecateLast;
-  const ms = playHecate(true);
-  if (!noShow) setTimeout(mesoShow, ms);
+  playHecate(true);
   hecate = keep;
   hecateLast = was;
 }
