@@ -890,3 +890,6 @@ input[type="search"]::-webkit-search-cancel-button, input[type="search"]::-webki
 .fxswitch.onbox input:checked + .knob::before { animation: specialglow 1.2s ease-in-out infinite alternate; }
 @keyframes specialglow { from { opacity: 0.35; } to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .fxswitch.onbox input:checked + .knob::before { animation: none; opacity: 0.8; } }
+/* On: the knob and the "Special toggle" text glow too (a steady glow; only the ring around the switch pulses). */
+.fxswitch.onbox:has(input:checked) > span:last-child { filter: drop-shadow(0 0 3px rgba(214, 36, 159, 0.85)) drop-shadow(0 0 6px rgba(123, 47, 247, 0.6)); }
+.fxswitch.onbox input:checked + .knob::after { box-shadow: 0 0 6px 2px rgba(255, 120, 220, 0.95), 0 0 12px 4px rgba(214, 36, 159, 0.6); text-shadow: 0 0 4px rgba(214, 36, 159, 0.9); }

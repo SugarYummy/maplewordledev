@@ -1089,9 +1089,9 @@ function drawThemeButton() {
         pic.style.backgroundImage = `url("${SHOP[pack].img}")`;
         const name = Object.assign(document.createElement('span'), { className: 'themename' });
         name.append(SHOP[pack].name, Object.assign(document.createElement('small'), {
-          textContent: pack !== 'limboSub' ? (using ? 'On' : 'Off') : limboAllOn() ? 'All Limbo effects on'
-            : [using ? CUSTOM_FX[using].name.replace(/^.*\((\w+)\)$/, '$1 border on') : 'Border off',
-              pack === 'limboSub' && limboGuessOn() && 'wrong guess on'].filter(Boolean).join(' · ') }));
+          // Limbo's set: how many of its 3 parts are on (a border, the wrong guess effect, the life count); blank with the Special toggle on
+          textContent: pack !== 'limboSub' ? (using ? 'On' : 'Off') : limboAllOn() ? ''
+            : `${[using, limboGuessOn(), hudOwnOn()].filter(Boolean).length} of 3 on` }));
         sum.append(pic, name);
         if (pack === 'limboSub') {   // one switch for everything in Limbo's set, on the box itself (no need to open it)
           const row = Object.assign(document.createElement('label'), { className: 'fxswitch onbox', title: 'Enable all Limbo effects, including hidden ones' });
@@ -1236,7 +1236,7 @@ function limboOver(won, delay = 0) {   // game over (called by the games, with w
   release(delay + 600);   // by then the fail screen covers everything
 }
 const cfxClips = {};
-const CFX_V = { 'fail-black': 3, 'fail-white': 2 };   // a clip that was replaced (so browsers fetch the new one)
+const CFX_V = { 'fail-black': 4, 'fail-white': 3 };   // a clip that was replaced (so browsers fetch the new one)
 function cfxClip(name) {
   cfxClips[name] ??= fetch(`video/limbo/${name}.${SAFARI ? 'webp' : 'webm'}${CFX_V[name] ? '?v=' + CFX_V[name] : ''}`).then((r) => (r.ok ? r.blob() : null)).catch(() => null);
   return cfxClips[name];
@@ -1486,10 +1486,11 @@ function setLimboAll(on) {
 }
 function limboAllOff() { if (limboAllOn()) { lsSet(LIMBO_ALL_KEY, '0'); applyTheme(true); drawCustomFx(); halloweenFx(); limboTransitions(); limboDragons(); hecate = null; loadHecate(); } }   // you picked something yourself
 // Losing with the alert border on plays Limbo's fail screen full screen, in the border's colour (white or black).
-const LIMBO_FAIL_MS = 3600;   // (the longer of the two clips)
+const LIMBO_FAIL_MS = 3120;   // (the longer of the two clips)
 // The end sound comes in as the pre sound trails off (overlapping it a little), with the screen's end part (Limbo's mouth,
-// then its face): black 1.32 s, white 1.56 s (each clip had a bit taken out before the mouth so the two line up).
-const FAIL_END_AT = { black: 1320, white: 1560 };
+// then its face): black 0.84 s, white 1.08 s (each clip had a bit taken out before the mouth so the two line up, then
+// 0.48 s more on Nov 2 so the end part comes sooner).
+const FAIL_END_AT = { black: 840, white: 1080 };
 const failSounds = (color) => (color === 'black' ? ['failBlackPre', 'failBlackEnd'] : ['failWhitePre', 'failWhiteEnd']);
 function limboFailLoad() { cfxClip('fail-white'); cfxClip('fail-black'); for (const c of ['white', 'black']) for (const k of failSounds(c)) soundFile(SOUNDS[k]).catch(() => {}); if (limboAllOn()) TRANS_CLIPS.forEach(cfxClip); }   // ready when needed
 async function limboFail(color, delay = 0) {
