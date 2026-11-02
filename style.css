@@ -1043,7 +1043,7 @@ h1.tglitch .gtext::after { animation: glitchb 1.6s steps(1) -1.088s 1; }
 .achvbar i { display: block; height: 100%; background: #e0a000; }
 .achvnum { font-variant-numeric: tabular-nums; }
 .achvclaim { flex: none; font: inherit; font-size: 13px; font-weight: 700; padding: 5px 14px; border-radius: 8px; cursor: pointer;
-  border: 1px solid #b07800; background: linear-gradient(#ffd75a, #f0a800); color: #3a2500; }
+  border: none; background: #ffc928; color: #3a2500; }
 .achvclaim:hover { filter: brightness(1.08); }
 .achvdate { font-size: 11px; opacity: 0.7; white-space: nowrap; }
 .achvtoast { position: fixed; top: 14px; left: 50%; transform: translateX(-50%); z-index: 23; display: flex; align-items: center; gap: 10px;

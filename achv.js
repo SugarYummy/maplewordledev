@@ -175,7 +175,7 @@
     if (a.fx && typeof drawThemeButton === 'function') { customFresh.add(a.fx); customTab = 'win'; drawThemeButton(); }
     if (typeof resultSound === 'function') resultSound(true, 0, 'purchase');
     toast(a.full || a.name, 'Reward claimed');
-    btn?.replaceWith(Object.assign(document.createElement('span'), { className: 'achvdate', textContent: dayText(got[a.id]) }));
+    btn?.replaceWith(Object.assign(document.createElement('span'), { className: 'achvdate', textContent: 'Claimed' }));
   }
   async function open() {
     const body = popup('achv', 'Achievements');
@@ -202,7 +202,7 @@
         row.innerHTML = `<div class="achvicon"><img src="${hide ? 'images/achv/4031348.png' : a.icon}" alt=""></div><div class="achvtext"><b></b><small></small>` +
           ((need > 1 || hide) && !(hidden && on) ? `<div class="achvbar"><i style="width:${(have / need) * 100}%"></i></div><small class="achvnum">${fmt(have)} / ${fmt(need)}</small>` : '') +
           (a.reward && !hide ? '<small class="achvreward"></small>' : '') + '</div>' +
-          (on && a.reward && hidden && !got._claimed?.[a.id] ? '<button class="achvclaim">Claim</button>' :
+          (on && a.reward && hidden ? (got._claimed?.[a.id] ? '<span class="achvdate">Claimed</span>' : '<button class="achvclaim">Claim</button>') :
           on ? `<span class="achvdate">${dayText(got[a.id])}</span>` : '');
         row.querySelector('b').textContent = on ? a.full || a.name : a.name;
         row.querySelector('small').textContent = hide ? '???' : a.how;
