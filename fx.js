@@ -272,7 +272,7 @@ function loadHecate() {
   const pool = picked.length > 1 ? picked.filter((id) => id !== hecateLast) : picked;
   const id = pool[Math.floor(Math.random() * pool.length)];
   hecateLoading = true;
-  if (id === 'limboCut') soundFile(SOUNDS.limboCut).catch(() => {});   // its sound ready too
+  if (SOUNDS[id]) soundFile(SOUNDS[id]).catch(() => {});   // its sound ready too (Limbo Transition, the boss finishing effects)
   fetch(`video/hecate/${id}.${SAFARI ? 'webp' : 'webm'}${HECATE[id].v ? '?v=' + HECATE[id].v : ''}`).then((r) => (r.ok ? r.blob() : null))
     .then((blob) => { if (blob) hecate = { id, skin: HECATE[id], blob }; }).catch(() => {}).finally(() => { hecateLoading = false; });
 }
@@ -300,9 +300,10 @@ function playHecate(special = false) {   // special: Limbo's mashup win (plays w
   el.src = url;
   document.body.appendChild(el);
   el.play?.().catch(done);
-  if (id === 'limboCut') {   // Limbo's skill sound, in step with the cutscene (from when its video really starts)
-    if (SAFARI) resultSound(true, 150, 'limboCut');
-    else el.addEventListener('playing', () => resultSound(true, 150, 'limboCut'), { once: true });
+  if (SOUNDS[id]) {   // its skill sound, in step with the clip (from when its video really starts)
+    const lag = id === 'limboCut' ? 150 : 0;
+    if (SAFARI) resultSound(true, lag, id);
+    else el.addEventListener('playing', () => resultSound(true, lag, id), { once: true });
   }
   return skin.burst;
 }
@@ -399,6 +400,7 @@ const SOUNDS = { win: 'sounds/star-force-success.mp3', lose: 'sounds/star-force-
   classWin: 'sounds/succession-bloom.mp3',   // First Adversary's Succession Bloom 1:03-1:27 (1 s fade-in), Class Wordle win on guess 2-5
   purchase: 'sounds/purchase.mp3',   // the Cash Shop's buy sound (0.8 s), when you buy something in the shop
   limboCut: 'sounds/limbo-cut.mp3',
+  sirenSong: 'sounds/siren-song.mp3', iaidoAlpha: 'sounds/iaido-alpha.mp3', mayrinKill: 'sounds/mayrin-kill.mp3',   // boss finishing effects' sounds
   // Limbo's fail screen (limboFail), each colour its own: the pre with the screen coming in, the end with Limbo's face (1.92 s)
   failBlackPre: 'sounds/limbo-fail-black-pre.mp3', failBlackEnd: 'sounds/limbo-fail-black-end.mp3',
   failWhitePre: 'sounds/limbo-fail-white-pre.mp3', failWhiteEnd: 'sounds/limbo-fail-white-end.mp3' };   // Limbo's skill sound (5.4 s) with Limbo's cutscene, 0.15 s in: its big hit lands on the burst

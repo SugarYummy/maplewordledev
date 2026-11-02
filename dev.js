@@ -21,7 +21,7 @@
     constructor(...a) { if (a.length) super(...a); else super(RealDate.now() - BEHIND); }
     static now() { return RealDate.now() - BEHIND; }
   };
-  const BUILD = 'alphaTest v5.1.02112026.122855', STAMP = BUILD.split(' v')[1];
+  const BUILD = 'alphaTest v5.1.02112026.131039', STAMP = BUILD.split(' v')[1];
   const ROOT = location.pathname.match(/^(.*?\/maplewordledev\/)/)?.[1] ?? '/';
   const kept = window.localStorage;   // the browser's own storage: only the test login ('mwdev:login') goes here
   Object.defineProperty(window, 'localStorage', { value: window.sessionStorage, configurable: true });
@@ -141,7 +141,7 @@
   } catch {}
   window.mwDevHolidays = !!ss.getItem('mwdev:holidays');   // /unlock all found the holiday items too (fx.js shopFound)
   window.devEgg = ss.getItem('mwdev:egg');   // read by bgm.js (bonusFor)
-  const DEV_HELP = '/meso 5000 — add mesos (minus works too)\n/egg limbo — Limbo\'s mashup as today\'s BGM Clip Extreme bonus\n/egg lucid — today\'s BGM Clip Extreme clip is Lucid\'s Garden of Eternal Dream\n/egg off — back to the real one\n/unlock all — unlock every hidden shop item (to buy at full price)\n/reset — wipe this tab\'s test saves (like opening a new tab) and reload\n/help — this list';
+  const DEV_HELP = '/meso 5000 — add mesos (minus works too)\n/egg limbo — Limbo\'s mashup as today\'s BGM Clip Extreme bonus\n/egg lucid — today\'s BGM Clip Extreme clip is Lucid\'s Garden of Eternal Dream\n/egg off — back to the real one\n/unlock all — own every shop item and boss finishing effect\n/reset — wipe this tab\'s test saves (like opening a new tab) and reload\n/help — this list';
   function devRun(line) {
     const [cmd, a] = line.trim().split(/\s+/);
     if (cmd === '/help') return DEV_HELP;
@@ -169,7 +169,17 @@
       window.mwDevHolidays = true;
       const got = Object.keys(SHOP).filter((t) => SHOP[t].hidden && !shopFound().includes(t) && !shopOwned(t));
       for (const t of got) shopUnlock(t, false);
-      return got.length ? `Unlocked in the shop: ${got.map((t) => SHOP[t].name).join(', ')}.` : 'Every hidden shop item is already unlocked.';
+      // ...and own all of it (free), plus the boss finishing effects (their Hidden achievements)
+      const items = Object.keys(SHOP);
+      lsSet(EFFECTS_KEY, JSON.stringify([...new Set([...ownedEffects(), ...items.filter((t) => SHOP[t].effect)])]));
+      lsSet(THEMES_KEY, JSON.stringify([...new Set([...ownedThemes().filter((x) => x !== 'default'),
+        ...items.flatMap((t) => (SHOP[t].effect ? SHOP[t].themes ?? [] : SHOP[t].themes ?? [t])).filter((x) => x in THEMES)])]));
+      const achv = JSON.parse(lsGet('mapleWordle:achv') || '{}'), day = Math.floor(Date.now() / 86400000);
+      for (const h of Object.values(HECATE)) if (h.achv) achv[h.achv] ??= day;
+      lsSet('mapleWordle:achv', JSON.stringify(achv));
+      drawThemeButton();
+      drawCustomFx();
+      return 'You now own every shop item and every boss finishing effect (Customize).';
     }
     if (cmd === '/reset') {   // the test site keeps saves in this tab only, so this is what a new tab starts with
       ss.clear();
