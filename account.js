@@ -304,7 +304,7 @@ const ACCT_APPEAR = 'mapleWordle:appearFx';
 const acctClaimed = (id) => { try { return JSON.parse(localStorage.getItem('mapleWordle:achv'))?._claimed?.[id] != null; } catch { return false; } };
 const ACCT_EFFECTS = {
   seethingBalance: { name: 'Seething Balance', from: 'Seething Balance (achievement)', src: 'images/avatars/seething-balance',
-    pic: 'images/achv/seething-balance.png', owned: () => acctClaimed('kill:Jupiter') },
+    pic: 'images/achv/seething-balance.png?v=2', owned: () => acctClaimed('kill:Jupiter') },
 };
 const acctAppearOn = () => { const id = acct() && localStorage.getItem(ACCT_APPEAR); return id && ACCT_EFFECTS[id]?.owned() ? id : null; };
 function acctAppearPlay(into) {   // once, then gone (Settings, when it opens)
@@ -393,7 +393,7 @@ function acctMapleWin() {
       (m.avatar ? '<span class="accttag">Shop</span>' : `<button class="acctdel" data-del="${i}" title="Delete" aria-label="Delete ${acctEsc(m.name)}">✕</button>`) + '</div>').join('') +
     '</div>' + (effects.length ? '<h3 class="acctpickhead">Appearance Effect</h3><div class="acctpick">' +
       effects.map((id) => `<div class="acctpickrow acctfxrow${acctAppearOn() === id ? ' on' : ''}" data-fx="${id}" role="button" tabindex="0">${fresh.includes('fx:' + id) ? acctNewTag : ''}` +
-        `<div class="acctmaple"><img class="acctfxpic" src="${ACCT_EFFECTS[id].pic}" alt=""><div><b>${acctEsc(ACCT_EFFECTS[id].name)}</b><span>Plays when you open Settings</span></div></div>` +
+        `<div class="acctmaple"><img class="acctfxpic" src="${ACCT_EFFECTS[id].pic}" alt=""><div><b>${acctEsc(ACCT_EFFECTS[id].name)}</b><span>Plays when your character appears</span></div></div>` +
         '<span class="accttag">Achievement</span></div>').join('') + '</div>' : '') +
     '<p class="acctchoices"><button class="acctbtn" data-do="add">Add Character</button>' +
     (cur ? '<button class="acctbtn acctout" data-do="none">Show None</button>' : '') + '</p>' +
