@@ -310,7 +310,7 @@ const acctAppearOn = () => { const id = acct() && localStorage.getItem(ACCT_APPE
 function acctAppearPlay(into) {   // once, then gone (Settings, when it opens)
   const id = acctAppearOn(), fx = ACCT_EFFECTS[id];
   if (!fx || !into || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  into.querySelector('.acctappear')?.remove();
+  document.querySelector('.acctappear')?.remove();
   const safari = typeof SAFARI !== 'undefined' && SAFARI;
   const el = Object.assign(document.createElement(safari ? 'img' : 'video'), { className: 'acctappear', src: `${fx.src}.${safari ? 'webp' : 'webm'}?v=1`, alt: '' });
   if (!safari) Object.assign(el, { muted: true, autoplay: true, playsInline: true });
@@ -319,9 +319,12 @@ function acctAppearPlay(into) {   // once, then gone (Settings, when it opens)
   const sound = () => { if (!sounded) { sounded = true; if (typeof resultSound === 'function') resultSound(true, 0, 'appear'); } };
   if (safari) { sound(); setTimeout(() => el.remove(), 3700); }
   else { el.addEventListener('playing', sound, { once: true }); el.addEventListener('ended', () => el.remove()); el.addEventListener('error', () => el.remove()); }
-  const ava = into.querySelector('.acctava');   // centred on your character (its middle), when one is shown
-  if (ava) { el.style.left = ava.offsetLeft + ava.offsetWidth / 2 + 'px'; el.style.top = ava.offsetTop + ava.offsetHeight / 2 + 'px'; }
-  into.appendChild(el);
+  // Over everything (not clipped by the Settings box), big, centred on your character (or the gap left of Welcome back)
+  const ava = into.querySelector('.acctava'), r = (ava || into).getBoundingClientRect();
+  el.style.left = (ava ? r.left + r.width / 2 : r.left - 46) + 'px';
+  el.style.top = r.top + r.height / 2 + 'px';
+  document.body.appendChild(el);
+  document.getElementById('settings')?.querySelector('.closebar button')?.addEventListener('click', () => el.remove(), { once: true });
 }
 // A shop avatar you haven't looked at yet (new in the MapleStory Character list): the Settings cog glows with NEW, and
 // Account Settings, MapleStory Character and the avatar itself say NEW, until that list is opened.

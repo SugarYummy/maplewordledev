@@ -1084,9 +1084,8 @@ html.dark .achvstats div { border-color: rgba(255, 255, 255, 0.12); }
 
 /* An appearance effect (Seething Balance): plays once over the account's avatar when Settings opens */
 .acctside { position: relative; }
-.acctappear { position: absolute; left: 22px; top: 50%; width: 150px; height: 125px; transform: translate(-50%, -50%); pointer-events: none; z-index: 2; object-fit: contain; }
+.acctappear { position: fixed; width: 300px; height: 250px; transform: translate(-50%, -50%); pointer-events: none; z-index: 20; object-fit: contain; }
 .acctpickhead { margin: 12px 0 4px; font-size: 15px; text-align: left; }
 .acctpickrow .acctfxpic { width: 72px; height: 72px; object-fit: contain; }
 .acctpickrow.acctfxrow { padding-right: 104px; }
 .acctpick:empty { display: none; }
-.acctside:not(:has(.acctava)) .acctappear { left: -46px; }   /* no character shown: over the gap left of "Welcome back" */
