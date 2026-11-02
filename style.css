@@ -296,7 +296,7 @@ td.flip { animation: flip 0.5s ease both; }
 .statrow.bonusrow .label { width: 52px; margin-left: -8px; }
 #mashupRow { display: flex; flex-direction: column; align-items: center; gap: 8px; margin: 6px 0; }
 #mashupRow[hidden] { display: none; }
-#limboTip { margin: 0; font-size: 13px; font-style: italic; color: #7a3fc4; }   /* Limbo's mashup: try pausing (bgm.js limboPause) */
+#limboTip { margin: 0; font-size: 13px; font-style: italic; font-weight: 700; color: #7a3fc4; text-shadow: 0 0 4px rgba(160, 60, 255, 0.55), 0 0 10px rgba(214, 36, 159, 0.35); }   /* Limbo's mashup: try pausing (bgm.js limboPause) */
 #limboTip[hidden] { display: none; }
 /* The mashup's own bar (under its Play button): green fill like the main bar, click to jump around */
 #mashupTrack { display: flex; align-items: center; gap: 8px; width: min(320px, 100%); }
@@ -929,22 +929,27 @@ input[type="search"]::-webkit-search-cancel-button, input[type="search"]::-webki
 @media (prefers-reduced-motion: reduce) { .spglow { animation: none; } .spring i, .spglow i { animation: none; transform: translate(-50%, -50%); } }
 .themecard.special, .themecard.special:hover { background: linear-gradient(rgba(255, 255, 255, 0.38), rgba(255, 255, 255, 0.38)),
   linear-gradient(120deg, rgba(74, 26, 140, 0.92), rgba(123, 47, 247, 0.85) 40%, rgba(214, 36, 159, 0.8) 75%, rgba(41, 211, 255, 0.7)); }
-/* the name glows and every few seconds glitches: cyan and pink copies jump out in slices (small text, so cheap to redraw) */
-.themecard.special .glitch { position: relative; display: inline-block; animation: glitchjit 3.2s steps(1) infinite; }
-.themecard.special .glitch::before, .themecard.special .glitch::after { content: attr(data-text); position: absolute; inset: 0; pointer-events: none; opacity: 0; }
-.themecard.special .glitch::before { color: #00e5ff; text-shadow: none; animation: glitcha 3.2s steps(1) infinite; }
-.themecard.special .glitch::after { color: #ff2fd0; text-shadow: none; animation: glitchb 3.2s steps(1) infinite; }
-@keyframes glitchjit { 0%, 84%, 92%, 100% { transform: none; } 85% { transform: translate(1px, 0) skewX(-6deg); } 88% { transform: translate(-2px, 0); } 90% { transform: skewX(4deg); } }
-@keyframes glitcha { 0%, 84%, 93%, 100% { opacity: 0; transform: none; clip-path: none; }
-  85% { opacity: 0.9; transform: translate(-3px, -1px); clip-path: inset(8% 0 58% 0); }
-  87% { opacity: 0.9; transform: translate(3px, 0); clip-path: inset(55% 0 12% 0); }
-  89% { opacity: 0.9; transform: translate(-2px, 1px); clip-path: inset(30% 0 45% 0); }
-  91% { opacity: 0.7; transform: translate(2px, 0); clip-path: inset(70% 0 2% 0); } }
-@keyframes glitchb { 0%, 84%, 93%, 100% { opacity: 0; transform: none; clip-path: none; }
-  85% { opacity: 0.9; transform: translate(3px, 1px); clip-path: inset(40% 0 30% 0); }
-  87% { opacity: 0.9; transform: translate(-3px, 0); clip-path: inset(5% 0 70% 0); }
-  89% { opacity: 0.9; transform: translate(2px, -1px); clip-path: inset(62% 0 10% 0); }
-  91% { opacity: 0.7; transform: translate(-2px, 0); clip-path: inset(18% 0 52% 0); } }
-@media (prefers-reduced-motion: reduce) { .themecard.special .glitch, .themecard.special .glitch::before, .themecard.special .glitch::after { animation: none; } }
+/* glitching text (Limbo): glows, and every 1.6 s for a moment it jitters while cyan and pink copies jump out in slices
+   (copies drawn from data-text; small text, so cheap to redraw). Used on Limbo's Subconscious box with the Special toggle
+   on (its name and "Special toggle") and on the Limbo mashup's tip. */
+.glitch { position: relative; display: inline-block; }
+.glitch::before, .glitch::after { content: attr(data-text); position: absolute; inset: 0; pointer-events: none; opacity: 0; color: #00e5ff; text-shadow: none; }
+.glitch::after { color: #ff2fd0; }
+.themecard.special .glitch, #limboTip .glitch { animation: glitchjit 1.6s steps(1) infinite; }
+.themecard.special .glitch::before, #limboTip .glitch::before { animation: glitcha 1.6s steps(1) infinite; }
+.themecard.special .glitch::after, #limboTip .glitch::after { animation: glitchb 1.6s steps(1) infinite; }
+.themecard.special .fxswitch .glitch, .themecard.special .fxswitch .glitch::before, .themecard.special .fxswitch .glitch::after { animation-delay: -0.7s; }   /* not in step with the name */
+@keyframes glitchjit { 0%, 68%, 84%, 100% { transform: none; } 70% { transform: translate(1px, 0) skewX(-6deg); } 76% { transform: translate(-2px, 0); } 80% { transform: skewX(4deg); } }
+@keyframes glitcha { 0%, 68%, 86%, 100% { opacity: 0; transform: none; clip-path: none; }
+  70% { opacity: 0.9; transform: translate(-3px, -1px); clip-path: inset(8% 0 58% 0); }
+  74% { opacity: 0.9; transform: translate(3px, 0); clip-path: inset(55% 0 12% 0); }
+  78% { opacity: 0.9; transform: translate(-2px, 1px); clip-path: inset(30% 0 45% 0); }
+  82% { opacity: 0.7; transform: translate(2px, 0); clip-path: inset(70% 0 2% 0); } }
+@keyframes glitchb { 0%, 68%, 86%, 100% { opacity: 0; transform: none; clip-path: none; }
+  70% { opacity: 0.9; transform: translate(3px, 1px); clip-path: inset(40% 0 30% 0); }
+  74% { opacity: 0.9; transform: translate(-3px, 0); clip-path: inset(5% 0 70% 0); }
+  78% { opacity: 0.9; transform: translate(2px, -1px); clip-path: inset(62% 0 10% 0); }
+  82% { opacity: 0.7; transform: translate(-2px, 0); clip-path: inset(18% 0 52% 0); } }
+@media (prefers-reduced-motion: reduce) { .glitch, .glitch::before, .glitch::after { animation: none !important; } }
 .themecard.special .themename { color: #fff; text-shadow: 0 0 2px #7b2ff7, 0 0 6px rgba(160, 60, 255, 0.95), 0 0 14px rgba(214, 36, 159, 0.8), 0 0 22px rgba(123, 47, 247, 0.6); }
 .fxbundle > summary.special::after { color: #fff; opacity: 1; text-shadow: 0 0 4px rgba(214, 36, 159, 0.95), 0 0 9px rgba(123, 47, 247, 0.8); }
