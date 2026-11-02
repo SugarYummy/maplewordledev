@@ -1117,7 +1117,7 @@ function drawThemeButton() {
         fill();
         toast(`${HECATE[id].name}: ${on ? 'Off' : 'On'}`, on ? 'no' : 'yes');
       };
-      const skinCard = (into, id) => onOff(card(into, `images/fx/hecate/${id}.webp${HECATE[id].achv ? '?v=5' : ''}`, HECATE[id].name, false, () => toggle(id), customFresh.has(id)), !all && picked.includes(id));
+      const skinCard = (into, id) => onOff(card(into, `images/fx/hecate/${id}.webp${HECATE[id].achv ? '?v=6' : ''}`, HECATE[id].name, false, () => toggle(id), customFresh.has(id)), !all && picked.includes(id));
       for (const id of ownedSkins().filter((x) => !HECATE[x].pack || HECATE[x].solo)) skinCard(list, id);
       for (const pack of ownedEffects().filter((x) => Object.values(HECATE).some((h) => h.pack === x && !h.solo))) {
         const ids = ownedSkins().filter((x) => HECATE[x].pack === pack && !HECATE[x].solo);
@@ -2207,22 +2207,31 @@ function mesoGain(mode, day, show) {
   if (fxHoldTill > Date.now()) revealAfter(el, fxHoldTill - Date.now());
 }
 // A few mesos burst out of the meso count's icon (e.g. an achievement's meso reward claimed).
-function mesoFly(n = 10) {
+// Mesos fly into the meso counter (top of the page) from `from` (e.g. an achievement's Claim button): they burst out a
+// little, then each one swoops to the counter, which bumps as they land. Returns false if nothing flew.
+function mesoFly(n = 12, from) {
   const icon = document.querySelector('#mesoBtn img');
-  if (!icon || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  const r = icon.getBoundingClientRect();
+  if (!icon || !from || matchMedia('(prefers-reduced-motion: reduce)').matches) return false;
+  const s = from.getBoundingClientRect(), e = icon.getBoundingClientRect();
+  const sx = s.left + s.width / 2 - 9, sy = s.top + s.height / 2 - 9, dx = e.left + e.width / 2 - 9 - sx, dy = e.top + e.height / 2 - 9 - sy;
+  let left = n;
   for (let i = 0; i < n; i++) {
     const m = Object.assign(document.createElement('img'), { src: 'images/fx/meso-gold.png', className: 'mesofly', alt: '' });
-    m.style.left = r.left + r.width / 2 - 9 + 'px';
-    m.style.top = r.top + r.height / 2 - 9 + 'px';
+    m.style.left = sx + 'px';
+    m.style.top = sy + 'px';
     document.body.appendChild(m);
-    const a = Math.PI * (1.05 + Math.random() * 0.9), d = 40 + Math.random() * 50;   // up and out (left, right, up)
-    const x = Math.cos(a) * d, y = Math.sin(a) * d;
-    m.animate([{ transform: 'translate(0, 0) scale(0.6)', opacity: 1 },
-      { transform: `translate(${x}px, ${y}px) scale(1) rotate(${Math.random() * 360}deg)`, opacity: 1, offset: 0.55 },
-      { transform: `translate(${x * 1.2}px, ${y + 40}px) scale(0.9) rotate(${Math.random() * 540}deg)`, opacity: 0 }],
-      { duration: 800 + Math.random() * 300, delay: i * 25, easing: 'ease-out', fill: 'both' }).onfinish = () => m.remove();
+    const a = Math.random() * Math.PI * 2, d = 18 + Math.random() * 26, bx = Math.cos(a) * d, by = Math.sin(a) * d;
+    const side = 60 + Math.random() * 60;   // swoop out to the right on the way up (the curve in the picture)
+    m.animate([{ transform: 'translate(0, 0) scale(0.5)', opacity: 0 },
+      { transform: `translate(${bx}px, ${by}px) scale(1)`, opacity: 1, offset: 0.2 },
+      { transform: `translate(${bx + dx * 0.45 + side}px, ${by + dy * 0.55}px) scale(1) rotate(${Math.random() * 360}deg)`, opacity: 1, offset: 0.6 },
+      { transform: `translate(${dx}px, ${dy}px) scale(0.7) rotate(${Math.random() * 540}deg)`, opacity: 1 }],
+      { duration: 750 + Math.random() * 200, delay: i * 35, easing: 'ease-in-out', fill: 'both' }).onfinish = () => {
+      m.remove();
+      if (--left === 0) { const b = document.getElementById('mesoBtn'); b?.classList.remove('bump'); void b?.offsetWidth; b?.classList.add('bump'); }
+    };
   }
+  return true;
 }
 // Under the Mode buttons (Boss Wordle, BGM Clip): only your best mode each day pays.
 (() => {

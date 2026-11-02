@@ -188,18 +188,19 @@
       if (!log.some((e) => e.key === `achv:${a.id}`)) {
         log.push({ key: `achv:${a.id}`, mode: 'achv', day: today(), what: a.full || a.name, amount: a.mesos });
         lsSet(MESO_LOG_KEY, JSON.stringify(log));
-        drawMeso(a.mesos);
+        const fly = typeof mesoFly === 'function' && mesoFly(12, btn);   // the mesos fly from the Claim button into the counter
+        setTimeout(() => drawMeso(a.mesos), fly ? 900 : 0);
       }
     }
     if (typeof resultSound === 'function') resultSound(true, 0, 'purchase');   // (for now: the shop's purchase sound)
     btn?.replaceWith(Object.assign(document.createElement('span'), { className: 'achvdate', textContent: 'Claimed' }));
     fresh.delete(a.id);
     newTag();
-    if (a.mesos) { if (typeof mesoFly === 'function') mesoFly(); toast(a.full || a.name, `+${fmt(a.mesos)} mesos`); }
+    if (a.mesos) toast(a.full || a.name, `+${fmt(a.mesos)} mesos`);
     if (a.fx && typeof drawThemeButton === 'function') {
       customFresh.add(a.fx); customTab = 'win'; drawThemeButton();
       // Like a shop purchase: its picture, and Customize takes you there
-      itemPopup({ name: a.full || a.name, img: `images/fx/hecate/${a.fx}.webp?v=5` }, 'Successfully Claimed!', false, ['Customize', 'yes'], ['Close', 'plain'])
+      itemPopup({ name: a.full || a.name, img: `images/fx/hecate/${a.fx}.webp?v=6` }, 'Successfully Claimed!', false, ['Customize', 'yes'], ['Close', 'plain'])
         .then((go) => { if (go) { document.getElementById('achv').hidden = true; document.getElementById('themeBtn')?.click(); } });
     }
   }
@@ -233,7 +234,12 @@
         row.querySelector('b').textContent = on ? a.full || a.name : a.name;
         row.querySelector('small').textContent = hide ? '???' : a.how;
         if (hide) row.querySelector('small').classList.add('achvq');
-        if (a.reward && !hide) row.querySelector('.achvreward').textContent = 'Reward: ' + a.reward;
+        if (a.reward && !hide) {   // the reward itself coloured: a win effect by its full name in purple, mesos in meso gold
+          const r = row.querySelector('.achvreward');
+          r.textContent = 'Reward: ';
+          r.appendChild(Object.assign(document.createElement('span'), a.mesos ? { className: 'rwmeso', textContent: `${fmt(a.mesos)} mesos` }
+            : a.fx ? { className: 'rwfx', textContent: a.full || a.name } : { textContent: a.reward }));
+        }
         const cb = row.querySelector('.achvclaim');
         if (cb) { cb.addEventListener('click', () => claim(a, cb)); if (typeof hoverSound === 'function') hoverSound(cb); }   // (the shop's hover sound, for now)
       }
