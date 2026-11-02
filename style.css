@@ -876,3 +876,17 @@ input[type="search"]::-webkit-search-cancel-button, input[type="search"]::-webki
 /* Customize, Limbo mode on: a note over the Background / Win Effect tabs (fx.js) */
 .fxvoid { margin: 0 0 10px; padding: 10px 14px; border: 2px solid #2e9a4a; border-radius: 10px; background: rgba(120, 220, 140, 0.25);
   color: #1d6b2e; font-size: 14px; line-height: 1.5; text-align: center; }
+/* Limbo's "Special toggle" (Customize > Custom Effects): Limbo's colours, a ✦ on the knob, gradient text, and when on a
+   soft pulsing glow (opacity only, so it costs nothing). */
+.fxswitch.onbox > span:last-child { background: linear-gradient(90deg, #7b2ff7, #d6249f, #7b2ff7); -webkit-background-clip: text; background-clip: text;
+  color: transparent; letter-spacing: 0.3px; }
+.fxswitch.onbox .knob { background: linear-gradient(135deg, #3a3150, #5b4d73); box-shadow: inset 0 0 0 1px rgba(160, 120, 255, 0.5); }
+.fxswitch.onbox .knob::after { content: '✦'; display: flex; align-items: center; justify-content: center; font-size: 11px; line-height: 1; color: #9a7bd0;
+  background: #f4efff; }
+.fxswitch.onbox .knob::before { content: ''; position: absolute; inset: -3px; border-radius: 14px; pointer-events: none; opacity: 0;
+  box-shadow: 0 0 8px 2px rgba(214, 36, 159, 0.8), 0 0 14px 4px rgba(123, 47, 247, 0.55); }
+.fxswitch.onbox input:checked + .knob { background: linear-gradient(135deg, #7b2ff7, #d6249f); box-shadow: none; }
+.fxswitch.onbox input:checked + .knob::after { color: #d6249f; background: #fff; }
+.fxswitch.onbox input:checked + .knob::before { animation: specialglow 1.2s ease-in-out infinite alternate; }
+@keyframes specialglow { from { opacity: 0.35; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .fxswitch.onbox input:checked + .knob::before { animation: none; opacity: 0.8; } }
