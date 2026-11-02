@@ -175,7 +175,7 @@
       const el = Object.assign(document.createElement('div'), { className: `achvbanner t-${a.tier}` });
       const media = (part) => safari ? `<img class="${part}" src="images/achv/fx/${art}-${part}.webp" alt="">`
         : `<video class="${part}" src="images/achv/fx/${art}-${part}.webm" muted autoplay playsinline disablepictureinpicture></video>`;
-      el.innerHTML = `<div class="achvbannerin">${media('back')}<b class="achvap">${TIERS[a.tier][1]}</b><span class="achvname"></span>${media('front')}</div>`;
+      el.innerHTML = `<div class="achvbannerin">${media('back')}<b class="achvap" aria-hidden="true">${[...String(TIERS[a.tier][1])].map((n) => `<img src="images/achv/fx/num/${n}.png" alt="">`).join('')}</b><span class="achvname"></span>${media('front')}</div>`;
       el.querySelector('.achvname').textContent = a.full || a.name;
       el.setAttribute('role', 'status');
       el.setAttribute('aria-label', `Achievement complete: ${a.full || a.name}`);

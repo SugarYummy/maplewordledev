@@ -1107,8 +1107,12 @@ html.dark .achvtier.t-unique { color: #ffcc33; } html.dark .achvtier.t-legendary
 .achvbannerin { position: absolute; inset: 0; }
 .achvbanner .back { position: absolute; left: 0; top: 0; width: 1366px; height: 231px; }
 .achvbanner .front { position: absolute; left: 336px; top: 31px; width: 693px; height: 194px; z-index: 2; }
-.achvbanner .achvap { position: absolute; left: 665px; top: 131px; width: 36px; height: 20px; z-index: 1; text-align: center; font: 700 15px/20px system-ui, sans-serif; color: #e9ecef; animation: achvtext 0.3s 0.15s both; }
+/* the points: MapleStory's own digits (achievementCompleteEffect.normal.num, 8 x 13 each), at their size, in the box under the trophy */
+.achvbanner .achvap { position: absolute; left: 665px; top: 134px; width: 36px; height: 13px; z-index: 1; display: flex; justify-content: center; animation: achvtext 0.3s 0.15s both; }
+.achvbanner .achvap img { width: 8px; height: 13px; image-rendering: pixelated; }
 .achvbanner .achvname { position: absolute; left: 393px; top: 163px; width: 580px; height: 36px; z-index: 1; text-align: center; font: 700 22px/36px system-ui, sans-serif;
-                        color: #e9ecef; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; animation: achvtext 0.3s 0.15s both; }
+                        white-space: nowrap; overflow: hidden; text-overflow: ellipsis; animation: achvtext 0.3s 0.15s both;
+                        /* coloured like those digits: grey-blue fill getting lighter downwards, dark teal outline */
+                        color: transparent; background: linear-gradient(#8899aa, #aacccc); -webkit-background-clip: text; background-clip: text;
+                        filter: drop-shadow(1.5px 0 0 #445555) drop-shadow(-1.5px 0 0 #445555) drop-shadow(0 1.5px 0 #445555) drop-shadow(0 -1.5px 0 #445555); }
 @keyframes achvtext { from { opacity: 0; } to { opacity: 1; } }
-.achvbanner.t-legendary .achvname, .achvbanner.t-legendary .achvap { color: #e6f28a; }
