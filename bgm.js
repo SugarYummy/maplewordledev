@@ -732,6 +732,23 @@ const LIMBO_CLIPS = { 'screen-in': 1740, 'screen-out': 900, 'border-white-in': 8
 const LIMBO_COVERED = 780;   // ms into the fade-in while the page is still fully covered
 const limbo = { on: false, leaving: false, jumping: false, dark: false, swap: 0, wait: 0, blobs: null };   // wait: paused, until the next transition
 const isLimboEgg = () => answer?.bonus?.mashup?.egg === 'limbo';   // the Archive gets Limbo's scene too (only the shop unlock is today-only)
+// On Limbo's mashup day the "Maple Wordle" title glitches for half a second now and then (every 25-90 s at random),
+// rare enough to barely notice.
+(function titleGlitch() {
+  setTimeout(() => {
+    const h = document.querySelector('h1');
+    if (h && isLimboEgg() && !document.hidden && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      if (!h.querySelector('.gtext')) {
+        const g = Object.assign(document.createElement('span'), { className: 'gtext', textContent: h.textContent });
+        g.dataset.text = h.textContent;
+        h.replaceChildren(g);
+      }
+      h.classList.remove('tglitch'); void h.offsetWidth; h.classList.add('tglitch');
+      setTimeout(() => h.classList.remove('tglitch'), 500);
+    }
+    titleGlitch();
+  }, 25000 + Math.random() * 65000);
+})();
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 function limboLoad() {   // fetched once (on a Limbo mashup day, when the bonus shows up)
   limbo.blobs ??= Promise.all(Object.keys(LIMBO_CLIPS).map((n) => fetch(`video/limbo/${n}.${SAFARI ? 'webp' : 'webm'}`)
