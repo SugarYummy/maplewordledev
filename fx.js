@@ -241,13 +241,13 @@ const HECATE = {   // ms: clip length, burst: ms into the clip when it bursts (f
   // Limbo's glitch mashup right plays for everyone. The mesos come as it fades out (frame 54 of 65).
   limboCut: { name: 'Limbo Transition', ms: 4200, burst: 3480, pack: 'limboSub', wide: true, solo: true, v: 2 },   // solo: its own card, no box
   // Boss finishing effects (60 ms frames; Siren's Song's End starts 1 s before its Pre ends, Bellona's three parts play at once):
-  // yours once you unlock that boss's Hidden achievement (achv.js)
+  // yours once you claim that boss's Hidden achievement (achv.js)
   sirenSong: { name: "Siren's Song", ms: 4500, burst: 2220, v: 2, achv: 'kill:Malefic Star' },
   iaidoAlpha: { name: 'Kai-ryu Sword: Iaido Alpha', ms: 2640, burst: 1920, achv: 'kill:Kai' },
   mayrinKill: { name: 'Guide of Destiny', ms: 3600, burst: 1800, v: 2, achv: 'kill:Mayrin' },
   bellonaKill: { name: "Fanatic's Execution", ms: 2820, burst: 1740, v: 2, achv: 'kill:Bellona' },
 };
-const achvGot = (id) => { try { return JSON.parse(lsGet('mapleWordle:achv') || '{}')[id] != null; } catch { return false; } };
+const achvGot = (id) => { try { return JSON.parse(lsGet('mapleWordle:achv') || '{}')._claimed?.[id] != null; } catch { return false; } };   // claimed (achv.js)
 const EFFECTS_KEY = 'mapleWordle:effects', WINFX_KEY = 'mapleWordle:winFx';   // packs bought; win effects picked
 function ownedEffects() {
   try { return JSON.parse(lsGet(EFFECTS_KEY) || '[]'); } catch { return []; }
@@ -1774,7 +1774,7 @@ const MESO_BONUS = { bgmnormal: 20, bgm: 20, sound: 20, map: 50 };   // bonus qu
 const MESO_SPECIAL = 100;                               // ...unless it's one of the hidden glitch days
 const MESO_NAMES = { shop: 'Shop', story: 'Boss Wordle - Story', normal: 'Boss Wordle - Normal', hard: 'Boss Wordle - Hard',
   extreme: 'Boss Wordle - Extreme', bgmnormal: 'BGM Clip - Normal', bgm: 'BGM Clip - Extreme', sound: 'Boss - Sound Clip', class: 'Class - Wordle',
-  anim: 'Class - Attack Animation', map: 'Guess the Map' };
+  anim: 'Class - Attack Animation', map: 'Guess the Map', achv: 'Achievement' };
 const MESO_SOON = new Set(['sound', 'map']);
 const MESO_DAY = (y, m, d) => Date.UTC(y, m - 1, d) / 86400000;
 // BGM Clip launch week: everything it pays (bonus too) is x3, Oct 20 to Oct 26.

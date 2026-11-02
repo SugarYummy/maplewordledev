@@ -1240,16 +1240,24 @@ function resultIn(d) {
   return n ? `In progress (${n}/${maxGuesses()})` : 'Not played';
 }
 window.archiveHere = { modes: Object.keys(MODES), current: () => MODE, result: resultFor, style: rowStyleFor, play: (m, d) => { MODE = m; start(d); } };
-// Every BGM you've won in Extreme (the Archive too), for the achievements (achv.js: win all of a boss's BGMs).
-const TRACKS_KEY = 'mapleWordle:bgmTracks';
+// For the achievements (achv.js): every BGM you've won in Extreme (the Archive too; the bonus doesn't matter), and
+// whether you've ever got Limbo's glitch mashup right.
+const TRACKS_KEY = 'mapleWordle:bgmTracks', LIMBO_MASH_KEY = 'mapleWordle:limboMash';
 function saveTracks() {
   const won = new Set();
+  let mash = false;
   for (let i = 0; i < localStorage.length; i++) {
     const m = /^mapleWordle:result:([a-z]+):(\d+)$/.exec(localStorage.key(i));
-    if (m && m[1] === 'bgm' && /^Won/.test(localStorage.getItem(localStorage.key(i)))) won.add(inMode(m[1], () => answerFor(+m[2]).track));
+    if (!m || !(m[1] in MODES)) continue;
+    const d = +m[2];
+    if (m[1] === 'bgm' && /^Won/.test(localStorage.getItem(localStorage.key(i)))) won.add(inMode('bgm', () => answerFor(d).track));
+    if (!mash) mash = inMode(m[1], () => { const a = answerFor(d), b = load(d).bonus; return a.bonus?.mashup?.egg === 'limbo' && b != null && a.bonus.right.includes(b); });
   }
   const v = JSON.stringify([...won].sort());
-  try { if (localStorage.getItem(TRACKS_KEY) !== v) localStorage.setItem(TRACKS_KEY, v); } catch {}
+  try {
+    if (localStorage.getItem(TRACKS_KEY) !== v) localStorage.setItem(TRACKS_KEY, v);
+    if (mash && localStorage.getItem(LIMBO_MASH_KEY) !== '1') localStorage.setItem(LIMBO_MASH_KEY, '1');
+  } catch {}
 }
 const noteResult = () => {
   if (over) {

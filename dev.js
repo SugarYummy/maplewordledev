@@ -21,7 +21,7 @@
     constructor(...a) { if (a.length) super(...a); else super(RealDate.now() - BEHIND); }
     static now() { return RealDate.now() - BEHIND; }
   };
-  const BUILD = 'alphaTest v5.1.02112026.133943', STAMP = BUILD.split(' v')[1];
+  const BUILD = 'alphaTest v5.1.02112026.134504', STAMP = BUILD.split(' v')[1];
   const ROOT = location.pathname.match(/^(.*?\/maplewordledev\/)/)?.[1] ?? '/';
   const kept = window.localStorage;   // the browser's own storage: only the test login ('mwdev:login') goes here
   Object.defineProperty(window, 'localStorage', { value: window.sessionStorage, configurable: true });
@@ -175,7 +175,8 @@
       lsSet(THEMES_KEY, JSON.stringify([...new Set([...ownedThemes().filter((x) => x !== 'default'),
         ...items.flatMap((t) => (SHOP[t].effect ? SHOP[t].themes ?? [] : SHOP[t].themes ?? [t])).filter((x) => x in THEMES)])]));
       const achv = JSON.parse(lsGet('mapleWordle:achv') || '{}'), day = Math.floor(Date.now() / 86400000);
-      for (const h of Object.values(HECATE)) if (h.achv) achv[h.achv] ??= day;
+      achv._claimed ??= {};
+      for (const h of Object.values(HECATE)) if (h.achv) { achv[h.achv] ??= day; achv._claimed[h.achv] ??= day; }
       lsSet('mapleWordle:achv', JSON.stringify(achv));
       drawThemeButton();
       drawCustomFx();

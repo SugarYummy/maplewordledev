@@ -175,7 +175,8 @@
       lsSet(THEMES_KEY, JSON.stringify([...new Set([...ownedThemes().filter((x) => x !== 'default'),
         ...items.flatMap((t) => (SHOP[t].effect ? SHOP[t].themes ?? [] : SHOP[t].themes ?? [t])).filter((x) => x in THEMES)])]));
       const achv = JSON.parse(lsGet('mapleWordle:achv') || '{}'), day = Math.floor(Date.now() / 86400000);
-      for (const h of Object.values(HECATE)) if (h.achv) achv[h.achv] ??= day;
+      achv._claimed ??= {};
+      for (const h of Object.values(HECATE)) if (h.achv) { achv[h.achv] ??= day; achv._claimed[h.achv] ??= day; }
       lsSet('mapleWordle:achv', JSON.stringify(achv));
       drawThemeButton();
       drawCustomFx();

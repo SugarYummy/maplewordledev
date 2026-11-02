@@ -11,6 +11,7 @@
   const gameOf = (mode) => Object.keys(GAMES).find((g) => GAMES[g].includes(mode));
   const read = (k) => { try { return localStorage.getItem(k); } catch { return null; } };
   const json = (k, d) => { try { return JSON.parse(read(k)) ?? d; } catch { return d; } };
+  const dayText = (d) => new Date(d * DAY_MS).toLocaleDateString(undefined, { timeZone: 'UTC', month: 'short', day: 'numeric' });
   const loggedIn = () => typeof acct === 'function' && !!acct();
   const fmt = (n) => Math.round(n).toLocaleString('en-US');
 
@@ -35,7 +36,8 @@
   function stats(L) {
     const s = { played: 0, wins: 0, firstTry: 0, diamond: 0, rainbow: 0, days: new Set(), games: new Set(), streak: 0, mesos: 0,
       won: { bgm: new Set(), boss: new Set(), class: new Set(), anim: new Set() }, limbo: false,
-      tracks: new Set(json('mapleWordle:bgmTracks', [])), buys: 0 };
+      tracks: new Set(json('mapleWordle:bgmTracks', [])), buys: 0,
+      limboMash: read('mapleWordle:limboMash') === '1' };
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i), m = /^mapleWordle:result:([a-z]+):(\d+)$/.exec(key);
       if (!m || !ALL_MODES.includes(m[1])) continue;
@@ -118,7 +120,8 @@
       kill('Kai', 'Iaido Alpha', 'Kai-ryu Sword: Iaido Alpha', '../achv/iaido-alpha', 'iaidoAlpha'),
       kill('Mayrin', 'Guide of Destiny', 'Guide of Destiny', 'mayrin', 'mayrinKill'),
       kill('Bellona', "Fanatic's Execution", "Fanatic's Execution", 'bellona', 'bellonaKill'),
-      A('limbo', 'Subconscious', 'Something stirred in the abyss.', (s) => [s.limbo ? 1 : 0, 1], 'images/fx/limbo-bundle.webp', { full: "Limbo's Subconscious" }),
+      A('limbo', 'Subconscious', 'Something stirred in the abyss.', (s) => [s.limboMash ? 1 : 0, 1], 'images/fx/limbo-bundle.webp',
+        { full: "Limbo's Subconscious", mesos: 1000, reward: '1,000 mesos' }),
     ], true],
   ];
   const ALL = SECTIONS.flatMap(([, list]) => list);
@@ -128,21 +131,20 @@
     if (!loggedIn()) return;
     const L = await loadLists();
     const first = read(ACHV_KEY) == null;   // first look ever: what was earned before unlocks quietly
-    const s = stats(L), got = json(ACHV_KEY, {}), fresh = [], newFx = [];
+    const s = stats(L), got = json(ACHV_KEY, {}), fresh = [];
     for (const a of ALL) {
       const [have, need] = a.prog(s, L);
-      if (have >= need && got[a.id] == null) { got[a.id] = today(); fresh.push(a.full || a.name); if (a.fx) newFx.push(a.fx); }
+      if (have >= need && got[a.id] == null) { got[a.id] = today(); fresh.push(a.full || a.name); }
     }
     const changed = fresh.length || s.streak > (got._bestStreak || 0);
     got._bestStreak = Math.max(s.streak, got._bestStreak || 0);
     if (changed || first) { try { localStorage.setItem(ACHV_KEY, JSON.stringify(got)); } catch {} }
-    // A boss finishing effect just unlocked: it's in Customize > Win Effect now (fx.js), NEW until reload
-    if (newFx.length && typeof drawThemeButton === 'function') { newFx.forEach((x) => customFresh.add(x)); customTab = 'win'; drawThemeButton(); }
     if (announce && !first) fresh.forEach((n, i) => setTimeout(() => toast(n), 2500 + i * 2600));
   }
-  function toast(name) {
+  function toast(name, head = 'Achievement unlocked') {
     const t = Object.assign(document.createElement('div'), { className: 'achvtoast' });
-    t.innerHTML = '<img src="images/achv/4000038.png" alt=""><div><b>Achievement unlocked</b><span></span></div>';
+    t.innerHTML = '<img src="images/achv/4000038.png" alt=""><div><b></b><span></span></div>';
+    t.querySelector('b').textContent = head;
     t.querySelector('span').textContent = name;
     document.body.appendChild(t);
     setTimeout(() => t.classList.add('out'), 2200);
@@ -152,9 +154,29 @@
   const setItem = Storage.prototype.setItem;
   Storage.prototype.setItem = function (k, v) {
     setItem.call(this, k, v);
-    if (typeof k === 'string' && (k.startsWith('mapleWordle:result:') || k === 'mapleWordle:mesoLog' || k === 'mapleWordle:bgmTracks')) { clearTimeout(check.t); check.t = setTimeout(check, 300); }
+    if (typeof k === 'string' && (k.startsWith('mapleWordle:result:') || k === 'mapleWordle:mesoLog' || k === 'mapleWordle:bgmTracks' || k === 'mapleWordle:limboMash')) { clearTimeout(check.t); check.t = setTimeout(check, 300); }
   };
 
+  // Claim a finished Hidden achievement's reward: its win effect (fx.js HECATE, in Customize > Win Effect, NEW until
+  // reload) or its mesos.
+  function claim(a, btn) {
+    const got = json(ACHV_KEY, {});
+    if (got[a.id] == null || got._claimed?.[a.id] != null) return;
+    got._claimed = { ...got._claimed, [a.id]: today() };
+    try { localStorage.setItem(ACHV_KEY, JSON.stringify(got)); } catch {}
+    if (a.mesos && typeof mesoLog === 'function') {
+      const log = mesoLog();
+      if (!log.some((e) => e.key === `achv:${a.id}`)) {
+        log.push({ key: `achv:${a.id}`, mode: 'achv', day: today(), what: a.full || a.name, amount: a.mesos });
+        lsSet(MESO_LOG_KEY, JSON.stringify(log));
+        drawMeso(a.mesos);
+      }
+    }
+    if (a.fx && typeof drawThemeButton === 'function') { customFresh.add(a.fx); customTab = 'win'; drawThemeButton(); }
+    if (typeof resultSound === 'function') resultSound(true, 0, 'purchase');
+    toast(a.full || a.name, 'Reward claimed');
+    btn?.replaceWith(Object.assign(document.createElement('span'), { className: 'achvdate', textContent: dayText(got[a.id]) }));
+  }
   async function open() {
     const body = popup('achv', 'Achievements');
     if (!loggedIn()) {
@@ -178,13 +200,15 @@
         // Hidden: always purple. Locked: the Secret Spell Scroll, its short name, a faint ??? and how far you are (N / M)
         const row = box.appendChild(Object.assign(document.createElement('div'), { className: 'achv' + (on ? ' on' : '') + (hidden ? ' secret' : '') }));
         row.innerHTML = `<div class="achvicon"><img src="${hide ? 'images/achv/4031348.png' : a.icon}" alt=""></div><div class="achvtext"><b></b><small></small>` +
-          (need > 1 && !(hidden && on) ? `<div class="achvbar"><i style="width:${(have / need) * 100}%"></i></div><small class="achvnum">${fmt(have)} / ${fmt(need)}</small>` : '') +
+          ((need > 1 || hide) && !(hidden && on) ? `<div class="achvbar"><i style="width:${(have / need) * 100}%"></i></div><small class="achvnum">${fmt(have)} / ${fmt(need)}</small>` : '') +
           (a.reward && !hide ? '<small class="achvreward"></small>' : '') + '</div>' +
-          (on ? `<span class="achvdate">${new Date(got[a.id] * DAY_MS).toLocaleDateString(undefined, { timeZone: 'UTC', month: 'short', day: 'numeric' })}</span>` : '');
+          (on && a.reward && hidden && !got._claimed?.[a.id] ? '<button class="achvclaim">Claim</button>' :
+          on ? `<span class="achvdate">${dayText(got[a.id])}</span>` : '');
         row.querySelector('b').textContent = on ? a.full || a.name : a.name;
         row.querySelector('small').textContent = hide ? '???' : a.how;
         if (hide) row.querySelector('small').classList.add('achvq');
         if (a.reward && !hide) row.querySelector('.achvreward').textContent = 'Reward: ' + a.reward;
+        row.querySelector('.achvclaim')?.addEventListener('click', (e) => claim(a, e.currentTarget));
       }
     }
   }

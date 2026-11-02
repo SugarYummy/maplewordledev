@@ -1042,6 +1042,9 @@ h1.tglitch .gtext::after { animation: glitchb 1.6s steps(1) -1.088s 1; }
 .achvbar { height: 6px; border-radius: 3px; background: rgba(0, 0, 0, 0.15); overflow: hidden; margin-top: 3px; }
 .achvbar i { display: block; height: 100%; background: #e0a000; }
 .achvnum { font-variant-numeric: tabular-nums; }
+.achvclaim { flex: none; font: inherit; font-size: 13px; font-weight: 700; padding: 5px 14px; border-radius: 8px; cursor: pointer;
+  border: 1px solid #b07800; background: linear-gradient(#ffd75a, #f0a800); color: #3a2500; }
+.achvclaim:hover { filter: brightness(1.08); }
 .achvdate { font-size: 11px; opacity: 0.7; white-space: nowrap; }
 .achvtoast { position: fixed; top: 14px; left: 50%; transform: translateX(-50%); z-index: 23; display: flex; align-items: center; gap: 10px;
   padding: 8px 18px; border-radius: 12px; background: #2a2e36; color: #fff; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
