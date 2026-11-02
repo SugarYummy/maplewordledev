@@ -624,10 +624,10 @@ body.glitch .game { animation: glitchslice 2.3s steps(1) infinite; }
   mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); }
 .game.rainbow > .rbring, .game.rainbow > .rbglow { display: block; }
 .rbring { inset: -3px; padding: 3px; border-radius: 15px; }
-.rbglow { inset: -18px; z-index: -1; padding: 18px; border-radius: 30px; opacity: 0.8; }
+.rbglow { inset: -5px; z-index: -1; padding: 5px; border-radius: 17px; opacity: 0.4; }
 .rbring i, .rbglow i, #archiveList button.rainbow::before { position: absolute; left: 50%; top: 50%; width: 150cqmax; height: 150cqmax;
   background: conic-gradient(#ff3c3c, #ffa01e, #ffe628, #3cd25a, #328cff, #aa50ff, #ff3c3c); animation: rbturn 4s linear infinite; }
-.rbglow i { filter: blur(14px); }
+.rbglow i { filter: blur(3px); }
 @keyframes rbturn { from { transform: translate(-50%, -50%) rotate(0); } to { transform: translate(-50%, -50%) rotate(360deg); } }
 .game.glow.rainbow { animation: none; box-shadow: none; }   /* the rainbow glow replaces the gold one */
 .game.shake.glow.rainbow { animation: shake 0.5s cubic-bezier(.36, .07, .19, .97) both; }
