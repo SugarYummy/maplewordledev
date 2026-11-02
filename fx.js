@@ -1095,7 +1095,7 @@ function drawThemeButton() {
         sum.append(pic, name);
         if (pack === 'limboSub') {   // one switch for everything in Limbo's set, on the box itself (no need to open it)
           const row = Object.assign(document.createElement('label'), { className: 'fxswitch onbox', title: 'Enable all Limbo effects, including hidden ones' });
-          row.innerHTML = '<input type="checkbox"><span class="knob"></span><span>All effects</span>';
+          row.innerHTML = '<input type="checkbox"><span class="knob"></span><span>Special toggle</span>';
           row.querySelector('input').checked = limboAllOn();
           row.addEventListener('click', (e) => {   // (not the box's open / close)
             e.preventDefault();
