@@ -1042,7 +1042,7 @@ $('bonusGo').addEventListener('click', (window.acctGate ?? ((f) => f))(() => {
   const ok = answer.bonus.right.includes(pick);
   // Limbo's wrong guess effect (if it's on) eats a wrong answer; on Limbo's mashup everyone gets to see it.
   limboGuess($('bonusResult'), !ok, undefined, isLimboEgg());
-  if (ok && isLimboEgg()) limboWin(guesses.length === 1 && won());   // right: Limbo's cutscene, then the meso show (not again after a guess in 1)
+  if (ok && isLimboEgg()) limboWin(!won() || guesses.length === 1);   // right: Limbo's cutscene, then the meso show (only after a win, and not again after a guess in 1)
   noteResult();
   if (!ok && isLimboEgg()) {
     // Wrong: the dragon swallows the answer and stays a moment, then the border's exit and Limbo's fail screen in
