@@ -315,15 +315,15 @@ function acctAppearPlay(into) {   // once, then gone (Settings, when it opens)
   const el = Object.assign(document.createElement(safari ? 'img' : 'video'), { className: 'acctappear', src: `${fx.src}.${safari ? 'webp' : 'webm'}?v=1`, alt: '' });
   if (!safari) Object.assign(el, { muted: true, autoplay: true, playsInline: true });
   el.setAttribute('aria-hidden', 'true');
-  let sounded = false;
-  const sound = () => { if (!sounded) { sounded = true; if (typeof resultSound === 'function') resultSound(true, 0, 'appear'); } };
-  if (safari) { sound(); setTimeout(() => el.remove(), 3700); }
-  else { el.addEventListener('playing', sound, { once: true }); el.addEventListener('ended', () => el.remove()); el.addEventListener('error', () => el.remove()); }
+  let sounded = false, soundAt = 0;
+  const sound = () => { if (!sounded && el.isConnected) { sounded = true; soundAt = Date.now(); if (typeof resultSound === 'function') resultSound(true, 0, 'appear'); } };
+  if (!safari) el.addEventListener('playing', sound, { once: true });
   // Over everything (not clipped by the Settings box), big, centred on your character (or the gap left of Welcome back)
   const ava = into.querySelector('.acctava'), r = (ava || into).getBoundingClientRect();
   el.style.left = (ava ? r.left + r.width / 2 : r.left - 46) + 'px';
   el.style.top = r.top + r.height / 2 + 'px';
   document.body.appendChild(el);
+  if (safari) sound();
   // Behind your character: a copy of your character sits on top of it, right over the real one, while it plays
   let top = null;
   if (ava) {
@@ -333,10 +333,17 @@ function acctAppearPlay(into) {   // once, then gone (Settings, when it opens)
     document.body.appendChild(top);
     if (top.tagName === 'VIDEO') { top.currentTime = ava.currentTime; top.play?.().catch(() => {}); }
   }
-  const gone = () => { el.remove(); top?.remove(); };
+  const gone = () => { el.remove(); top?.remove(); watch?.disconnect(); };
+  // Leaving Settings (Close, Esc, clicking outside): the effect, the copy of your character and its sound all stop
+  const set = document.getElementById('settings');
+  const watch = set && new MutationObserver(() => {
+    if (!set.hidden || !el.isConnected) return;
+    gone();
+    if (Date.now() - soundAt < 4500 && typeof stopResultSounds === 'function') stopResultSounds();
+  });
+  watch?.observe(set, { attributes: true, attributeFilter: ['hidden'] });
   el.addEventListener('ended', gone); el.addEventListener('error', gone);
   if (safari) setTimeout(gone, 3700);
-  document.getElementById('settings')?.querySelector('.closebar button')?.addEventListener('click', gone, { once: true });
 }
 // A shop avatar you haven't looked at yet (new in the MapleStory Character list): the Settings cog glows with NEW, and
 // Account Settings, MapleStory Character and the avatar itself say NEW, until that list is opened.

@@ -38,11 +38,13 @@
       won: { bgm: new Set(), boss: new Set(), class: new Set(), anim: new Set() }, limbo: false,
       tracks: new Set(json('mapleWordle:bgmTracks', [])), buys: 0,
       limboMash: read('mapleWordle:limboMash') === '1' };
+    const byMode = {};   // each mode's days played: [day, won]
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i), m = /^mapleWordle:result:([a-z]+):(\d+)$/.exec(key);
       if (!m || !ALL_MODES.includes(m[1])) continue;
       const r = read(key) || '', mode = m[1], d = +m[2], game = gameOf(mode);
       if (!/^(Won|Lost)/.test(r)) continue;
+      (byMode[mode] ??= []).push([d, /^Won/.test(r)]);
       s.played++;
       s.days.add(d);
       const w = /^Won (?:in )?(\d+)/.exec(r);
@@ -60,6 +62,16 @@
       if (last) s.won[game].add(game === 'boss' ? (L?.bossOf[last] || last) : last);
     }
     for (const m of ALL_MODES) s.streak = Math.max(s.streak, json(`mapleWordle:streak:${m}`, {}).count || 0);
+    // ...and the best streak in everything saved (the Archive too, day by day), like the games count it: Story counts
+    // days in a row; the other modes count wins in a row (a loss ends it)
+    for (const [mode, list] of Object.entries(byMode)) {
+      let run = 0, prev = null;
+      for (const [d, won] of list.sort((a, b) => a[0] - b[0])) {
+        run = mode === 'story' ? (prev === d - 1 ? run + 1 : 1) : won ? run + 1 : 0;
+        prev = d;
+        s.streak = Math.max(s.streak, run);
+      }
+    }
     s.streak = Math.max(s.streak, json(ACHV_KEY, {})._bestStreak || 0);   // the best one seen, kept (a streak can end)
     // Shop buys: every shop item you own (fx.js)
     try { s.buys = Object.keys(SHOP).filter(shopOwned).length; } catch {}
