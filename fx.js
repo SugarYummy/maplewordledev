@@ -240,11 +240,12 @@ const HECATE = {   // ms: clip length, burst: ms into the clip when it bursts (f
   // Limbo's set: its cutscene (a wide banner, shown whole). Also what a win in 1 plays in Limbo mode, and what getting
   // Limbo's glitch mashup right plays for everyone. The mesos come as it fades out (frame 54 of 65).
   limboCut: { name: 'Limbo Transition', ms: 4200, burst: 3480, pack: 'limboSub', wide: true, solo: true, v: 2 },   // solo: its own card, no box
-  // Boss finishing effects (Pre into End, 60 ms frames): yours once you unlock that boss's Hidden achievement (achv.js)
-  sirenSong: { name: "Siren's Song", ms: 5520, burst: 3240, achv: 'kill:Malefic Star' },
+  // Boss finishing effects (60 ms frames; Siren's Song's End starts 1 s before its Pre ends, Bellona's three parts play at once):
+  // yours once you unlock that boss's Hidden achievement (achv.js)
+  sirenSong: { name: "Siren's Song", ms: 4500, burst: 2220, v: 2, achv: 'kill:Malefic Star' },
   iaidoAlpha: { name: 'Kai-ryu Sword: Iaido Alpha', ms: 2640, burst: 1920, achv: 'kill:Kai' },
   mayrinKill: { name: 'Mayrin (Placeholder)', ms: 3600, burst: 1800, achv: 'kill:Mayrin' },
-  bellonaKill: { name: 'Bellona (Placeholder)', ms: 4980, burst: 2160, achv: 'kill:Bellona' },
+  bellonaKill: { name: 'Bellona (Placeholder)', ms: 2820, burst: 1740, v: 2, achv: 'kill:Bellona' },
 };
 const achvGot = (id) => { try { return JSON.parse(lsGet('mapleWordle:achv') || '{}')[id] != null; } catch { return false; } };
 const EFFECTS_KEY = 'mapleWordle:effects', WINFX_KEY = 'mapleWordle:winFx';   // packs bought; win effects picked
@@ -407,7 +408,7 @@ const SOUNDS = { win: 'sounds/star-force-success.mp3', lose: 'sounds/star-force-
 // Tracks that play longer than SOUND_SECONDS: seconds before the fade-out starts (fade-out is SOUND_FADE).
 const SOUND_LENGTH = { animWin: 19, classLose: 16, firstTry: 33, classWin: 22, failBlackPre: 3, failBlackEnd: 4, failWhitePre: 3, failWhiteEnd: 4 };
 // Tracks louder than SOUND_VOLUME.
-const SOUND_LOUDER = { firstTry: 0.30, purchase: 0.6, limboCut: 0.5, failBlackPre: 0.5, failBlackEnd: 0.5, failWhitePre: 0.5, failWhiteEnd: 0.5 };   // limboCut: as loud as the first-guess music it plays with
+const SOUND_LOUDER = { firstTry: 0.30, purchase: 0.6, limboCut: 0.5, sirenSong: 0.45, iaidoAlpha: 0.73, mayrinKill: 0.63, failBlackPre: 0.5, failBlackEnd: 0.5, failWhitePre: 0.5, failWhiteEnd: 0.5 };   // limboCut and the boss finishing effects: as loud as the first-guess music they play with (a touch louder; set by loudness)
 // Phone and tablet speakers are much quieter, so they play everything twice as loud (12%, and 60% for a first-guess win).
 const PHONE = matchMedia('(hover: none) and (pointer: coarse)').matches;
 const muteKey = 'mapleWordle:muted';
