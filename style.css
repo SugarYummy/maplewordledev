@@ -761,7 +761,7 @@ input[type="search"]::-webkit-search-cancel-button, input[type="search"]::-webki
 .dealtag.limbodeal { display: inline-flex; align-items: center; gap: 2px; background: #2a0f3d; padding: 0 4px 0 8px; }
 .limboclock { width: auto; height: 34px; margin: -6px -14px; image-rendering: pixelated; }
 /* A bundle box's own switch (Limbo's "All effects"), on the box itself: knob over a small label, before the arrow */
-.fxswitch.onbox { flex-direction: column; gap: 2px; margin-left: auto; padding: 0 4px; font-size: 10px; font-weight: 700; color: #444; }
+.fxswitch.onbox { flex-direction: column; align-items: center; text-align: center; gap: 6px; margin-left: auto; padding: 0 4px; font-size: 10px; font-weight: 700; color: #444; }
 .fxbundle > summary:has(.onbox)::after { margin-left: 6px; }
 /* "(Bundle of N)" in the shop: dotted underline; hover / tap shows what's in it */
 .bundletip { text-decoration: underline dotted; text-underline-offset: 2px; cursor: help; }
