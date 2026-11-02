@@ -143,9 +143,9 @@ td.cardcell { background: #b9bdc6; }
 td.flip { animation: flip 0.5s ease both; }
 @keyframes flip { from { transform: rotateX(90deg); } to { transform: rotateX(0); } }
 /* Win confetti (fx.js). */
-.confetti { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 11; }   /* one canvas */
+.confetti { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 21; }   /* one canvas */
 /* First-guess win: a Sol Hecate skill screen over the whole page (fx.js playHecate), under the mesos */
-.hecatefx { position: fixed; inset: 0; width: 100vw; height: 100vh; object-fit: cover; z-index: 10; pointer-events: none; }
+.hecatefx { position: fixed; inset: 0; width: 100vw; height: 100vh; object-fit: cover; z-index: 20; pointer-events: none; }
 /* First-guess win: the game box shakes once; a puzzle won on the first guess glows gold for good. */
 .game.shake { animation: shake 0.5s cubic-bezier(.36, .07, .19, .97) both; }
 /* The glow is a shadow drawn once on a layer behind the box that only fades in and out: animating the box's own
@@ -331,7 +331,7 @@ body.egg-limbo::before { opacity: 1; background-color: #3a3348; background-image
 #cfx [hidden] { display: none; }
 body:has(#limboborder) #cfx { display: none; }   /* Limbo's Easter egg brings its own border */
 #limboborder [hidden] { display: none; }
-.limboscreen { position: fixed; inset: 0; width: 100vw; height: 100vh; object-fit: cover; z-index: 13; pointer-events: none; }
+.limboscreen { position: fixed; inset: 0; width: 100vw; height: 100vh; object-fit: cover; z-index: 22; pointer-events: none; }
 body.limboswap #limbobg, body.limboswap #limboborder, body.limboswap #cfx, body.limboswap .themebg { animation: limboswap 0.32s steps(4) both; }
 @keyframes limboswap {
   0% { transform: translate(-8px, 2px); filter: hue-rotate(90deg) saturate(2) contrast(1.3); }
