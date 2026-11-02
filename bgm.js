@@ -49,7 +49,7 @@ function hash(str) {
 // Normal leaves out the special tracks (an "egg" one, like Lucid's Garden of Eternal Dream), and never picks the
 // boss Extreme has that day, so the two modes are two different BGMs.
 // From Oct 22 Normal also leaves out bosses that are too obscure for it (new, region-only or event ones).
-const NORMAL_SKIP = ['Cross', 'Malicia', 'Gerand Darmoor', 'Bellona', 'Julieta', 'Inferno Wolf', 'Yakuza Boss', 'Frenzied Gigatoad', 'Balrog', 'Champion Raid'];
+const NORMAL_SKIP = ['Cross', 'Malicia', 'Gerand Darmoor', 'Bellona', 'Julieta', 'Inferno Wolf', 'Yakuza Boss', 'Frenzied Gigatoad', 'Balrog', 'Champion Raid: Draco Isle'];
 const NORMAL_SKIP_FROM = Date.UTC(2026, 9, 22) / DAY_MS;
 // Added later (data/bgm.json boss "since": "YYYY-MM-DD"): its BGMs join the shuffle from that day on, so every day before
 // it (the whole Archive) keeps its answer. The "base" schedule is the one without them: it still decides where an egg
