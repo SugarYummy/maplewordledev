@@ -624,12 +624,19 @@ body.glitch .game { animation: glitchslice 2.3s steps(1) infinite; }
   mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); }
 .game.rainbow > .rbring, .game.rainbow > .rbglow { display: block; }
 .rbring { inset: -3px; padding: 3px; border-radius: 15px; }
-.rbglow { inset: -48px; z-index: -1; padding: 48px; opacity: 0.95; animation: glow 0.8s ease-in-out infinite alternate;
-  /* fades out with distance from the box, like the gold glow's shadow (a flat blurred ring looked like one shade) */
-  --f: transparent 0, rgba(0, 0, 0, 0.04) 8px, rgba(0, 0, 0, 0.12) 16px, rgba(0, 0, 0, 0.28) 24px, rgba(0, 0, 0, 0.5) 32px, rgba(0, 0, 0, 0.78) 40px, rgba(0, 0, 0, 0.95) 44px, #000 48px,
-       #000 calc(100% - 48px), rgba(0, 0, 0, 0.95) calc(100% - 44px), rgba(0, 0, 0, 0.78) calc(100% - 40px), rgba(0, 0, 0, 0.5) calc(100% - 32px), rgba(0, 0, 0, 0.28) calc(100% - 24px), rgba(0, 0, 0, 0.12) calc(100% - 16px), rgba(0, 0, 0, 0.04) calc(100% - 8px), transparent 100%;
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(to right, var(--f)), linear-gradient(var(--f)); -webkit-mask-composite: xor, source-in;
-  mask: linear-gradient(#000 0 0) content-box, linear-gradient(to right, var(--f)), linear-gradient(var(--f)); mask-composite: exclude, intersect; }
+.rbglow { inset: -48px; z-index: -1; padding: 0; opacity: 0.95; animation: glow 0.8s ease-in-out infinite alternate;
+  /* fades out with distance from the box like the gold glow's shadow: four edge strips plus four rounded corners
+     (around the box's 12 px corners); the box itself is left out so the glow doesn't tint it */
+  --m: linear-gradient(to top, #000 0px, rgba(0, 0, 0, 0.95) 4px, rgba(0, 0, 0, 0.78) 8px, rgba(0, 0, 0, 0.5) 16px, rgba(0, 0, 0, 0.28) 24px, rgba(0, 0, 0, 0.12) 32px, rgba(0, 0, 0, 0.04) 40px, transparent 48px),
+    linear-gradient(to bottom, #000 0px, rgba(0, 0, 0, 0.95) 4px, rgba(0, 0, 0, 0.78) 8px, rgba(0, 0, 0, 0.5) 16px, rgba(0, 0, 0, 0.28) 24px, rgba(0, 0, 0, 0.12) 32px, rgba(0, 0, 0, 0.04) 40px, transparent 48px),
+    linear-gradient(to left, #000 0px, rgba(0, 0, 0, 0.95) 4px, rgba(0, 0, 0, 0.78) 8px, rgba(0, 0, 0, 0.5) 16px, rgba(0, 0, 0, 0.28) 24px, rgba(0, 0, 0, 0.12) 32px, rgba(0, 0, 0, 0.04) 40px, transparent 48px),
+    linear-gradient(to right, #000 0px, rgba(0, 0, 0, 0.95) 4px, rgba(0, 0, 0, 0.78) 8px, rgba(0, 0, 0, 0.5) 16px, rgba(0, 0, 0, 0.28) 24px, rgba(0, 0, 0, 0.12) 32px, rgba(0, 0, 0, 0.04) 40px, transparent 48px),
+    radial-gradient(circle at 100% 100%, transparent 11.5px, #000 12px, rgba(0, 0, 0, 0.95) 16px, rgba(0, 0, 0, 0.78) 20px, rgba(0, 0, 0, 0.5) 28px, rgba(0, 0, 0, 0.28) 36px, rgba(0, 0, 0, 0.12) 44px, rgba(0, 0, 0, 0.04) 52px, transparent 60px),
+    radial-gradient(circle at 0 100%, transparent 11.5px, #000 12px, rgba(0, 0, 0, 0.95) 16px, rgba(0, 0, 0, 0.78) 20px, rgba(0, 0, 0, 0.5) 28px, rgba(0, 0, 0, 0.28) 36px, rgba(0, 0, 0, 0.12) 44px, rgba(0, 0, 0, 0.04) 52px, transparent 60px),
+    radial-gradient(circle at 100% 0, transparent 11.5px, #000 12px, rgba(0, 0, 0, 0.95) 16px, rgba(0, 0, 0, 0.78) 20px, rgba(0, 0, 0, 0.5) 28px, rgba(0, 0, 0, 0.28) 36px, rgba(0, 0, 0, 0.12) 44px, rgba(0, 0, 0, 0.04) 52px, transparent 60px),
+    radial-gradient(circle at 0 0, transparent 11.5px, #000 12px, rgba(0, 0, 0, 0.95) 16px, rgba(0, 0, 0, 0.78) 20px, rgba(0, 0, 0, 0.5) 28px, rgba(0, 0, 0, 0.28) 36px, rgba(0, 0, 0, 0.12) 44px, rgba(0, 0, 0, 0.04) 52px, transparent 60px);
+  -webkit-mask: none; -webkit-mask-image: var(--m); -webkit-mask-repeat: no-repeat; -webkit-mask-size: calc(100% - 120px) 48px, calc(100% - 120px) 48px, 48px calc(100% - 120px), 48px calc(100% - 120px), 60px 60px, 60px 60px, 60px 60px, 60px 60px; -webkit-mask-position: 60px 0, 60px 100%, 0 60px, 100% 60px, 0 0, 100% 0, 0 100%, 100% 100%;
+  mask: none; mask-image: var(--m); mask-repeat: no-repeat; mask-size: calc(100% - 120px) 48px, calc(100% - 120px) 48px, 48px calc(100% - 120px), 48px calc(100% - 120px), 60px 60px, 60px 60px, 60px 60px, 60px 60px; mask-position: 60px 0, 60px 100%, 0 60px, 100% 60px, 0 0, 100% 0, 0 100%, 100% 100%; mask-composite: add; }
 .rbring i, .rbglow i, #archiveList button.rainbow::before { position: absolute; left: 50%; top: 50%; width: 150cqmax; height: 150cqmax;
   background: conic-gradient(#ff3c3c, #ffa01e, #ffe628, #3cd25a, #328cff, #aa50ff, #ff3c3c); animation: rbturn 4s linear infinite; }
 .rbglow i { filter: blur(6px); }
