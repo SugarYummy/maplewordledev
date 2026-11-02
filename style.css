@@ -1084,7 +1084,8 @@ html.dark .achvstats div { border-color: rgba(255, 255, 255, 0.12); }
 
 /* An appearance effect (Seething Balance): plays once over the account's avatar when Settings opens */
 .acctside { position: relative; }
-.acctappear { position: fixed; width: 300px; height: 250px; transform: translate(-50%, -50%); pointer-events: none; z-index: 20; object-fit: contain; }
+/* 312 x 260 (the effect's 1322 x 1100 at 0.236): its middle (the eye, at 636, 534 in the effect) lands on your character's middle */
+.acctappear { position: fixed; width: 312px; height: 260px; transform: translate(calc(-50% + 5.9px), calc(-50% + 3.8px)); pointer-events: none; z-index: 20; object-fit: contain; }
 .acctpickhead { margin: 12px 0 4px; font-size: 15px; text-align: left; }
 .acctpickrow .acctfxpic { width: 72px; height: 72px; object-fit: contain; }
 .acctpickrow.acctfxrow { padding-right: 104px; }
