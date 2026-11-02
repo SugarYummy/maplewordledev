@@ -70,6 +70,7 @@
   // art (images/achv/<item id>.png from maplestory.io), names from Maple medals / items.
   const A = (id, name, how, prog, icon, extra) => ({ id, name, how, prog, icon: /^\d+$/.test(icon) ? `images/achv/${icon}.png` : icon, ...extra });
   const upTo = (n, need) => [Math.min(n, need), need];
+  // Icons: the skill's icon (Kai, Malefic Star); Mayrin and Bellona use their boss picture until GMS has theirs.
   // Hidden: win every BGM of the boss (waiting room, each phase, loot room) in BGM Clip Extreme. Locked: its short name,
   // ??? and N / M; unlocked: its full name (the boss's finishing attack) and what you did.
   const kill = (boss, name, full, img, fx) => A(`kill:${boss}`, name, `Played all versions of ${boss}'s BGM in Extreme mode.`,
@@ -113,8 +114,8 @@
       A('buy10', 'Richie Rich', 'Buy 10 items in the shop.', (s) => upTo(s.buys, 10), '1142161'),
     ]],
     ['Hidden', [
-      kill('Malefic Star', "Siren's Song", "Siren's Song", 'malefic-star', 'sirenSong'),
-      kill('Kai', 'Iaido Alpha', 'Kai-ryu Sword: Iaido Alpha', 'kai', 'iaidoAlpha'),
+      kill('Malefic Star', "Siren's Song", "Siren's Song", '../achv/siren-song', 'sirenSong'),
+      kill('Kai', 'Iaido Alpha', 'Kai-ryu Sword: Iaido Alpha', '../achv/iaido-alpha', 'iaidoAlpha'),
       kill('Mayrin', 'Guide of Destiny', 'Guide of Destiny', 'mayrin', 'mayrinKill'),
       kill('Bellona', "Fanatic's Execution", "Fanatic's Execution", 'bellona', 'bellonaKill'),
       A('limbo', 'Subconscious', 'Something stirred in the abyss.', (s) => [s.limbo ? 1 : 0, 1], 'images/fx/limbo-bundle.webp', { full: "Limbo's Subconscious" }),
