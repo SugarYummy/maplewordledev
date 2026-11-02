@@ -206,7 +206,7 @@
   async function open() {
     const body = popup('achv', 'Achievements');
     if (!loggedIn()) {
-      body.innerHTML = '<p class="achvlocked">Achievements need an account.<br>Make one (or log in) in Settings.</p>';
+      body.innerHTML = '<p class="achvlocked">Achievements need an account.<br>Log in or create an account in settings.</p>';
       return;
     }
     body.innerHTML = '<p class="achvcount">Loading…</p>';

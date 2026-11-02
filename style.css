@@ -1033,7 +1033,7 @@ h1.tglitch .gtext::after { animation: glitchb 1.6s steps(1) -1.088s 1; }
 #achvBtn .newtag { top: -5px; left: -8px; font-size: 9px; line-height: 13px; padding: 0 4px; }
 @media (max-width: 700px) { #achvBtn { top: 12px; right: 54px; } #themeBtn { top: 12px; right: 96px; } }   /* phones: in a row beside Settings (a column would cover the game box) */
 #achvBtn img { width: 22px; height: 23px; image-rendering: pixelated; }
-.achvlocked { margin: 18px 8px; font-weight: 600; line-height: 1.5; }
+.achvlocked { margin: 18px 8px; font-weight: 600; line-height: 1.5; text-align: center; }
 .achvcount { margin: 0 0 6px; font-weight: 700; }
 .achvhead { margin: 14px 0 6px; text-align: left; }
 .achvlist { display: flex; flex-direction: column; gap: 6px; min-width: min(420px, 80vw); }
