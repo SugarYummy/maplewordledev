@@ -996,7 +996,8 @@ input[type="search"]::-webkit-search-cancel-button, input[type="search"]::-webki
    The see-through white boxes take their colour from --wb (white, or a dark slate in dark mode); the browser's own
    buttons, inputs and default text follow color-scheme. The rest is the few places with a fixed dark text colour. */
 :root { --wb: 255, 255, 255; --ol: #333; }
-html.dark { color-scheme: dark; --wb: 30, 33, 41; --ol: #cfd4dc; color: #e6e8ee; }
+html.dark { color-scheme: dark; --wb: 30, 33, 41; --ol: #cfd4dc; color: #c3c8d1; }
+html.dark :is(button, input, select, textarea) { color: #c3c8d1; }
 html.dark .game { --fxk: 1.5; }
 html.dark :is(#archive, #changelog, #info, #themes, .popup) > .panel, html.dark .closebar { background: #262a32; }
 html.dark :is(.closebar button, .buybtns .plain) { background: #3a3f4a; color: #eee; border-color: rgba(255, 255, 255, 0.2); }
@@ -1011,7 +1012,7 @@ html.dark .fxswitch.onbox { color: #ccc; }
 html.dark :is(#games, #subgames) button:disabled { color: #999; }
 html.dark .shopitem.lockeditem b, html.dark .shopitem .locked { color: #aaa; }
 html.dark td.cardcell { background: #3a3f4a; }
-html.dark #bundletipbox { background: #262a32; color: #e6e8ee; }
+html.dark #bundletipbox { background: #262a32; color: #c3c8d1; }
 html.dark :is(td, th) { border-color: #5a606c; }
 html.dark :is(#archiveList button, .themecard, .acctpickrow, .shopitem) { border-color: rgba(255, 255, 255, 0.15); }
 html.dark #credit { background: #2a3442; }   /* still solid (the peeking characters hide behind it) */
