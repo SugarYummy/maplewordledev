@@ -732,7 +732,7 @@ const LIMBO_CLIPS = { 'screen-in': 1740, 'screen-out': 900, 'border-white-in': 8
 const LIMBO_COVERED = 780;   // ms into the fade-in while the page is still fully covered
 const limbo = { on: false, leaving: false, jumping: false, dark: false, swap: 0, wait: 0, blobs: null };   // wait: paused, until the next transition
 const isLimboEgg = () => answer?.bonus?.mashup?.egg === 'limbo';   // the Archive gets Limbo's scene too (only the shop unlock is today-only)
-// On Limbo's mashup day the "Maple Wordle" title glitches for half a second now and then (every 25-90 s at random),
+// On Limbo's mashup day the "Mapledle" title glitches for half a second now and then (every 25-90 s at random),
 // rare enough to barely notice.
 (function titleGlitch() {
   setTimeout(() => {
@@ -1289,7 +1289,7 @@ function shareText() {
   const extra = special ? '\nSPECIAL 🔥🔥🔥' + (title == null || grid === '💎' || grid === '🌈' ? '' : `\nTitle ${titleRight() ? '✅' : '❌'}`)
     : grid === '💎' || grid === '🌈' ? ''
     : (bonus == null ? '' : `\nBonus ${ok ? '✅' : '❌'}`) + (title == null ? '' : `\nTitle ${titleRight() ? '✅' : '❌'}`);
-  return [`${isHalloween(day) ? '🎃 ' : ''}Maple Wordle - BGM Clip (${MODES[MODE].name}) #${day - firstDay() + 1} ${won() ? guesses.length : 'X'}/${maxGuesses()}`,
+  return [`${isHalloween(day) ? '🎃 ' : ''}Mapledle - BGM Clip (${MODES[MODE].name}) #${day - firstDay() + 1} ${won() ? guesses.length : 'X'}/${maxGuesses()}`,
     grid + extra, 'https://ima.moe/maplewordle/bgm/' + (MODE === 'bgmnormal' ? 'normal' : 'extreme')].join('\n');
 }
 function share() {

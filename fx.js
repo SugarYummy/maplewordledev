@@ -519,9 +519,9 @@ applyBox();
       '<input id="setBox" type="range" min="0" max="100" step="5"><span id="setBoxPct"></span></div>' +
       `<div class="setrow"><span class="setlabel">Background effect ${tip('Maple leaves on 2x weekends, effects on holidays.')}</span>` +
       '<span class="seg"><button data-fx="on">On</button><button data-fx="off">Off</button></span></div>' +
-      `<div class="setrow"><span class="setlabel">Theme ${tip('Light or dark boxes and windows.')}</span>` +
+      `<div class="setrow"><span class="setlabel">Theme ${tip('Light or dark boxes.')}</span>` +
       '<span class="seg"><button data-dark="0">Light</button><button data-dark="1">Dark</button></span></div>' +
-      `<div class="setrow"><span class="setlabel">Effects ${tip('How smooth the glows, mesos and leaves are. 30 (default) is easier on your computer; 60 is smoother but heavier.')}</span>` +
+      `<div class="setrow"><span class="setlabel">Effects ${tip('60 is smoother, 30 is lighter.')}</span>` +
       '<span class="seg"><button data-fps="30">30 FPS</button><button data-fps="60">60 FPS</button></span></div>' +
       `<div class="setrow"><span class="setlabel">Secret passcode ${tip('VIP access for helpers of the site!')}</span>` +
       (vip.on ? '<span class="vipon">✨ VIP unlocked</span>'
