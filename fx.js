@@ -617,6 +617,9 @@ applyBox();
     for (const b of body.querySelectorAll('[data-dark]')) b.addEventListener('click', () => {
       lsSet(DARK_KEY, b.dataset.dark);
       document.documentElement.classList.toggle('dark', b.dataset.dark === '1');
+      // The game runs inside index.html's frame: the browser paints a frame whose light / dark differs from the page
+      // around it with a solid background, so the outer page switches too (it reads the setting itself on load).
+      try { if (parent !== window) parent.document.documentElement.classList.toggle('dark', b.dataset.dark === '1'); } catch {}
       show();
     });
     for (const b of body.querySelectorAll('[data-fps]')) b.addEventListener('click', () => {
