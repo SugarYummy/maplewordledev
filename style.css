@@ -1025,8 +1025,9 @@ html.dark #play:hover { background: #474d5a; }
 h1.tglitch .gtext { animation: glitchjit 1.6s steps(1) -1.088s 1; }
 h1.tglitch .gtext::before { animation: glitcha 1.6s steps(1) -1.088s 1; }
 h1.tglitch .gtext::after { animation: glitchb 1.6s steps(1) -1.088s 1; }
-/* Achievements (achv.js): the 🏆 button next to Archive, its window, and the "unlocked" note */
-#achvBtn { position: fixed; top: 12px; left: 100px; z-index: 5; margin: 0; padding: 6px 10px; font-size: 14px; border: none; cursor: pointer; font-family: inherit; }
+/* Achievements (achv.js): the trophy button next to Archive, its window, and the "unlocked" note */
+#achvBtn { position: fixed; top: 12px; left: 100px; z-index: 5; margin: 0; padding: 3px 7px; border: none; cursor: pointer; line-height: 0; }
+#achvBtn img { width: 24px; height: 25px; image-rendering: pixelated; }
 .achvlocked { margin: 18px 8px; font-weight: 600; line-height: 1.5; }
 .achvcount { margin: 0 0 6px; font-weight: 700; }
 .achvhead { margin: 14px 0 6px; text-align: left; }
@@ -1042,9 +1043,11 @@ h1.tglitch .gtext::after { animation: glitchb 1.6s steps(1) -1.088s 1; }
 .achvbar i { display: block; height: 100%; background: #e0a000; }
 .achvnum { font-variant-numeric: tabular-nums; }
 .achvdate { font-size: 11px; opacity: 0.7; white-space: nowrap; }
-.achvtoast { position: fixed; top: 14px; left: 50%; transform: translateX(-50%); z-index: 23; display: flex; flex-direction: column; align-items: center;
+.achvtoast { position: fixed; top: 14px; left: 50%; transform: translateX(-50%); z-index: 23; display: flex; align-items: center; gap: 10px;
   padding: 8px 18px; border-radius: 12px; background: #2a2e36; color: #fff; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
   border: 2px solid #e0a000; font-size: 14px; animation: achvin 0.35s ease both; transition: opacity 0.4s ease, transform 0.4s ease; }
+.achvtoast div { display: flex; flex-direction: column; }
+.achvtoast img { image-rendering: pixelated; }
 .achvtoast b { color: #ffd23f; font-size: 12px; letter-spacing: 0.04em; }
 .achvtoast.out { opacity: 0; transform: translate(-50%, -10px); }
 @keyframes achvin { from { opacity: 0; transform: translate(-50%, -14px); } }
@@ -1058,5 +1061,10 @@ html.dark .achvbar { background: rgba(255, 255, 255, 0.15); }
 .achvhead small { font-size: 12px; font-weight: 600; opacity: 0.6; margin-left: 4px; }
 .achvreward { color: #8a5a00; font-weight: 600; }
 html.dark .achvreward { color: #f0c050; }
-.achv.secret { filter: none; opacity: 0.7; background: rgba(110, 60, 180, 0.12); border-style: dashed; }
+.achv.secret { filter: none; opacity: 1; background: rgba(110, 60, 180, 0.16); border: 1px dashed rgba(110, 60, 180, 0.6); }
+.achv.secret b { color: #6b3cb4; letter-spacing: 0.1em; }
+.achv.secret .achvbar i { background: #8a5ad8; }
+html.dark .achv.secret { background: rgba(140, 90, 220, 0.18); }
+html.dark .achv.secret b { color: #c2a0ff; }
+
 html.dark .achvstats div { border-color: rgba(255, 255, 255, 0.12); }

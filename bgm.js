@@ -1240,6 +1240,17 @@ function resultIn(d) {
   return n ? `In progress (${n}/${maxGuesses()})` : 'Not played';
 }
 window.archiveHere = { modes: Object.keys(MODES), current: () => MODE, result: resultFor, style: rowStyleFor, play: (m, d) => { MODE = m; start(d); } };
+// Every BGM you've won (either mode, the Archive too), for the achievements (achv.js: win all of a boss's BGMs).
+const TRACKS_KEY = 'mapleWordle:bgmTracks';
+function saveTracks() {
+  const won = new Set();
+  for (let i = 0; i < localStorage.length; i++) {
+    const m = /^mapleWordle:result:([a-z]+):(\d+)$/.exec(localStorage.key(i));
+    if (m && m[1] in MODES && /^Won/.test(localStorage.getItem(localStorage.key(i)))) won.add(inMode(m[1], () => answerFor(+m[2]).track));
+  }
+  const v = JSON.stringify([...won].sort());
+  try { if (localStorage.getItem(TRACKS_KEY) !== v) localStorage.setItem(TRACKS_KEY, v); } catch {}
+}
 const noteResult = () => {
   if (over) {
     try { localStorage.setItem(`mapleWordle:result:${MODE}:${day}`, resultFor(MODE, day)); } catch {}
@@ -1247,6 +1258,7 @@ const noteResult = () => {
     earnGame(MODE, day, resultFor(MODE, day));   // mesos (fx.js): Archive days pay 10%
     if (bonus != null && answer.bonus?.right.includes(bonus)) earnBonus(MODE, day, !!answer.bonus.mashup?.egg);
     if (titleRight()) earnBonus(MODE, day, false, 'title');
+    try { saveTracks(); } catch {}
   }
   mesoGain(MODE, day, over);   // the spinning "+mesos" under the result (game + bonus)
   // Shop items this track's day finds: "win" by winning on the day itself, "winAny" by winning (the Archive too), "play" by
@@ -1380,6 +1392,7 @@ fetch('data/bgm.json', { cache: 'no-cache' }).then((r) => r.json())
     const req = window.archiveRequest;   // opened from the archive on another page
     if (req && req.mode in MODES) { MODE = req.mode; start(req.day); }
     else { if (today() < firstDay()) MODE = 'bgm'; start(); }   // Normal isn't open yet: show Extreme
+    try { saveTracks(); } catch {}   // (wins from before this was saved)
   })
   .catch(() => { $('status').textContent = 'Could not load the BGM data.'; });
 addEventListener('resize', () => { if (answer) drawBar(); });
