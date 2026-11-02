@@ -296,7 +296,7 @@ td.flip { animation: flip 0.5s ease both; }
 .statrow.bonusrow .label { width: 52px; margin-left: -8px; }
 #mashupRow { display: flex; flex-direction: column; align-items: center; gap: 8px; margin: 6px 0; }
 #mashupRow[hidden] { display: none; }
-#limboTip { margin: 0; font-size: 13px; font-style: italic; font-weight: 700; color: #7a3fc4; text-shadow: 0 0 4px rgba(160, 60, 255, 0.55), 0 0 10px rgba(214, 36, 159, 0.35); }   /* Limbo's mashup: try pausing (bgm.js limboPause) */
+#limboTip { margin: 0; font-size: 13px; font-style: italic; color: #7a3fc4; }   /* Limbo's mashup: try pausing (bgm.js limboPause) */
 #limboTip[hidden] { display: none; }
 /* The mashup's own bar (under its Play button): green fill like the main bar, click to jump around */
 #mashupTrack { display: flex; align-items: center; gap: 8px; width: min(320px, 100%); }
@@ -356,6 +356,19 @@ body.glitch::after { content: ''; position: fixed; inset: 0; z-index: 10; pointe
                      background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.18) 0 2px, transparent 2px 4px);
                      animation: glitchflash 1.7s steps(1) infinite; }
 body.glitch .game { animation: glitchslice 2.3s steps(1) infinite; }
+/* and all the text on the page glitches with it: every 1.6 s cyan and pink copies jump out to the sides for a moment
+   (a shadow every text inherits from the page; text with its own shadow keeps that). Only while the glitch lasts. */
+body.glitch { animation: textglitch 1.6s steps(1) infinite; }
+body.glitch :is(button, input, select) { text-shadow: inherit; }   /* the browser gives these no shadow of their own otherwise */
+@keyframes textglitch {
+  0%, 58%, 72%, 78%, 86%, 100% { text-shadow: none; }
+  60% { text-shadow: -2px 0 rgba(0, 229, 255, 0.85), 2px 0 rgba(255, 47, 208, 0.85); }
+  63% { text-shadow: 3px 1px rgba(0, 229, 255, 0.85), -3px -1px rgba(255, 47, 208, 0.85); }
+  66% { text-shadow: -4px 0 rgba(0, 229, 255, 0.7), 1px 0 rgba(255, 47, 208, 0.9); }
+  69% { text-shadow: 1px -1px rgba(0, 229, 255, 0.85), -2px 1px rgba(255, 47, 208, 0.85); }
+  80% { text-shadow: 2px 0 rgba(0, 229, 255, 0.85), -2px 0 rgba(255, 47, 208, 0.85), 0 0 6px rgba(160, 60, 255, 0.7); }
+  83% { text-shadow: -1px 1px rgba(0, 229, 255, 0.85), 3px 0 rgba(255, 47, 208, 0.7); }
+}
 @keyframes glitchslice {
   0%, 100% { clip-path: none; transform: none; filter: none; }
   12% { transform: translate(-4px, 1px); filter: drop-shadow(3px 0 0 rgba(255, 0, 80, 0.7)) drop-shadow(-3px 0 0 rgba(0, 220, 255, 0.7)); }
@@ -380,7 +393,7 @@ body.glitch .game { animation: glitchslice 2.3s steps(1) infinite; }
   64% { opacity: 0.9; background-color: rgba(0, 255, 220, 0.08); }
   66% { opacity: 0.6; background-color: transparent; }
 }
-@media (prefers-reduced-motion: reduce) { body.glitch .game, body.glitch::after { animation: none; } }
+@media (prefers-reduced-motion: reduce) { body.glitch, body.glitch .game, body.glitch::after { animation: none; } }
 /* Theme button: just above the credit box, only once you have a theme besides Default. It opens a window like the Changelog. */
 #themeBtn { position: fixed; bottom: 40px; right: 10px; z-index: 5; margin: 0; max-width: none; width: 34px; height: 34px; padding: 0;
             display: flex; align-items: center; justify-content: center; font-size: 18px; line-height: 1; border: none; border-radius: 8px; cursor: pointer; }
@@ -931,13 +944,13 @@ input[type="search"]::-webkit-search-cancel-button, input[type="search"]::-webki
   linear-gradient(120deg, rgba(74, 26, 140, 0.92), rgba(123, 47, 247, 0.85) 40%, rgba(214, 36, 159, 0.8) 75%, rgba(41, 211, 255, 0.7)); }
 /* glitching text (Limbo): glows, and every 1.6 s for a moment it jitters while cyan and pink copies jump out in slices
    (copies drawn from data-text; small text, so cheap to redraw). Used on Limbo's Subconscious box with the Special toggle
-   on (its name and "Special toggle") and on the Limbo mashup's tip. */
+   on (its name and "Special toggle"). */
 .glitch { position: relative; display: inline-block; }
 .glitch::before, .glitch::after { content: attr(data-text); position: absolute; inset: 0; pointer-events: none; opacity: 0; color: #00e5ff; text-shadow: none; }
 .glitch::after { color: #ff2fd0; }
-.themecard.special .glitch, #limboTip .glitch { animation: glitchjit 1.6s steps(1) infinite; }
-.themecard.special .glitch::before, #limboTip .glitch::before { animation: glitcha 1.6s steps(1) infinite; }
-.themecard.special .glitch::after, #limboTip .glitch::after { animation: glitchb 1.6s steps(1) infinite; }
+.themecard.special .glitch { animation: glitchjit 1.6s steps(1) infinite; }
+.themecard.special .glitch::before { animation: glitcha 1.6s steps(1) infinite; }
+.themecard.special .glitch::after { animation: glitchb 1.6s steps(1) infinite; }
 .themecard.special .fxswitch .glitch, .themecard.special .fxswitch .glitch::before, .themecard.special .fxswitch .glitch::after { animation-delay: -0.7s; }   /* not in step with the name */
 @keyframes glitchjit { 0%, 68%, 84%, 100% { transform: none; } 70% { transform: translate(1px, 0) skewX(-6deg); } 76% { transform: translate(-2px, 0); } 80% { transform: skewX(4deg); } }
 @keyframes glitcha { 0%, 68%, 86%, 100% { opacity: 0; transform: none; clip-path: none; }
