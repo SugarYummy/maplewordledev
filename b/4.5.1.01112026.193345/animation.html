@@ -1,0 +1,106 @@
+<!doctype html>
+<html>
+<head>
+<meta name="robots" content="noindex, nofollow">
+<script src="dev.js?b=4.5.1.01112026.193345"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Maple Wordle - Attack Animation</title>
+<script src="move.js?v=3"></script>
+<script src="account.js?v=7"></script>
+<link rel="stylesheet" href="style.css?v=158">
+</head>
+<body>
+<button id="archiveBtn" class="panel">Archive</button>
+<div id="archive" hidden>
+  <div class="panel">
+    <h2>Archive</h2>
+    <div id="archiveList"></div>
+    <p class="closebar"><button id="archiveClose">Close</button></p>
+  </div>
+</div>
+<div class="panel game">
+<h1>Maple Wordle</h1>
+<div id="games">
+  <button onclick="location.href='boss'">Guess the Boss</button>
+  <button class="on" onclick="location.href='class'">Guess the Class</button>
+  <button disabled>Guess the Map<small>Coming soon</small></button>
+</div>
+<div id="subgames">
+  <button onclick="location.href='class'">Wordle</button>
+  <button class="on">Attack Animation</button>
+</div>
+<div class="infostrip" id="infostrip">
+  <div><span class="k" id="puzzleLabel">Puzzle</span><span class="v" id="puzzle"></span></div>
+  <div><span class="k" id="timerLabel">Next in</span><span class="v" id="timer"></span></div>
+  <div><span class="k">Streak</span><span class="v" id="streak"></span></div>
+</div>
+<p><button id="today" hidden>Back to today</button></p>
+<p id="status"></p>
+<p><button id="share" hidden>Share</button></p>
+<div class="pickrow">
+<div id="picker">
+  <input id="guess" type="search" placeholder="Type a class name" autocomplete="off" spellcheck="false" data-1p-ignore data-lpignore="true" data-form-type="other">
+  <div id="list" hidden></div>
+</div>
+<button id="infoBtn" title="How to play">?</button>
+</div>
+<div id="congrats" hidden>
+  <h2>You guessed it!</h2>
+  <p id="congratsClass"></p>
+  <p id="congratsThanks"></p>
+  <img id="congratsImg" alt="">
+</div>
+<div id="clips">
+  <figure id="clip1"><table class="cliptag"><tr><th>Clip 1</th></tr><tr><td id="skill1" class="grey">🔒</td></tr></table></figure>
+  <figure id="clip2"><table class="cliptag"><tr><th>Clip 2</th></tr><tr><td id="skill2" class="grey">🔒</td></tr></table></figure>
+</div>
+<div class="table-wrap">
+<table id="clues">
+  <thead><tr><th>Faction</th><th>Job Branch</th><th>Main Stat</th><th>Release Year (GMS)</th><th>Region</th><th>Starts with</th></tr></thead>
+  <tbody><tr id="clueRow"></tr></tbody>
+</table>
+</div>
+<div id="rows"></div>
+<div id="stats" hidden>
+  <h3 id="statsTitle"></h3>
+  <div id="statsBars"></div>
+  <p id="statsAvg"></p>
+</div>
+</div>
+<footer class="panel">
+  Want to give any suggestions or feedback?<br>
+  <a href="https://discord.gg/f22H4UJ" target="_blank" rel="noopener">Join the Discord!</a>
+</footer>
+<div id="creditWrap">
+  <div id="clip-left" class="peekclip"><img src="images/peek/sato.png" alt=""></div>
+  <div id="clip-mid" class="peekclip"><img src="images/peek/elysia.png" alt=""></div>
+  <div id="clip-right" class="peekclip"><img src="images/peek/moeko.png" alt=""></div>
+  <div id="credit" class="panel">Made by Yuki with Love &lt;3</div>
+</div>
+<button id="version" class="panel">alpha v4.3.2</button>
+<div id="info" hidden>
+  <div class="panel">
+    <h2>How to play</h2>
+    <div id="infoBody"></div>
+    <p class="closebar"><button id="infoClose">Close</button></p>
+  </div>
+</div>
+<div id="zoom" hidden>
+  <div class="panel">
+    <button id="zoomClose" title="Close">×</button>
+    <div id="zoomBody"></div>
+  </div>
+</div>
+<div id="changelog" hidden>
+  <div class="panel">
+    <h2>Changelog</h2>
+    <div id="changelogBody"></div>
+    <p class="closebar"><button id="changelogClose">Close</button></p>
+  </div>
+</div>
+<script src="fx.js?v=155"></script>
+<script src="archive.js?v=7"></script>
+<script src="animation.js?v=40"></script>
+</body>
+</html>

@@ -60,7 +60,8 @@ const modePool = (d, base) => (MODE === 'bgm' ? pool
   .filter((e) => (base ? !e.boss.since : !(sinceDay(e.boss) > d)));
 const basePool = () => (basePool.list ??= pool.filter((e) => !e.boss.since));
 const JOIN_DAY = () => (JOIN_DAY.d ??= Math.min(Infinity, ...bosses.map(sinceDay).filter((x) => x != null)));
-// Extreme's egg tracks keep the day the base schedule gives them (worked out here, never written down anywhere).
+// Extreme's egg tracks keep the day the base schedule gives them (worked out here, never written down anywhere), and
+// so does Limbo's mashup day.
 function eggPins() {
   if (eggPins.list) return eggPins.list;
   const list = [];
@@ -71,6 +72,8 @@ function eggPins() {
       if (data.tracks[e.track].egg && !list.some((p) => p.entry === e)) list.push({ day: x, entry: e });
     }
   });
+  const limbo = limboEggDay();   // Limbo's mashup day: its one-BGM boss stays
+  if (limbo != null) list.push({ day: limbo, entry: inMode('bgm', () => entryFor(limbo, true)) });
   return (eggPins.list = list.filter((p) => p.day >= JOIN_DAY()));   // one that already played before: nothing to keep
 }
 const schedules = {};   // per mode (and base)
@@ -125,12 +128,15 @@ function answerFor(d) {
   return ans;
 }
 const GLITCH_PAUSE_FROM = Date.UTC(2026, 9, 26) / DAY_MS;
-const LIMBO_EGG_UNTIL = Date.UTC(2026, 10, 13) / DAY_MS;   // the last day Limbo's glitch mashup can be on
+// Limbo's glitch mashup comes back on one day picked at random among Nov 3 - 9's one-BGM days (moved on Nov 2, before
+// any of them was played; a surprise: nothing on the site says which). Picked from the base schedule, and that day
+// keeps its base pick (eggPins), so BGMs added later can't move it.
+const LIMBO_EGG_FROM = Date.UTC(2026, 10, 3) / DAY_MS, LIMBO_EGG_UNTIL = Date.UTC(2026, 10, 9) / DAY_MS;
 function limboEggDay() {
   if (limboEggDay.d !== undefined) return limboEggDay.d;
   const days = [];
-  for (let x = GLITCH_PAUSE_FROM; x <= LIMBO_EGG_UNTIL; x++) if (!hasBonus(entryFor(x).boss)) days.push(x);
-  return (limboEggDay.d = days.length ? days[hash('bgm|limbo-egg-day') % days.length] : null);
+  inMode('bgm', () => { for (let x = LIMBO_EGG_FROM; x <= LIMBO_EGG_UNTIL; x++) if (!hasBonus(entryFor(x, true).boss)) days.push(x); });
+  return (limboEggDay.d = days.length ? days[hash('bgm|limbo-egg-day|2') % days.length] : null);
 }
 // The bonus round. A boss with 2+ BGMs: which part of the fight does it play in (any part with that track is right).
 // A boss with one BGM usually has none, but each mashup in data/bgm.json "mashups" shows up on one of those days per
