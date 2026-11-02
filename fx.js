@@ -399,16 +399,19 @@ const SOUNDS = { win: 'sounds/star-force-success.mp3', lose: 'sounds/star-force-
   classLose: 'sounds/the-breeze-that-carried-sorrow.mp3',   // Malitia's The Breeze That Carried Sorrow 0:00-0:18 (1 s fade-in), Class Wordle loss
   firstTry: 'sounds/the-unblessed-cathedral-descend.mp3',   // Mayrin's The Unblessed Cathedral -Descend- 1:07-1:42 (1 s fade-in), any first-guess win
   classWin: 'sounds/succession-bloom.mp3',   // First Adversary's Succession Bloom 1:03-1:27 (1 s fade-in), Class Wordle win on guess 2-5
-  purchase: 'sounds/purchase.mp3',   // the Cash Shop's buy sound (0.8 s), when you buy something in the shop
+  purchase: 'sounds/purchase.mp3',
+  achvComplete: 'sounds/achievement-complete.mp3',   // an achievement unlocked (each one, with its note)
+  gradeUp: 'sounds/grade-up.mp3',   // (for later: an achievement's next tier)
+  appear: 'sounds/appear.mp3',   // an appearance effect (Seething Balance), when it plays in Settings   // the Cash Shop's buy sound (0.8 s), when you buy something in the shop
   limboCut: 'sounds/limbo-cut.mp3',
   sirenSong: 'sounds/siren-song.mp3', iaidoAlpha: 'sounds/iaido-alpha.mp3', mayrinKill: 'sounds/mayrin-kill.mp3',   // boss finishing effects' sounds
   // Limbo's fail screen (limboFail), each colour its own: the pre with the screen coming in, the end with Limbo's face (1.92 s)
   failBlackPre: 'sounds/limbo-fail-black-pre.mp3', failBlackEnd: 'sounds/limbo-fail-black-end.mp3',
   failWhitePre: 'sounds/limbo-fail-white-pre.mp3', failWhiteEnd: 'sounds/limbo-fail-white-end.mp3' };   // Limbo's skill sound (5.4 s) with Limbo's cutscene, 0.15 s in: its big hit lands on the burst
 // Tracks that play longer than SOUND_SECONDS: seconds before the fade-out starts (fade-out is SOUND_FADE).
-const SOUND_LENGTH = { animWin: 19, classLose: 16, firstTry: 33, classWin: 22, failBlackPre: 3, failBlackEnd: 4, failWhitePre: 3, failWhiteEnd: 4 };
+const SOUND_LENGTH = { achvComplete: 3, gradeUp: 3, appear: 4, animWin: 19, classLose: 16, firstTry: 33, classWin: 22, failBlackPre: 3, failBlackEnd: 4, failWhitePre: 3, failWhiteEnd: 4 };
 // Tracks louder than SOUND_VOLUME.
-const SOUND_LOUDER = { firstTry: 0.30, purchase: 0.6, limboCut: 0.5, sirenSong: 0.45, iaidoAlpha: 0.73, mayrinKill: 0.63, failBlackPre: 0.5, failBlackEnd: 0.5, failWhitePre: 0.5, failWhiteEnd: 0.5 };   // limboCut and the boss finishing effects: as loud as the first-guess music they play with (a touch louder; set by loudness)
+const SOUND_LOUDER = { firstTry: 0.30, purchase: 0.6, achvComplete: 0.3, gradeUp: 0.25, appear: 0.3, limboCut: 0.5, sirenSong: 0.45, iaidoAlpha: 0.73, mayrinKill: 0.63, failBlackPre: 0.5, failBlackEnd: 0.5, failWhitePre: 0.5, failWhiteEnd: 0.5 };   // limboCut and the boss finishing effects: as loud as the first-guess music they play with (a touch louder; set by loudness)
 // Phone and tablet speakers are much quieter, so they play everything twice as loud (12%, and 60% for a first-guess win).
 const PHONE = matchMedia('(hover: none) and (pointer: coarse)').matches;
 const muteKey = 'mapleWordle:muted';
@@ -2213,7 +2216,7 @@ function mesoFly(n = 12, from) {
   const icon = document.querySelector('#mesoBtn img');
   if (!icon || !from || matchMedia('(prefers-reduced-motion: reduce)').matches) return false;
   const s = from.getBoundingClientRect(), e = icon.getBoundingClientRect();
-  const sx = s.left + s.width / 2 - 9, sy = s.top + s.height / 2 - 9, dx = e.left + e.width / 2 - 9 - sx, dy = e.top + e.height / 2 - 9 - sy;
+  const sx = s.left + s.width / 2 - 15, sy = s.top + s.height / 2 - 15, dx = e.left + e.width / 2 - 15 - sx, dy = e.top + e.height / 2 - 15 - sy;
   let left = n;
   for (let i = 0; i < n; i++) {
     const m = Object.assign(document.createElement('img'), { src: 'images/fx/meso-gold.png', className: 'mesofly', alt: '' });
@@ -2225,7 +2228,7 @@ function mesoFly(n = 12, from) {
     m.animate([{ transform: 'translate(0, 0) scale(0.5)', opacity: 0 },
       { transform: `translate(${bx}px, ${by}px) scale(1)`, opacity: 1, offset: 0.2 },
       { transform: `translate(${bx + dx * 0.45 + side}px, ${by + dy * 0.55}px) scale(1) rotate(${Math.random() * 360}deg)`, opacity: 1, offset: 0.6 },
-      { transform: `translate(${dx}px, ${dy}px) scale(0.7) rotate(${Math.random() * 540}deg)`, opacity: 1 }],
+      { transform: `translate(${dx}px, ${dy}px) scale(0.6) rotate(${Math.random() * 540}deg)`, opacity: 1 }],
       { duration: 750 + Math.random() * 200, delay: i * 35, easing: 'ease-in-out', fill: 'both' }).onfinish = () => {
       m.remove();
       if (--left === 0) { const b = document.getElementById('mesoBtn'); b?.classList.remove('bump'); void b?.offsetWidth; b?.classList.add('bump'); }

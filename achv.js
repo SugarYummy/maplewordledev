@@ -120,6 +120,9 @@
       kill('Kai', 'Iaido Alpha', 'Kai-ryu Sword: Iaido Alpha', '../achv/iaido-alpha', 'iaidoAlpha'),
       kill('Mayrin', 'Guide of Destiny', 'Guide of Destiny', 'mayrin', 'mayrinKill'),
       kill('Bellona', "Fanatic's Execution", "Fanatic's Execution", 'bellona', 'bellonaKill'),
+      A('kill:Jupiter', 'Seething Balance', "Played all versions of Jupiter's BGM in Extreme mode.",
+        (s, L) => { const t = L?.tracksOf.Jupiter || []; return [t.filter((x) => s.tracks.has(x)).length, t.length || 1]; },
+        'images/achv/seething-balance.png', { appear: 'seethingBalance', reward: 'Seething Balance appearance effect' }),
       A('limbo', 'Subconscious', 'Something stirred in the abyss.', (s) => [s.limboMash ? 1 : 0, 1], 'images/fx/limbo-bundle.webp',
         { full: "Limbo's Subconscious", mesos: 1000, reward: '1,000 mesos' }),
     ], true],
@@ -143,6 +146,7 @@
     noteClaims();
   }
   function toast(name, head = 'Achievement unlocked') {
+    if (head === 'Achievement unlocked' && typeof resultSound === 'function') resultSound(true, 0, 'achvComplete');
     const t = Object.assign(document.createElement('div'), { className: 'achvtoast' });
     t.innerHTML = '<img src="images/achv/4000038.png" alt=""><div><b></b><span></span></div>';
     t.querySelector('b').textContent = head;
@@ -197,6 +201,11 @@
     fresh.delete(a.id);
     newTag();
     if (a.mesos) toast(a.full || a.name, `+${fmt(a.mesos)} mesos`);
+    if (a.appear) {   // an appearance effect: Settings > Account Settings > MapleStory Character
+      if (typeof acctAvatarCall === 'function') acctAvatarCall();
+      itemPopup({ name: a.full || a.name, img: 'images/fx/seething-balance.webp' }, 'Successfully Claimed!', false, ['Settings', 'yes'], ['Close', 'plain'])
+        .then((go) => { if (go) { document.getElementById('achv').hidden = true; document.getElementById('settingsBtn')?.click(); } });
+    }
     if (a.fx && typeof drawThemeButton === 'function') {
       customFresh.add(a.fx); customTab = 'win'; drawThemeButton();
       // Like a shop purchase: its picture, and Customize takes you there
@@ -238,7 +247,8 @@
           const r = row.querySelector('.achvreward');
           r.textContent = 'Reward: ';
           r.appendChild(Object.assign(document.createElement('span'), a.mesos ? { className: 'rwmeso', textContent: `${fmt(a.mesos)} mesos` }
-            : a.fx ? { className: 'rwfx', textContent: a.full || a.name } : { textContent: a.reward }));
+            : a.fx ? { className: 'rwfx', textContent: a.full || a.name }
+            : a.appear ? { className: 'rwfx', textContent: `${a.full || a.name} (appearance effect)` } : { textContent: a.reward }));
         }
         const cb = row.querySelector('.achvclaim');
         if (cb) { cb.addEventListener('click', () => claim(a, cb)); if (typeof hoverSound === 'function') hoverSound(cb); }   // (the shop's hover sound, for now)

@@ -1025,7 +1025,7 @@ h1.tglitch .gtext { animation: glitchjit 1.6s steps(1) -1.088s 1; }
 h1.tglitch .gtext::before { animation: glitcha 1.6s steps(1) -1.088s 1; }
 h1.tglitch .gtext::after { animation: glitchb 1.6s steps(1) -1.088s 1; }
 /* Flying mesos (fx.js mesoFly) */
-.mesofly { position: fixed; z-index: 30; width: 18px; height: 18px; pointer-events: none; image-rendering: pixelated; }
+.mesofly { position: fixed; z-index: 30; width: 30px; height: 30px; pointer-events: none; image-rendering: pixelated; }
 /* Achievements (achv.js): the trophy button next to Archive, its window, and the "unlocked" note */
 #achvBtn { position: fixed; top: 54px; right: 12px; z-index: 5; margin: 0; width: 34px; height: 34px; padding: 0; border: none; border-radius: 10px;
   cursor: pointer; display: flex; align-items: center; justify-content: center; max-width: none; }
@@ -1067,7 +1067,7 @@ html.dark .achvbar { background: rgba(255, 255, 255, 0.15); }
 .achvstats b { font-size: 17px; font-variant-numeric: tabular-nums; }
 @media (max-width: 520px) { .achvstats { grid-template-columns: repeat(2, 1fr); } }
 .achvhead small { font-size: 12px; font-weight: 600; opacity: 0.6; margin-left: 4px; }
-.achvreward { color: #5b5f6b; font-weight: 600; }
+.achvreward { color: #5b5f6b; font-weight: 800; }
 .achvreward .rwfx { color: #6b2fb3; font-weight: 700; }
 .achvreward .rwmeso { color: #ffd23f; font-weight: 800; -webkit-text-stroke: 0.6px #6b3f00; paint-order: stroke fill; }
 html.dark .achvreward .rwfx { color: #c9a2ff; }
@@ -1081,3 +1081,12 @@ html.dark .achv.secret { background: rgba(140, 90, 220, 0.18); }
 html.dark .achv.secret b { color: #c2a0ff; }
 
 html.dark .achvstats div { border-color: rgba(255, 255, 255, 0.12); }
+
+/* An appearance effect (Seething Balance): plays once over the account's avatar when Settings opens */
+.acctside { position: relative; }
+.acctappear { position: absolute; left: 22px; top: 50%; width: 150px; height: 125px; transform: translate(-50%, -50%); pointer-events: none; z-index: 2; object-fit: contain; }
+.acctpickhead { margin: 12px 0 4px; font-size: 15px; text-align: left; }
+.acctpickrow .acctfxpic { width: 72px; height: 72px; object-fit: contain; }
+.acctpickrow.acctfxrow { padding-right: 104px; }
+.acctpick:empty { display: none; }
+.acctside:not(:has(.acctava)) .acctappear { left: -46px; }   /* no character shown: over the gap left of "Welcome back" */
