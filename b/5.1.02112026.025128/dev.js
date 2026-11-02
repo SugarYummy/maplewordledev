@@ -141,7 +141,7 @@
   } catch {}
   window.mwDevHolidays = !!ss.getItem('mwdev:holidays');   // /unlock all found the holiday items too (fx.js shopFound)
   window.devEgg = ss.getItem('mwdev:egg');   // read by bgm.js (bonusFor)
-  const DEV_HELP = '/meso 5000 — add mesos (minus works too)\n/egg limbo — Limbo\'s mashup as today\'s BGM Clip Extreme bonus\n/egg lucid — today\'s BGM Clip Extreme clip is Lucid\'s Garden of Eternal Dream\n/egg off — back to the real one\n/unlock all — own every shop item and boss finishing effect\n/reset — wipe this tab\'s test saves (like opening a new tab) and reload\n/help — this list';
+  const DEV_HELP = '/meso 5000 — add mesos (minus works too)\n/egg limbo — Limbo\'s mashup as today\'s BGM Clip Extreme bonus\n/egg lucid — today\'s BGM Clip Extreme clip is Lucid\'s Garden of Eternal Dream\n/egg off — back to the real one\n/unlock all — own every shop item and boss finishing effect\n/unlock achievement — unlock the next achievement (or one by name: /unlock achievement siren)\n/reset — wipe this tab\'s test saves (like opening a new tab) and reload\n/help — this list';
   function devRun(line) {
     const [cmd, a] = line.trim().split(/\s+/);
     if (cmd === '/help') return DEV_HELP;
@@ -164,7 +164,12 @@
       return what ? `${what}${page ? ' Reloading…' : ' Open BGM Clip (Extreme).'}` : `Back to the real BGM Clip.${page ? ' Reloading…' : ''}`;
     }
     if (cmd === '/unlock') {
-      if (a !== 'all') return 'Try: /unlock all';
+      if (a === 'achievement') {   // the unlock note: the next locked achievement (or one by name: /unlock achievement siren)
+        if (typeof achvDev !== 'function') return 'Achievements aren\'t loaded here.';
+        const name = achvDev(line.trim().split(/\s+/).slice(2).join(' ').toLowerCase());
+        return name ? `Unlocked: ${name}` : 'No achievement by that name.';
+      }
+      if (a !== 'all') return 'Try: /unlock all or /unlock achievement';
       ss.setItem('mwdev:holidays', '1');   // holiday items too (outside their day; fx.js keeps them found while this is set)
       window.mwDevHolidays = true;
       const got = Object.keys(SHOP).filter((t) => SHOP[t].hidden && !shopFound().includes(t) && !shopOwned(t));

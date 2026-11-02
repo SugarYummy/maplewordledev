@@ -244,5 +244,15 @@
   btn.setAttribute('aria-label', 'Achievements');
   btn.addEventListener('click', open);
   document.body.appendChild(btn);
+  // (the test site's console: /unlock achievement)
+  window.achvDev = (pick) => {
+    const got = json(ACHV_KEY, {}), locked = ALL.filter((a) => got[a.id] == null);
+    const a = pick ? ALL.find((x) => (x.full || x.name).toLowerCase().includes(pick)) : locked[0] ?? ALL[Math.floor(Math.random() * ALL.length)];
+    if (!a) return null;
+    if (got[a.id] == null) { got[a.id] = today(); try { localStorage.setItem(ACHV_KEY, JSON.stringify(got)); } catch {} }
+    toast(a.full || a.name);
+    noteClaims();
+    return a.full || a.name;
+  };
   check();
 })();
