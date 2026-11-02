@@ -812,7 +812,10 @@ function limboResume() {
 }
 // fail (a wrong answer): the border's exit, then Limbo's fail screen in that side's colour instead of the fade.
 async function limboExit(fail = false) {
-  if (!limbo.on || limbo.leaving) return;
+  if (!limbo.on || limbo.leaving) {   // already gone / on its way out (the mashup stopped first): the fail screen still shows
+    if (fail) { limboTransitionStop(); limboFail(limbo.dark ? 'black' : 'white'); }
+    return;
+  }
   limbo.leaving = true;
   clearTimeout(limbo.swap);
   clearTimeout(limbo.wait);
@@ -861,7 +864,10 @@ function limboKill() {   // right away (another day or mode)
 // The mashup stopped (paused, ended, or the main Play took over): a glitch egg's screen glitch stops, except Limbo's
 // before the bonus is answered.
 function mashupStopped() {
-  if (limbo.on) { if (bonus != null) limboExit(); else if (!limbo.leaving) limboPause(); }
+  if (limbo.on) {
+    if (bonus != null) { if (!(isLimboEgg() && !answer.bonus.right.includes(bonus))) limboExit(); }   // a wrong answer's own exit (with the fail screen) is on its way
+    else if (!limbo.leaving) limboPause();
+  }
   else glitch(false);
 }
 function stopMashup() {
