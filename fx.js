@@ -1004,21 +1004,24 @@ function drawThemeButton() {
     list.innerHTML = '';
     for (const b of win.querySelectorAll('.themetabs button')) b.classList.toggle('on', b.dataset.tab === customTab);
     tags();
+    if (limboAllOn() && customTab !== 'fx') {   // Limbo mode overrides the other tabs
+      list.appendChild(Object.assign(document.createElement('div'), { className: 'fxvoid',
+        innerHTML: 'Special Effects are turned on:<br><b>Limbo\'s Subconscious Toggle</b><br>All other customization are voided.' }));
+    }
     if (customTab === 'win') {
       help.textContent = 'Plays when you win in 1 guess. Tick one or more: each win plays a random one of them.';
       if (limboAllOn()) help.textContent = 'Limbo mode is on, so a win in 1 plays Limbo Transition. Ticking one turns Limbo mode off.';
       const all = limboAllOn();   // Limbo mode: none of these shows as on (its own transition plays instead)
       const picked = pickedSkins();
       const toggle = (id) => {
-        const on = all ? id === 'limboCut' : picked.includes(id);   // as the card shows it (Limbo mode: a click on another turns it on, and Limbo mode off)
-        if (all && on) { limboAllOff(); drawCustomFx(); fill(); return toast('Limbo mode: Off', 'no'); }
+        const on = !all && picked.includes(id);   // as the card shows it (Limbo mode: all off; a click turns that one on, and Limbo mode off)
         if (on && picked.length === 1) return toast('Keep at least one win effect on.', 'no');
         setPickedSkins(on ? picked.filter((x) => x !== id) : [...new Set([...picked, id])]);
         if (limboAllOn()) { limboAllOff(); drawCustomFx(); }
         fill();
         toast(`${HECATE[id].name}: ${on ? 'Off' : 'On'}`, on ? 'no' : 'yes');
       };
-      const skinCard = (into, id) => onOff(card(into, `images/fx/hecate/${id}.webp`, HECATE[id].name, false, () => toggle(id)), all ? id === 'limboCut' : picked.includes(id));   // Limbo mode: only Limbo's own
+      const skinCard = (into, id) => onOff(card(into, `images/fx/hecate/${id}.webp`, HECATE[id].name, false, () => toggle(id)), !all && picked.includes(id));
       for (const id of ownedSkins().filter((x) => !HECATE[x].pack || HECATE[x].solo)) skinCard(list, id);
       for (const pack of ownedEffects().filter((x) => Object.values(HECATE).some((h) => h.pack === x && !h.solo))) {
         const ids = ownedSkins().filter((x) => HECATE[x].pack === pack && !HECATE[x].solo);
@@ -1042,7 +1045,8 @@ function drawThemeButton() {
       }
     } else if (customTab === 'fx') {
       help.textContent = 'Effects on every page. Toggle effects replaces your customization.';
-      const cur = customFx();
+      const all = limboAllOn();   // Limbo mode: every card shows off (only its switch is on); a click turns that one on, and Limbo mode off
+      const cur = all ? null : customFx();
       // Click one to use it; click the one in use to turn it off again.
       const fxCard = (into, id) => onOff(card(into, CUSTOM_FX[id].img, CUSTOM_FX[id].name, false, () => {
         const off = id === cur;
@@ -1105,11 +1109,11 @@ function drawThemeButton() {
         const inner = Object.assign(document.createElement('div'), { className: 'fxbundlelist' });
         for (const id of ids) fxCard(inner, id);
         if (pack === 'limboSub') {   // the wrong guess effect: on / off, works with any border
-          const on = limboGuessOn();
+          const on = !all && limboGuessOn();
           onOff(card(inner, 'images/fx/limbo-guess.webp', 'Limbo Wrong Guess Effect', false, () => {
             setLimboGuess(!on); fill(); toast(`Limbo Wrong Guess Effect: ${on ? 'Off' : 'On'}`, on ? 'no' : 'yes');
           }), on);
-          const hud = hudOwnOn();   // the Erosion life count (and in Limbo mode, the map change timer)
+          const hud = !all && hudOwnOn();   // the Erosion life count (and in Limbo mode, the map change timer)
           onOff(card(inner, 'images/fx/limbo-hud.webp?v=2', 'Limbo Life Count / Timer', false, () => {
             setLimboHud(!hud); fill(); toast(`Limbo Life Count / Timer: ${hud ? 'Off' : 'On'}`, hud ? 'no' : 'yes');
           }), hud);
