@@ -623,7 +623,7 @@ body.glitch .game { animation: glitchslice 2.3s steps(1) infinite; }
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
   mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); }
 .game.rainbow > .rbring, .game.rainbow > .rbglow { display: block; }
-.rbring { inset: -2px; padding: 2px; border-radius: 14px; opacity: 0.6; }
+.rbring { inset: -3px; padding: 3px; border-radius: 15px; }
 .rbglow { inset: -18px; z-index: -1; padding: 18px; border-radius: 30px; opacity: 0.8; }
 .rbring i, .rbglow i, #archiveList button.rainbow::before { position: absolute; left: 50%; top: 50%; width: 150cqmax; height: 150cqmax;
   background: conic-gradient(#ff3c3c, #ffa01e, #ffe628, #3cd25a, #328cff, #aa50ff, #ff3c3c); animation: rbturn 4s linear infinite; }
@@ -632,8 +632,8 @@ body.glitch .game { animation: glitchslice 2.3s steps(1) infinite; }
 .game.glow.rainbow { animation: none; box-shadow: none; }   /* the rainbow glow replaces the gold one */
 .game.shake.glow.rainbow { animation: shake 0.5s cubic-bezier(.36, .07, .19, .97) both; }
 body.glitch .game.glow.rainbow { animation: glitchslice 2.3s steps(1) infinite; }
-#archiveList button.rainbow { position: relative; isolation: isolate; overflow: hidden; border: 0; padding: 8px; background: #fff; }   /* the 2 px ring is the rainbow showing around ::after */
-#archiveList button.rainbow::before { content: ''; width: 150%; height: auto; aspect-ratio: 1; z-index: -1; opacity: 0.55; }
+#archiveList button.rainbow { position: relative; isolation: isolate; overflow: hidden; border: 0; padding: 8px; background: none; }   /* the 2 px ring is the rainbow showing around ::after */
+#archiveList button.rainbow::before { content: ''; width: 150%; height: auto; aspect-ratio: 1; z-index: -1; }
 #archiveList button.rainbow::after { content: ''; position: absolute; inset: 2px; border-radius: 4px; z-index: -1; background: rgba(255, 255, 255, 0.75); }
 #archiveList button.rainbow:hover::after { background: rgba(255, 255, 255, 0.85); }
 @media (prefers-reduced-motion: reduce) { .game.rainbow, .game.glow.rainbow { animation: none; }
@@ -899,8 +899,8 @@ input[type="search"]::-webkit-search-cancel-button, input[type="search"]::-webki
 .spring, .spglow { position: absolute; pointer-events: none; overflow: hidden; container-type: size;
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
   mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); }
-.spring { inset: -2px; padding: 2px; border-radius: 10px; opacity: 0.6; }
-.spglow { inset: -9px; padding: 9px; border-radius: 17px; z-index: -1; opacity: 0.5; filter: blur(4px); }
+.spring { inset: -2px; padding: 2px; border-radius: 10px; }
+.spglow { inset: -4px; padding: 4px; border-radius: 12px; z-index: -1; opacity: 0.35; filter: blur(2px); }
 .spring i, .spglow i { position: absolute; left: 50%; top: 50%; width: 150cqmax; height: 150cqmax;
   background: conic-gradient(#7b2ff7, #d6249f, #ff6ad5, #4a1a8c, #29d3ff, #7b2ff7); animation: rbturn 10s linear infinite; }
 .spglow i { filter: blur(6px); }
