@@ -115,8 +115,8 @@
     ['Hidden', [
       kill('Malefic Star', "Siren's Song", "Siren's Song", 'malefic-star', 'sirenSong'),
       kill('Kai', 'Iaido Alpha', 'Kai-ryu Sword: Iaido Alpha', 'kai', 'iaidoAlpha'),
-      kill('Mayrin', 'Mayrin (Placeholder)', 'Mayrin (Placeholder)', 'mayrin', 'mayrinKill'),
-      kill('Bellona', 'Bellona (Placeholder)', 'Bellona (Placeholder)', 'bellona', 'bellonaKill'),
+      kill('Mayrin', 'Guide of Destiny', 'Guide of Destiny', 'mayrin', 'mayrinKill'),
+      kill('Bellona', "Fanatic's Execution", "Fanatic's Execution", 'bellona', 'bellonaKill'),
       A('limbo', 'Subconscious', 'Something stirred in the abyss.', (s) => [s.limbo ? 1 : 0, 1], 'images/fx/limbo-bundle.webp', { full: "Limbo's Subconscious" }),
     ], true],
   ];

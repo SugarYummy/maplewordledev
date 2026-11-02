@@ -244,8 +244,8 @@ const HECATE = {   // ms: clip length, burst: ms into the clip when it bursts (f
   // yours once you unlock that boss's Hidden achievement (achv.js)
   sirenSong: { name: "Siren's Song", ms: 4500, burst: 2220, v: 2, achv: 'kill:Malefic Star' },
   iaidoAlpha: { name: 'Kai-ryu Sword: Iaido Alpha', ms: 2640, burst: 1920, achv: 'kill:Kai' },
-  mayrinKill: { name: 'Mayrin (Placeholder)', ms: 3600, burst: 1800, achv: 'kill:Mayrin' },
-  bellonaKill: { name: 'Bellona (Placeholder)', ms: 2820, burst: 1740, v: 2, achv: 'kill:Bellona' },
+  mayrinKill: { name: 'Guide of Destiny', ms: 3600, burst: 1800, v: 2, achv: 'kill:Mayrin' },
+  bellonaKill: { name: "Fanatic's Execution", ms: 2820, burst: 1740, v: 2, achv: 'kill:Bellona' },
 };
 const achvGot = (id) => { try { return JSON.parse(lsGet('mapleWordle:achv') || '{}')[id] != null; } catch { return false; } };
 const EFFECTS_KEY = 'mapleWordle:effects', WINFX_KEY = 'mapleWordle:winFx';   // packs bought; win effects picked
