@@ -1093,6 +1093,10 @@ function drawThemeButton() {
           textContent: pack !== 'limboSub' ? (using ? 'On' : 'Off') : limboAllOn() ? ''
             : `${[using, limboGuessOn(), hudOwnOn()].filter(Boolean).length} of 3 on` }));
         sum.append(pic, name);
+        if (pack === 'limboSub' && limboAllOn()) {   // Special toggle on: a slow spinning Limbo-coloured ring + glow around the box (style.css)
+          sum.classList.add('special');
+          sum.insertAdjacentHTML('afterbegin', '<span class="spglow"><i></i></span><span class="spring"><i></i></span>');
+        }
         if (pack === 'limboSub') {   // one switch for everything in Limbo's set, on the box itself (no need to open it)
           const row = Object.assign(document.createElement('label'), { className: 'fxswitch onbox', title: 'Enable all Limbo effects, including hidden ones' });
           row.innerHTML = '<input type="checkbox"><span class="knob"></span><span>Special toggle</span>';
