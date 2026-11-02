@@ -49,27 +49,58 @@ function hash(str) {
 // Normal leaves out the special tracks (an "egg" one, like Lucid's Garden of Eternal Dream), and never picks the
 // boss Extreme has that day, so the two modes are two different BGMs.
 // From Oct 22 Normal also leaves out bosses that are too obscure for it (new, region-only or event ones).
-const NORMAL_SKIP = ['Cross', 'Malicia', 'Gerand Darmoor', 'Bellona', 'Julieta', 'Inferno Wolf', 'Yakuza Boss', 'Frenzied Gigatoad', 'Balrog'];
+const NORMAL_SKIP = ['Cross', 'Malicia', 'Gerand Darmoor', 'Bellona', 'Julieta', 'Inferno Wolf', 'Yakuza Boss', 'Frenzied Gigatoad', 'Balrog', 'Champion Raid'];
 const NORMAL_SKIP_FROM = Date.UTC(2026, 9, 22) / DAY_MS;
-const modePool = (d) => MODE === 'bgm' ? pool
-  : pool.filter((e) => !data.tracks[e.track].egg && !(d >= NORMAL_SKIP_FROM && NORMAL_SKIP.includes(e.boss.name)));
-const schedules = {};   // per mode
+// Added later (data/bgm.json boss "since": "YYYY-MM-DD"): its BGMs join the shuffle from that day on, so every day before
+// it (the whole Archive) keeps its answer. The "base" schedule is the one without them: it still decides where an egg
+// track (Lucid's) lands, and the mashup days, so adding new ones never moves those either.
+const sinceDay = (b) => (b.since ? Date.parse(b.since) / DAY_MS : null);
+const modePool = (d, base) => (MODE === 'bgm' ? pool
+  : pool.filter((e) => !data.tracks[e.track].egg && !(d >= NORMAL_SKIP_FROM && NORMAL_SKIP.includes(e.boss.name))))
+  .filter((e) => (base ? !e.boss.since : !(sinceDay(e.boss) > d)));
+const basePool = () => (basePool.list ??= pool.filter((e) => !e.boss.since));
+const JOIN_DAY = () => (JOIN_DAY.d ??= Math.min(Infinity, ...bosses.map(sinceDay).filter((x) => x != null)));
+// Extreme's egg tracks keep the day the base schedule gives them (worked out here, never written down anywhere).
+function eggPins() {
+  if (eggPins.list) return eggPins.list;
+  const list = [];
+  inMode('bgm', () => {
+    const from = firstDay(), eggs = basePool().filter((e) => data.tracks[e.track].egg);
+    for (let x = from; x < from + 3 * basePool().length && list.length < eggs.length; x++) {
+      const e = entryFor(x, true);
+      if (data.tracks[e.track].egg && !list.some((p) => p.entry === e)) list.push({ day: x, entry: e });
+    }
+  });
+  return (eggPins.list = list.filter((p) => p.day >= JOIN_DAY()));   // one that already played before: nothing to keep
+}
+const schedules = {};   // per mode (and base)
 function inMode(m, f) { const was = MODE; MODE = m; try { return f(); } finally { MODE = was; } }
-function entryFor(d) {
-  const s = schedules[MODE] ??= { days: [], used: new Set() };
+function entryFor(d, base = false) {
+  const s = schedules[MODE + (base ? '|base' : '')] ??= { days: [], used: new Set() };
   const FIRST_DAY = firstDay();
   while (FIRST_DAY + s.days.length <= d) {
-    const day = FIRST_DAY + s.days.length, all = modePool(day);
+    const day = FIRST_DAY + s.days.length;
+    let all = modePool(day, base);
     const prev = s.days[s.days.length - 1];
-    const other = MODE === 'bgm' ? null : inMode('bgm', () => entryFor(day));   // Extreme's pick that day
-    let left = all.filter((e) => !s.used.has(e.key));
-    if (!left.length) { s.used.clear(); left = all; }                   // cycle done: everything is back in
-    const notSame = (list) => list.filter((e) => (!prev || e.boss !== prev.boss) && (!other || e.boss !== other.boss));
-    left = notSame(left).length ? notSame(left) : notSame(all);          // only that boss left: borrow from the next cycle
-    let pick = left[0], best = Infinity;
-    for (const e of left) {
-      const v = hash(`${MODE}|${day}|${e.key}`);
-      if (v < best) { best = v; pick = e; }
+    const other = MODE === 'bgm' ? null : inMode('bgm', () => entryFor(day, base));   // Extreme's pick that day
+    const pins = !base && MODE === 'bgm' && day >= JOIN_DAY() ? eggPins() : [];
+    const pinned = pins.find((p) => p.day === day);
+    let pick;
+    if (pinned) pick = pinned.entry;
+    else {
+      const waiting = pins.filter((p) => p.day > day);
+      all = all.filter((e) => !waiting.some((p) => p.entry === e));   // an egg waits for its own day
+      const nextBoss = pins.find((p) => p.day === day + 1)?.entry.boss;   // and its boss isn't on the day before
+      let left = all.filter((e) => !s.used.has(e.key));
+      if (!left.length) { s.used.clear(); left = all; }                   // cycle done: everything is back in
+      const notSame = (list) => list.filter((e) => (!prev || e.boss !== prev.boss) && (!other || e.boss !== other.boss) && e.boss !== nextBoss);
+      left = notSame(left).length ? notSame(left) : notSame(all);          // only that boss left: borrow from the next cycle
+      pick = left[0];
+      let best = Infinity;
+      for (const e of left) {
+        const v = hash(`${MODE}|${day}|${e.key}`);
+        if (v < best) { best = v; pick = e; }
+      }
     }
     s.used.add(pick.key);
     s.days.push(pick);
@@ -122,9 +153,10 @@ function bonusFor(ans, d) {
     mashups = mashups.filter((x) => !x.egg);
   }
   const FIRST_DAY = firstDay();
-  const cycle = Math.floor((d - FIRST_DAY) / pool.length), from = FIRST_DAY + cycle * pool.length;
+  const n = basePool().length;   // the base schedule's days, so BGMs added later don't move any mashup day
+  const cycle = Math.floor((d - FIRST_DAY) / n), from = FIRST_DAY + cycle * n;
   const quiet = [];   // this cycle's one-BGM days, in a shuffled order
-  for (let x = from; x < from + pool.length; x++) if (!hasBonus(entryFor(x).boss)) quiet.push(x);
+  for (let x = from; x < from + n; x++) if (!hasBonus(entryFor(x, true).boss)) quiet.push(x);
   quiet.sort((x, y) => hash(`${MODE}|mashup|${x}`) - hash(`${MODE}|mashup|${y}`));
   const i = quiet.indexOf(d);
   if (i < 0 || i >= mashups.length) return null;
