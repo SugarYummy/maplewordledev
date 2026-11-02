@@ -319,6 +319,8 @@ function acctAppearPlay(into) {   // once, then gone (Settings, when it opens)
   const sound = () => { if (!sounded) { sounded = true; if (typeof resultSound === 'function') resultSound(true, 0, 'appear'); } };
   if (safari) { sound(); setTimeout(() => el.remove(), 3700); }
   else { el.addEventListener('playing', sound, { once: true }); el.addEventListener('ended', () => el.remove()); el.addEventListener('error', () => el.remove()); }
+  const ava = into.querySelector('.acctava');   // centred on your character (its middle), when one is shown
+  if (ava) { el.style.left = ava.offsetLeft + ava.offsetWidth / 2 + 'px'; el.style.top = ava.offsetTop + ava.offsetHeight / 2 + 'px'; }
   into.appendChild(el);
 }
 // A shop avatar you haven't looked at yet (new in the MapleStory Character list): the Settings cog glows with NEW, and
@@ -402,12 +404,11 @@ function acctMapleWin() {
   panel.querySelector('[data-close]').addEventListener('click', () => close());
   panel.querySelector('[data-do="add"]').addEventListener('click', () => { close(); acctMapleSearch(); });
   panel.querySelector('[data-do="none"]')?.addEventListener('click', () => { localStorage.removeItem(ACCT_MAPLE); acctRefresh(); again(); });
-  for (const row of panel.querySelectorAll('.acctfxrow')) {   // on / off (click again to turn it off); turning it on shows it once
+  for (const row of panel.querySelectorAll('.acctfxrow')) {   // on / off (click again to turn it off)
     const pick = () => {
       const on = acctAppearOn() !== row.dataset.fx;
       on ? localStorage.setItem(ACCT_APPEAR, row.dataset.fx) : localStorage.removeItem(ACCT_APPEAR);
       row.classList.toggle('on', on);
-      if (on) acctAppearPlay(row.querySelector('.acctmaple'));
     };
     row.addEventListener('click', pick);
     row.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(); } });
