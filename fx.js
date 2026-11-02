@@ -1007,20 +1007,21 @@ function drawThemeButton() {
     if (customTab === 'win') {
       help.textContent = 'Plays when you win in 1 guess. Tick one or more: each win plays a random one of them.';
       if (limboAllOn()) help.textContent = 'Limbo mode is on, so a win in 1 plays Limbo Transition. Ticking one turns Limbo mode off.';
+      const all = limboAllOn();   // Limbo mode: none of these shows as on (its own transition plays instead)
       const picked = pickedSkins();
       const toggle = (id) => {
-        const on = picked.includes(id);
+        const on = !all && picked.includes(id);   // in Limbo mode a click turns this one on (and Limbo mode off)
         if (on && picked.length === 1) return toast('Keep at least one win effect on.', 'no');
-        setPickedSkins(on ? picked.filter((x) => x !== id) : [...picked, id]);
+        setPickedSkins(on ? picked.filter((x) => x !== id) : [...new Set([...picked, id])]);
         if (limboAllOn()) { limboAllOff(); drawCustomFx(); }
         fill();
         toast(`${HECATE[id].name}: ${on ? 'Off' : 'On'}`, on ? 'no' : 'yes');
       };
-      const skinCard = (into, id) => onOff(card(into, `images/fx/hecate/${id}.webp`, HECATE[id].name, false, () => toggle(id)), picked.includes(id));
+      const skinCard = (into, id) => onOff(card(into, `images/fx/hecate/${id}.webp`, HECATE[id].name, false, () => toggle(id)), all ? id === 'limboCut' : picked.includes(id));   // Limbo mode: only Limbo's own
       for (const id of ownedSkins().filter((x) => !HECATE[x].pack || HECATE[x].solo)) skinCard(list, id);
       for (const pack of ownedEffects().filter((x) => Object.values(HECATE).some((h) => h.pack === x && !h.solo))) {
         const ids = ownedSkins().filter((x) => HECATE[x].pack === pack && !HECATE[x].solo);
-        const n = ids.filter((x) => picked.includes(x)).length;
+        const n = all ? 0 : ids.filter((x) => picked.includes(x)).length;
         const box = document.createElement('details');
         box.className = 'fxbundle';
         box.open = bundleOpen.has(pack);
@@ -1060,7 +1061,7 @@ function drawThemeButton() {
       for (const id of ownedCustomFx().filter((x) => !CUSTOM_FX[x].pack && x !== 'none')) fxCard(list, id);
       if (hwFxOwned()) {   // Halloween's bats, ghosts and fog: on / off, on top of anything else (its name green when on, red when off)
         // On Halloween itself they're on for everyone (like its background), so the switch waits until it's over.
-        const holiday = holidayToday() === 'halloween', on = holiday || hwFxOn();
+        const holiday = holidayToday() === 'halloween', on = !limboAllOn() && (holiday || hwFxOn());   // (off in Limbo mode)
         // On / off: green ✓ or red ✕ before its name (a shape too, not only a colour), and a message when it's switched.
         onOff(card(list, 'images/fx/halloween-fx.webp', 'Halloween Night (bats, ghosts, fog)', false, () => {
           if (holiday) return toast('You cannot change effects on special occasional days.', 'no');
@@ -1122,7 +1123,7 @@ function drawThemeButton() {
       // A holiday's background is on all of its day (see HOLIDAYS), so picking one does nothing until it's over.
       const locked = !!holidayToday() && !limboAllOn();
       for (const t of own) {
-        const c = card(list, THEME_IMG[t], THEMES[t], t === cur, () => {
+        const c = card(list, THEME_IMG[t], THEMES[t], t === cur && !limboAllOn(), () => {   // Limbo mode: none picked here
           if (locked) return toast('You cannot change theme on special occasional days.', 'no');
           lsSet(THEME_KEY, t);
           if (limboAllOn()) { limboAllOff(); drawCustomFx(); }
@@ -1215,7 +1216,7 @@ function limboAlertCheck() {   // each game says how many guesses are left (wind
 }
 function limboOver(won, delay = 0) {   // game over (called by the games, with when the result shows)
   const fx = CUSTOM_FX[customFx()];
-  if (!fx.color || !cfxShown()) return;
+  if (!fx.color || (won && !cfxShown())) return;   // a loss always gets the fail screen (guessing fast, the border may not be up yet)
   cfxHold = true;
   const release = (ms) => setTimeout(() => { cfxHold = false; drawCustomFx(); }, ms);
   if (won) return release(delay);
