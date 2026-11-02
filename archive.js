@@ -55,6 +55,11 @@
       const rainbow = r.endsWith('🌈');   // BGM Clip: first guess and both bonuses right
       const star = firstTry && !diamond && !rainbow ? ' ⭐' : '';
       if (firstTry) btn.className = rainbow ? 'rainbow' : diamond ? 'diamond' : 'firsttry';   // 💎 glows blue, 🌈 rainbow
+      const here = window.archiveHere;   // a special row look (Limbo's border on its mashup day), from the game's page or what it saved
+      let look = '';
+      if (here && here.modes.includes(t.mode)) { try { look = here.style?.(t.mode, d) || ''; } catch {} }
+      else look = read(`mapleWordle:style:${t.mode}:${d}`) || '';
+      if (look) btn.className = look;
       btn.textContent = `#${d - t.first + 1} - ${dateLabel(d)}${d === today() ? ' (today)' : ''} - ${r}${star}`;
       btn.addEventListener('click', () => {
         const here = window.archiveHere;

@@ -150,14 +150,14 @@ td.flip { animation: flip 0.5s ease both; }
 .game.shake { animation: shake 0.5s cubic-bezier(.36, .07, .19, .97) both; }
 /* The glow is a shadow drawn once on a layer behind the box that only fades in and out: animating the box's own
    shadow repainted the blurred box every frame, for as long as the page stayed open. */
-.game.glow:not(.rainbow)::after { content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: -1;
+.game.glow:not(.rainbow):not(.limborb)::after { content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: -1;
   box-shadow: 0 0 22px 8px rgba(255, 200, 40, .95), 0 0 60px 20px rgba(255, 170, 0, .55); animation: glow 0.8s ease-in-out infinite alternate; }
 @keyframes shake {
   10%, 90% { transform: translate(-2px, 1px); } 20%, 80% { transform: translate(4px, -2px); }
   30%, 50%, 70% { transform: translate(-8px, 3px); } 40%, 60% { transform: translate(8px, -3px); } }
 @keyframes glow { from { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { td.flip { animation: none; } .confetti { display: none; }
-  .game.glow:not(.rainbow)::after { animation: none; } }
+  .game.glow:not(.rainbow):not(.limborb)::after { animation: none; } }
 .later { animation: appear 0.3s ease both; }
 @keyframes appear { from { opacity: 0; } to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .later { animation: none; } }
@@ -284,7 +284,7 @@ td.flip { animation: flip 0.5s ease both; }
 /* BGM Clip 💎 (first guess + bonus right): blue instead of gold, on the game box and its Archive day. */
 #archiveList button.diamond { border-color: rgba(30, 140, 255, 0.9); background: rgba(170, 215, 255, 0.55); box-shadow: 0 0 2px 1px rgba(60, 170, 255, .5); }
 #archiveList button.diamond::after { box-shadow: 0 0 10px 4px rgba(60, 170, 255, 1); }
-.game.glow.diamond:not(.rainbow)::after { box-shadow: 0 0 22px 8px rgba(80, 190, 255, .95), 0 0 60px 20px rgba(30, 130, 255, .55); }
+.game.glow.diamond:not(.rainbow):not(.limborb)::after { box-shadow: 0 0 22px 8px rgba(80, 190, 255, .95), 0 0 60px 20px rgba(30, 130, 255, .55); }
 
 /* Tiny "NEW" tag in the top left corner of a new game tab (fx.js). */
 #games button, #subgames button { position: relative; }
@@ -635,7 +635,7 @@ body.glitch :is(button, input, select) { text-shadow: inherit; }   /* the browse
 .rbring, .rbglow { display: none; position: absolute; pointer-events: none; overflow: hidden; container-type: size;
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
   mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); }
-.game.rainbow > .rbring, .game.rainbow > .rbglow { display: block; }
+.game.rainbow > .rbring, .game.rainbow > .rbglow, .game.limborb > .rbring, .game.limborb > .rbglow { display: block; }
 .rbring { inset: -3px; padding: 3px; border-radius: 15px; }
 .rbglow { inset: -48px; z-index: -1; padding: 0; opacity: 0.95; animation: glow 0.8s ease-in-out infinite alternate;
   /* fades out with distance from the box like the gold glow's shadow: four edge strips plus four rounded corners
@@ -650,18 +650,25 @@ body.glitch :is(button, input, select) { text-shadow: inherit; }   /* the browse
     radial-gradient(circle at 0 0, transparent 11.5px, #000 12px, rgba(0, 0, 0, 0.95) 16px, rgba(0, 0, 0, 0.78) 20px, rgba(0, 0, 0, 0.5) 28px, rgba(0, 0, 0, 0.28) 36px, rgba(0, 0, 0, 0.12) 44px, rgba(0, 0, 0, 0.04) 52px, transparent 60px);
   -webkit-mask: none; -webkit-mask-image: var(--m); -webkit-mask-repeat: no-repeat; -webkit-mask-size: calc(100% - 120px) 48px, calc(100% - 120px) 48px, 48px calc(100% - 120px), 48px calc(100% - 120px), 60px 60px, 60px 60px, 60px 60px, 60px 60px; -webkit-mask-position: 60px 0, 60px 100%, 0 60px, 100% 60px, 0 0, 100% 0, 0 100%, 100% 100%;
   mask: none; mask-image: var(--m); mask-repeat: no-repeat; mask-size: calc(100% - 120px) 48px, calc(100% - 120px) 48px, 48px calc(100% - 120px), 48px calc(100% - 120px), 60px 60px, 60px 60px, 60px 60px, 60px 60px; mask-position: 60px 0, 60px 100%, 0 60px, 100% 60px, 0 0, 100% 0, 0 100%, 100% 100%; mask-composite: add; }
-.rbring i, .rbglow i, #archiveList button.rainbow::before { position: absolute; left: 50%; top: 50%; width: 150cqmax; height: 150cqmax;
+.rbring i, .rbglow i, #archiveList button.rainbow::before, #archiveList button.limborb::before { position: absolute; left: 50%; top: 50%; width: 150cqmax; height: 150cqmax;
   background: conic-gradient(#ff3c3c, #ffa01e, #ffe628, #3cd25a, #328cff, #aa50ff, #ff3c3c); animation: rbturn 4s linear infinite; }
 @keyframes rbturn { from { transform: translate(-50%, -50%) rotate(0); } to { transform: translate(-50%, -50%) rotate(360deg); } }
-.game.glow.rainbow { animation: none; box-shadow: none; }   /* the rainbow glow replaces the gold one */
-.game.shake.glow.rainbow { animation: shake 0.5s cubic-bezier(.36, .07, .19, .97) both; }
-body.glitch .game.glow.rainbow { animation: glitchslice 2.3s steps(1) infinite; }
-#archiveList button.rainbow { position: relative; isolation: isolate; overflow: hidden; border: 0; padding: 8px; background: none; }   /* the 2 px ring is the rainbow showing around ::after */
-#archiveList button.rainbow::before { content: ''; width: 150%; height: auto; aspect-ratio: 1; z-index: -1; }
-#archiveList button.rainbow::after { content: ''; position: absolute; inset: 2px; border-radius: 4px; z-index: -1; background: rgba(255, 255, 255, 0.75); }
-#archiveList button.rainbow:hover::after { background: rgba(255, 255, 255, 0.85); }
-@media (prefers-reduced-motion: reduce) { .game.rainbow, .game.glow.rainbow, .rbglow { animation: none; }
-  .rbring i, .rbglow i, #archiveList button.rainbow::before { animation: none; transform: translate(-50%, -50%); } }
+.game.glow.rainbow, .game.glow.limborb { animation: none; box-shadow: none; }   /* the rainbow glow replaces the gold one */
+.game.shake.glow.rainbow, .game.shake.glow.limborb { animation: shake 0.5s cubic-bezier(.36, .07, .19, .97) both; }
+body.glitch .game.glow.rainbow, body.glitch .game.glow.limborb { animation: glitchslice 2.3s steps(1) infinite; }
+#archiveList button.rainbow, #archiveList button.limborb { position: relative; isolation: isolate; overflow: hidden; border: 0; padding: 8px; background: none; }   /* the 2 px ring is the rainbow showing around ::after */
+#archiveList button.rainbow::before, #archiveList button.limborb::before { content: ''; width: 150%; height: auto; aspect-ratio: 1; z-index: -1; }
+#archiveList button.rainbow::after, #archiveList button.limborb::after { content: ''; position: absolute; inset: 2px; border-radius: 4px; z-index: -1; background: rgba(255, 255, 255, 0.75); }
+#archiveList button.rainbow:hover::after, #archiveList button.limborb:hover::after { background: rgba(255, 255, 255, 0.85); }
+@media (prefers-reduced-motion: reduce) { .game.rainbow, .game.glow.rainbow, .game.glow.limborb, .rbglow { animation: none; }
+  .rbring i, .rbglow i, #archiveList button.rainbow::before, #archiveList button.limborb::before { animation: none; transform: translate(-50%, -50%); } }
+/* Limbo's border (BGM Clip, Limbo's mashup day: first guess + the mashup right): the 🌈 ring and glow in Limbo's
+   colours, turning slower, a Limbo tint in the panel; the Archive row the same. */
+.game.limborb { background: linear-gradient(rgba(255, 255, 255, var(--boxRA, .42)), rgba(255, 255, 255, var(--boxRA, .42))),
+  linear-gradient(120deg, rgba(74, 26, 140, var(--boxT, .38)), rgba(123, 47, 247, var(--boxT, .38)), rgba(214, 36, 159, var(--boxT, .38)), rgba(41, 211, 255, var(--boxT, .38))), #fff0; }
+.game.limborb .rbring i, .game.limborb .rbglow i, #archiveList button.limborb::before {
+  background: conic-gradient(#7b2ff7, #d6249f, #ff6ad5, #4a1a8c, #29d3ff, #7b2ff7); animation-duration: 7s; }
+#archiveList button.limborb::after { background: linear-gradient(rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.72)), linear-gradient(90deg, rgba(123, 47, 247, 0.35), rgba(214, 36, 159, 0.3)); background-color: #fff; }
 #titleAsk { display: flex; gap: 6px; justify-content: center; margin: 6px 0; }
 #titleField { position: relative; flex: 1; max-width: 320px; }
 #titlePick { width: 100%; box-sizing: border-box; font-family: inherit; font-size: 15px; padding: 6px 8px; border: 1px solid #999; border-radius: 4px; }
