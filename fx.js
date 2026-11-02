@@ -1095,6 +1095,10 @@ function drawThemeButton() {
         sum.append(pic, name);
         if (pack === 'limboSub' && limboAllOn()) {   // Special toggle on: a slow spinning Limbo-coloured ring + glow around the box (style.css)
           sum.classList.add('special');
+          const label = name.firstChild;   // the name, glitching (style.css draws the split colour copies from data-text)
+          const g = Object.assign(document.createElement('span'), { className: 'glitch', textContent: label.textContent });
+          g.dataset.text = label.textContent;
+          label.replaceWith(g);
           sum.insertAdjacentHTML('afterbegin', '<span class="spglow"><i></i></span><span class="spring"><i></i></span>');
         }
         if (pack === 'limboSub') {   // one switch for everything in Limbo's set, on the box itself (no need to open it)
