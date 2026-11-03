@@ -74,6 +74,14 @@ html:has(:is(#archive, #changelog, #info, #themes, .popup):not([hidden])), html:
   #changelogBody { max-width: min(780px, 70vw); width: min(780px, 70vw); }
   #changelog { align-items: center; }   /* in the middle, the same gap above and below */
   #changelog .panel { margin: 0; box-sizing: border-box; max-height: calc(100vh - 48px); }
+  /* Mesos, Shop and Customize too: wide and in the middle, in two columns */
+  :is(#meso, #shop, #themes) { align-items: center; }
+  :is(#meso, #shop, #themes) > .panel { margin: 0; box-sizing: border-box; max-height: calc(100vh - 48px); }
+  :is(#meso, #shop) .popupbody { width: min(780px, 70vw); }
+  #meso .popupbody { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; align-items: start; }
+  #meso .mesocol > h3:first-child { margin-top: 0; }
+  #shop .shoplist { display: grid; grid-template-columns: 1fr 1fr; }
+  #themeList { display: grid; grid-template-columns: 1fr 1fr; width: min(720px, 64vw); }
 }
 /* While one of these windows is open, scrolling only moves the window, never the page behind it. */
 #archive .panel, #changelog .panel, #info .panel, #themes .panel { overscroll-behavior: contain; }
