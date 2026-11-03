@@ -226,15 +226,6 @@
       setTimeout(() => el.remove(), BANNER_MS);
     }, at - Date.now());
   }
-  function toast(name, head = 'Achievement unlocked') {
-    const t = Object.assign(document.createElement('div'), { className: 'achvtoast' });
-    t.innerHTML = '<img src="images/achv/4000038.png" alt=""><div><b></b><span></span></div>';
-    t.querySelector('b').textContent = head;
-    t.querySelector('span').textContent = name;
-    document.body.appendChild(t);
-    setTimeout(() => t.classList.add('out'), 2200);
-    setTimeout(() => t.remove(), 2700);
-  }
   // A game result saved (a game just ended) or mesos earned: look again.
   const setItem = Storage.prototype.setItem;
   Storage.prototype.setItem = function (k, v) {
@@ -280,7 +271,6 @@
     btn?.replaceWith(Object.assign(document.createElement('img'), { className: 'achvclaimed', src: 'images/achv/ui/claim-disabled.png', alt: 'Claimed' }));   // the game's greyed "Claimed" button
     fresh.delete(a.id);
     newTag();
-    if (a.mesos) toast(a.full || a.name, `+${fmt(a.mesos)} mesos`);
     if (a.appear) {   // an appearance effect: Settings > Account Settings > MapleStory Character
       if (typeof acctAvatarCall === 'function') acctAvatarCall();
       itemPopup({ name: a.full || a.name, img: 'images/fx/seething-balance.webp?v=2' }, 'Successfully Claimed!', false, ['Settings', 'yes'], ['Close', 'plain'])

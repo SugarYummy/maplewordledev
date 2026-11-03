@@ -401,7 +401,7 @@ const SOUNDS = { win: 'sounds/star-force-success.mp3', lose: 'sounds/star-force-
   classWin: 'sounds/succession-bloom.mp3',   // First Adversary's Succession Bloom 1:03-1:27 (1 s fade-in), Class Wordle win on guess 2-5
   purchase: 'sounds/purchase.mp3',
   achvComplete: 'sounds/achievement-complete.mp3',   // an achievement unlocked (each one, with its note)
-  gradeUp: 'sounds/grade-up.mp3',   // (for later: an achievement's next tier)
+  gradeUp: 'sounds/grade-up.mp3',   // ranking up (Bronze, Silver, ...) by achievement points
   appear: 'sounds/appear.mp3',   // an appearance effect (Seething Balance), when it plays in Settings   // the Cash Shop's buy sound (0.8 s), when you buy something in the shop
   limboCut: 'sounds/limbo-cut.mp3',
   sirenSong: 'sounds/siren-song.mp3', iaidoAlpha: 'sounds/iaido-alpha.mp3', mayrinKill: 'sounds/mayrin-kill.mp3',   // boss finishing effects' sounds
