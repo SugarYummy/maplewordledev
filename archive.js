@@ -60,7 +60,10 @@
       if (here && here.modes.includes(t.mode)) { try { look = here.style?.(t.mode, d) || ''; } catch {} }
       else look = read(`mapleWordle:style:${t.mode}:${d}`) || '';
       if (look) btn.className = look;
-      btn.textContent = `#${d - t.first + 1} - ${dateLabel(d)}${d === today() ? ' (today)' : ''} - ${look === 'limborb' ? '' : r + star}`;
+      btn.textContent = `#${d - t.first + 1} - ${dateLabel(d)} - ${look === 'limborb' ? '' : r + star}`;
+      // Today: a green tag (like the NEW one) after the date, in place of "(today)"
+      if (d === today()) btn.firstChild.splitText(btn.textContent.indexOf(' - ', String(d - t.first + 1).length + 4))
+        .before(Object.assign(document.createElement('span'), { className: 'todaytag', textContent: 'Today' }));
       if (look === 'limborb') {   // Limbo's border day: just "Limbo", glowing and glitching like the Special toggle's text
         const s = Object.assign(document.createElement('span'), { className: 'gtext', textContent: 'Limbo' });
         s.dataset.text = 'Limbo';
