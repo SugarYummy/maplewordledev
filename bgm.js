@@ -608,12 +608,13 @@ function guess(name) {
       const ms = await bossKill(kill, !won() ? null : guesses.length === 1 ? 'show' : 'rain');
       setTimeout(() => bgmAfter(game), ms);
     }, flipMs);
-  } else if (won() && guesses.length === 1 && typeof hecate !== 'undefined' && (limboAllOn() || hecate?.id === 'limboCut')) {
-    // A first-guess win whose win effect is Limbo Transition (Limbo mode, or ticked on its own in Customize): like the finishing
-    // attacks, the BGM is quiet until its burst (its own sound in place of the first-guess music), then in from 0:00 with the mesos.
-    const game = answer;
+  } else if (won() && guesses.length === 1 && typeof hecate !== 'undefined' && (limboAllOn() || hecate?.id === 'limboCut' || HECATE[hecate?.id]?.achv)) {
+    // A first-guess win whose win effect is Limbo Transition (Limbo mode, or ticked on its own in Customize) or a boss
+    // finishing attack you unlocked and ticked (any day, either mode): like the boss's own BGM Clip Extreme day, the
+    // BGM is quiet until its burst (its own sound in place of the first-guess music), then in from 0:00 with the mesos.
+    const game = answer, fx = limboAllOn() ? 'limboCut' : hecate.id;
     pause();
-    setTimeout(() => { confetti(true); setTimeout(() => bgmAfter(game), HECATE.limboCut.burst); }, flipMs);
+    setTimeout(() => { confetti(true); setTimeout(() => bgmAfter(game), HECATE[fx].burst); }, flipMs);
   } else if (won()) {
     setTimeout(() => confetti(guesses.length === 1), flipMs);
     // First-guess win: Mayrin's Descend plays (the BGM pauses for it). Other wins: no music, the BGM is already playing.
