@@ -248,8 +248,7 @@ async function decode(id, raw) {
   return buf;
 }
 async function play() {
-  if (play.keep) play.keep = false;   // started by itself (after Jupiter's entrance): leave the entrance / achievement sounds playing
-  else stopResultSounds();   // the win / lose music stops so you can listen again
+  stopResultSounds();   // the win / lose music stops so you can listen again
   if (mashupAudio) { mashupAudio.pause(); $('mashupPlay').textContent = '▶\uFE0E Play the mashup'; mashupStopped(); }
   ensureCtx();
   audio.ctx.resume();
@@ -589,8 +588,8 @@ function guess(name) {
   // game ends, won (any guess) or lost; a first-guess win plays it in place of your win effect (fx.js bossKill).
   const kill = MODE === 'bgm' && typeof bossKillFor === 'function' ? bossKillFor(answer.name) : null;
   // ...and on Jupiter's: your character's entrance under Share (account.js), in place of a first-guess win effect (no
-  // character: the usual). Each of these keeps the BGM quiet until its burst, then (bigWinAt):
-  //   won in 1: the meso fountain + the first-guess music · won in 2+: the meso rain + this BGM (from 0:00) · lost: the fail music
+  // character: the usual). Each of these keeps the BGM quiet until its burst, then (bigWinAt): won in 1: the meso fountain
+  // + Mayrin's Descend · won in 2+: the meso rain + Kaling's Four Auspicious Beasts · lost: Seren's Burning City
   const game = answer, n = guesses.length, ok = won();
   if (MODE === 'bgm' && answer.name === 'Jupiter' && typeof acctJupiterEntrance === 'function' && acct() && acctMapleImg()) {
     pause();
@@ -622,20 +621,10 @@ function guess(name) {
 // brings its own meso fountain). Nothing if another game opened meanwhile.
 function bigWinAt(was, ok, n, mesos) {
   if (answer !== was) return;
-  if (ok && n === 1) { if (mesos) mesoShow(); if (live) resultSound(true, 0, 'firstTry'); }
-  else if (ok) { if (mesos) confetti(false); bgmAfter(was); }
-  else if (live) resultSound(false, 0);   // Star Force Destroy
+  if (ok && n === 1) { if (mesos) mesoShow(); if (live) resultSound(true, 0, 'firstTry'); }   // Mayrin's Descend
+  else if (ok) { if (mesos) confetti(false); if (live) resultSound(true, 0, 'extremeWin'); }   // Kaling's Four Auspicious Beasts
+  else if (live) resultSound(false, 0, 'extremeLose');   // Seren's Burning City
 }
-// With the mesos of a won-in-2+ game's finishing attack or Jupiter's entrance: the whole BGM plays from 0:00 by itself (unless it's already
-// playing or you've moved on), leaving the attack's / achievement sounds to finish.
-function bgmAfter(was) {
-  if (audio.playing || !over || answer !== was) return;   // (a different game opened meanwhile: leave it)
-  audio.pos = 0;
-  audio.ended = false;
-  play.keep = true;
-  play();
-}
-
 // ---- After the game: the whole track and the bonus guess ----
 
 // Bonus round only for bosses with more than one BGM (every part of the fight is listed, even ones sharing a track).
