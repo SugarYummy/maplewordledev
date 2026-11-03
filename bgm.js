@@ -597,22 +597,37 @@ function guess(name) {
       const ms = acctJupiterEntrance();
       setTimeout(() => {
         if (won()) guesses.length === 1 ? mesoShow() : confetti(false);
-        if (!audio.playing && over) { audio.pos = 0; audio.ended = false; play.keep = true; play(); }
+        bgmAfter();
       }, ms);
     }, flipMs);
+  } else if (kill) {   // the BGM quiet while it plays (its own sound in place of the win / lose music), then in from 0:00
+    pause();
+    setTimeout(async () => {
+      const ms = await bossKill(kill, !won() ? null : guesses.length === 1 ? 'show' : 'rain');
+      setTimeout(bgmAfter, ms);
+    }, flipMs);
   } else if (won()) {
-    setTimeout(() => (kill ? bossKill(kill, guesses.length === 1 ? 'show' : 'rain') : confetti(guesses.length === 1)), flipMs);
+    setTimeout(() => confetti(guesses.length === 1), flipMs);
     // First-guess win: Mayrin's Descend plays (the BGM pauses for it). Other wins: no music, the BGM is already playing.
     if (guesses.length === 1 && live) { pause(); resultSound(true, flipMs, 'firstTry'); }
   } else if (live) {
     pause();
-    if (kill) setTimeout(() => bossKill(kill), flipMs);   // its own sound, in place of Star Force Destroy
-    else resultSound(false, flipMs);   // Star Force Destroy
-  } else if (kill) setTimeout(() => bossKill(kill), flipMs);
+    resultSound(false, flipMs);   // Star Force Destroy
+  }
   if (!audio.playing) { audio.pos = 0; audio.ended = false; drawBar(); }   // not playing: the full track starts from 0:00
   updateStreak();
   loadStats();
   noteResult();
+}
+
+// After a boss's finishing attack or Jupiter's entrance: the whole BGM plays from 0:00 by itself (unless it's already
+// playing or you've moved on), leaving the attack's / achievement sounds to finish.
+function bgmAfter() {
+  if (audio.playing || !over) return;
+  audio.pos = 0;
+  audio.ended = false;
+  play.keep = true;
+  play();
 }
 
 // ---- After the game: the whole track and the bonus guess ----

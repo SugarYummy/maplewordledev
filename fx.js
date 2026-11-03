@@ -325,7 +325,8 @@ function bossKillLoad(id) {
 }
 // mesos: 'show' (a first-guess win: the meso fountain), 'rain' (a win in 2+), or none (lost); they come out at its burst.
 async function bossKill(id, mesos) {
-  const fallback = () => (mesos === 'show' ? bigWin() : mesos === 'rain' ? confetti(false) : undefined);
+  // Resolves with how long it plays (ms; 0 when it can't), so BGM Clip can bring its BGM in after it.
+  const fallback = () => { if (mesos === 'show') bigWin(); else if (mesos === 'rain') confetti(false); return 0; };
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) return fallback();
   const blob = await bossKillLoad(id);
   if (!blob) return fallback();
@@ -335,6 +336,7 @@ async function bossKill(id, mesos) {
   hecate = keep;
   hecateLast = was;
   if (mesos) setTimeout(() => (mesos === 'show' ? mesoShow() : confetti(false)), burst);
+  return HECATE[id].ms;
 }
 // Limbo's glitch mashup answered right (BGM Clip): Limbo's cutscene for everyone (only that: no meso show or glow).
 let limboCutBlob = null;
