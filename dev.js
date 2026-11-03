@@ -21,7 +21,7 @@
     constructor(...a) { if (a.length) super(...a); else super(RealDate.now() - BEHIND); }
     static now() { return RealDate.now() - BEHIND; }
   };
-  const BUILD = 'alphaTest v5.1.02112026.183517', STAMP = BUILD.split(' v')[1];
+  const BUILD = 'alphaTest v5.1.02112026.184240', STAMP = BUILD.split(' v')[1];
   const ROOT = location.pathname.match(/^(.*?\/maplewordledev\/)/)?.[1] ?? '/';
   const kept = window.localStorage;   // the browser's own storage: only the test login ('mwdev:login') goes here
   Object.defineProperty(window, 'localStorage', { value: window.sessionStorage, configurable: true });
@@ -141,7 +141,7 @@
   } catch {}
   window.mwDevHolidays = !!ss.getItem('mwdev:holidays');   // /unlock all found the holiday items too (fx.js shopFound)
   window.devEgg = ss.getItem('mwdev:egg');   // read by bgm.js (bonusFor)
-  const DEV_HELP = '/meso 5000 — add mesos (minus works too)\n/egg limbo — Limbo\'s mashup as today\'s BGM Clip Extreme bonus\n/egg lucid — today\'s BGM Clip Extreme clip is Lucid\'s Garden of Eternal Dream\n/egg off — back to the real one\n/unlock all — own every shop item, boss finishing effect and appearance effect\n/unlock achievement — unlock the next achievement (or one by name: /unlock achievement siren)\n/unlock allachievement — unlock every achievement at once\n/master — count as one of the site's top 10 (Master rank at 1,000+ AP; again to stop)\n/reset — wipe this tab\'s test saves (like opening a new tab) and reload\n/help — this list';
+  const DEV_HELP = '/meso 5000 — add mesos (minus works too)\n/egg limbo — Limbo\'s mashup as today\'s BGM Clip Extreme bonus\n/egg lucid — today\'s BGM Clip Extreme clip is Lucid\'s Garden of Eternal Dream\n/egg off — back to the real one\n/unlock all — own every shop item, boss finishing effect and appearance effect\n/unlock achievement — unlock the next achievement (or one by name: /unlock achievement siren)\n/unlock allachievement — unlock every achievement at once\n/master — count as one of the site\'s top 10 (Master rank at 1,000+ AP; again to stop)\n/reset — wipe this tab\'s test saves (like opening a new tab) and reload\n/help — this list';
   function devRun(line) {
     const [cmd, a] = line.trim().split(/\s+/);
     if (cmd === '/help') return DEV_HELP;
