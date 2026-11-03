@@ -1,0 +1,551 @@
+{
+ "_about": "Attack Animation puzzles. Each puzzle = one class + its clips: videos/anim/video<N>.webm/.mp4/.jpg (numbers just count up, so file names give nothing away; a class can have several puzzles). videos: clip 1 [, clip 2]. credit / creditImage: who recorded it, shown on the win screen. skills: the skill shown in each clip (a hint); skillsFull: optional full names shown only once the game is over (when the full name would give it away), listed on the win screen. hintDelay: wrong guesses that unlock nothing before the first hint (for clips that are too easy). since (YYYY-MM-DD): first day it can be the answer. days: fixed puzzle ids for puzzles #1, #2, ...; after them a shuffled cycle over every puzzle. Add clips with tools/add_clip.py. Every clip's skill must be unique to that one class (check the skill's class on MapleWiki): a skill shared with another class, like Covering Fire (Bow Master and Marksman), is never used.",
+ "puzzles": [
+  {
+   "id": 1,
+   "class": "Ren",
+   "videos": [
+    1,
+    2
+   ],
+   "credit": "Snowmoon",
+   "creditImage": "videos/anim/credit1.jpg",
+   "skills": [
+    "Wish Unending (4th attack)",
+    "Plum Blossom Sword: Storm (Hold down)"
+   ]
+  },
+  {
+   "id": 2,
+   "class": "Corsair",
+   "videos": [
+    3
+   ],
+   "credit": "Axar",
+   "creditImage": "videos/anim/credit2.jpg",
+   "skills": [
+    "Rapid Fire (Hold down)"
+   ]
+  },
+  {
+   "id": 3,
+   "class": "Lynn",
+   "videos": [
+    4
+   ],
+   "credit": "MagicalFair",
+   "creditImage": "videos/anim/credit3.jpg",
+   "skills": [
+    "Strike"
+   ]
+  },
+  {
+   "id": 4,
+   "class": "Adele",
+   "videos": [
+    5
+   ],
+   "credit": "Scäll",
+   "creditImage": "videos/anim/credit4.jpg",
+   "skills": [
+    "Cleave"
+   ]
+  },
+  {
+   "id": 5,
+   "class": "Hayato",
+   "videos": [
+    6,
+    7
+   ],
+   "credit": "llleyayyota",
+   "creditImage": "videos/anim/credit5.jpg",
+   "since": "2026-10-13",
+   "skills": [
+    "Silent Arc",
+    "Mist Slash"
+   ],
+   "skillsFull": [
+    "[Shinsoku] Silent Arc",
+    "[Shinsoku] Mist Slash"
+   ]
+  },
+  {
+   "id": 6,
+   "class": "Erel Light",
+   "videos": [
+    8
+   ],
+   "credit": "EEEELL",
+   "creditImage": "videos/anim/credit6.jpg",
+   "since": "2026-10-13",
+   "skills": [
+    "Spear of Lugh"
+   ],
+   "hintDelay": 1
+  },
+  {
+   "id": 7,
+   "class": "Hero",
+   "videos": [
+    10,
+    9
+   ],
+   "credit": "Pigoo",
+   "creditImage": "videos/anim/credit7.jpg",
+   "since": "2026-10-16",
+   "skills": [
+    "Sword Illusion",
+    "Raging Blow"
+   ]
+  },
+  {
+   "id": 8,
+   "class": "Bow Master",
+   "videos": [
+    12
+   ],
+   "credit": "Pigoo",
+   "creditImage": "videos/anim/credit8.jpg",
+   "since": "2026-10-16",
+   "skills": [
+    "Arrow Stream"
+   ]
+  },
+  {
+   "id": 9,
+   "class": "Dawn Warrior",
+   "videos": [
+    13,
+    14
+   ],
+   "credit": "Pigoo",
+   "creditImage": "videos/anim/credit9.jpg",
+   "since": "2026-10-16",
+   "skills": [
+    "Impaling Rays",
+    "Solar Slash/Lunar Divide"
+   ]
+  },
+  {
+   "id": 10,
+   "class": "Shade",
+   "videos": [
+    15,
+    16
+   ],
+   "credit": "Pigoo",
+   "creditImage": "videos/anim/credit10.jpg",
+   "since": "2026-10-16",
+   "skills": [
+    "Spirit Trap",
+    "Bomb Punch"
+   ]
+  },
+  {
+   "id": 11,
+   "class": "Night Walker",
+   "videos": [
+    17,
+    18
+   ],
+   "credit": "Pigoo",
+   "creditImage": "videos/anim/credit11.jpg",
+   "since": "2026-10-16",
+   "skills": [
+    "Dark Omen",
+    "Shadow Spark"
+   ]
+  },
+  {
+   "id": 12,
+   "class": "Mihile",
+   "videos": [
+    19,
+    20
+   ],
+   "credit": "Pigoo",
+   "creditImage": "videos/anim/credit12.jpg",
+   "since": "2026-10-16",
+   "skills": [
+    "Charging Light",
+    "Radiant Cross"
+   ]
+  },
+  {
+   "id": 13,
+   "class": "Pathfinder",
+   "videos": [
+    21,
+    22
+   ],
+   "credit": "Pigoo",
+   "creditImage": "videos/anim/credit13.jpg",
+   "since": "2026-10-16",
+   "skills": [
+    "Nova Blast",
+    "Cardinal Burst/Cardinal Deluge"
+   ]
+  },
+  {
+   "id": 14,
+   "class": "Phantom",
+   "videos": [
+    23,
+    24
+   ],
+   "credit": "Pigoo",
+   "creditImage": "videos/anim/credit14.jpg",
+   "since": "2026-10-16",
+   "skills": [
+    "Tempest (Hold down)",
+    "Mille Aiguilles"
+   ]
+  },
+  {
+   "id": 15,
+   "class": "Demon Avenger",
+   "videos": [
+    25,
+    26
+   ],
+   "credit": "Pigoo",
+   "creditImage": "videos/anim/credit15.jpg",
+   "since": "2026-10-17",
+   "skills": [
+    "Blood Prison",
+    "Lunar Slash"
+   ],
+   "skillsFull": [
+    "Blood Prison",
+    "Exceed: Lunar Slash"
+   ]
+  },
+  {
+   "id": 16,
+   "class": "Demon Slayer",
+   "videos": [
+    27,
+    28
+   ],
+   "credit": "Pigoo",
+   "creditImage": "videos/anim/credit16.jpg",
+   "since": "2026-10-17",
+   "skills": [
+    "Raven Storm",
+    "Demon Thrash"
+   ]
+  },
+  {
+   "id": 17,
+   "class": "Aran",
+   "videos": [
+    29,
+    30
+   ],
+   "credit": "Pigoo",
+   "creditImage": "videos/anim/credit17.jpg",
+   "since": "2026-10-17",
+   "skills": [
+    "Hunter's Prey",
+    "Beyond Blade"
+   ],
+   "skillsFull": [
+    "Finisher - Hunter's Prey",
+    "Beyond Blade"
+   ]
+  },
+  {
+   "id": 18,
+   "class": "Khali",
+   "videos": [
+    31,
+    32
+   ],
+   "credit": "Pigoo",
+   "creditImage": "videos/anim/credit18.jpg",
+   "since": "2026-10-17",
+   "skills": [
+    "Chakram Fury",
+    "Flurry"
+   ],
+   "skillsFull": [
+    "Hex: Chakram Fury",
+    "Arts: Flurry"
+   ]
+  },
+  {
+   "id": 19,
+   "class": "Dual Blade",
+   "videos": [
+    33,
+    34
+   ],
+   "credit": "Pigoo",
+   "creditImage": "videos/anim/credit19.jpg",
+   "since": "2026-10-17",
+   "skills": [
+    "Asura's Anger",
+    "Phantom Blow"
+   ]
+  },
+  {
+   "id": 20,
+   "class": "Arch Mage (F/P)",
+   "videos": [
+    35,
+    36
+   ],
+   "credit": "Pigoo",
+   "creditImage": "videos/anim/credit20.jpg",
+   "since": "2026-10-17",
+   "skills": [
+    "DoT Punisher",
+    "Flame Sweep"
+   ]
+  },
+  {
+   "id": 21,
+   "class": "Kinesis",
+   "videos": [
+    37,
+    38
+   ],
+   "credit": "Pigoo",
+   "creditImage": "videos/anim/credit21.jpg",
+   "since": "2026-10-19",
+   "skills": [
+    "Check",
+    "Psychic Smash"
+   ],
+   "skillsFull": [
+    "Ultimate: Check",
+    "Psychic Smash"
+   ]
+  },
+  {
+   "id": 22,
+   "class": "Luminous",
+   "videos": [
+    39,
+    40
+   ],
+   "credit": "Pigoo",
+   "creditImage": "videos/anim/credit22.jpg",
+   "since": "2026-10-19",
+   "skills": [
+    "Aether Conduit",
+    "Reflection"
+   ]
+  },
+  {
+   "id": 23,
+   "class": "Paladin",
+   "videos": [
+    41,
+    42
+   ],
+   "credit": "Pigoo",
+   "creditImage": "videos/anim/credit23.jpg",
+   "since": "2026-10-19",
+   "skills": [
+    "Smite Shield",
+    "Blast"
+   ]
+  },
+  {
+   "id": 24,
+   "class": "Buccaneer",
+   "videos": [
+    43,
+    44
+   ],
+   "credit": "Pigoo",
+   "creditImage": "videos/anim/credit24.jpg",
+   "since": "2026-10-19",
+   "skills": [
+    "Howling Fist",
+    "Octopunch"
+   ]
+  },
+  {
+   "id": 25,
+   "class": "Ark",
+   "videos": [
+    45,
+    46
+   ],
+   "credit": "Pigoo",
+   "creditImage": "videos/anim/credit25.jpg",
+   "since": "2026-10-19",
+   "skills": [
+    "Abyssal Charge Drive",
+    "Basic Charge Drive"
+   ]
+  },
+  {
+   "id": 26,
+   "class": "Blaster",
+   "videos": [
+    47,
+    48
+   ],
+   "credit": "Pigoo",
+   "creditImage": "videos/anim/credit26.jpg",
+   "since": "2026-10-19",
+   "skills": [
+    "Ballistic Hurricane",
+    "Shotgun Punch"
+   ]
+  },
+  {
+   "id": 27,
+   "class": "Arch Mage (I/L)",
+   "videos": [
+    49,
+    50
+   ],
+   "credit": "Pigoo",
+   "creditImage": "videos/anim/credit27.jpg",
+   "since": "2026-11-04",
+   "skills": [
+    "Frozen Orb",
+    "Chain Lightning"
+   ]
+  },
+  {
+   "id": 28,
+   "class": "Bishop",
+   "videos": [
+    51,
+    52
+   ],
+   "credit": "Pigoo",
+   "creditImage": "videos/anim/credit28.jpg",
+   "since": "2026-11-04",
+   "skills": [
+    "Big Bang",
+    "Angel Ray"
+   ]
+  },
+  {
+   "id": 29,
+   "class": "Night Lord",
+   "videos": [
+    53
+   ],
+   "credit": "Pigoo",
+   "creditImage": "videos/anim/credit29.jpg",
+   "since": "2026-11-04",
+   "skills": [
+    "Showdown"
+   ]
+  },
+  {
+   "id": 30,
+   "class": "Shadower",
+   "videos": [
+    54,
+    55
+   ],
+   "credit": "Pigoo",
+   "creditImage": "videos/anim/credit30.jpg",
+   "since": "2026-11-04",
+   "skills": [
+    "Shadow Veil",
+    "Cruel Stab"
+   ]
+  },
+  {
+   "id": 31,
+   "class": "Cannoneer",
+   "videos": [
+    56,
+    57
+   ],
+   "credit": "Pigoo",
+   "creditImage": "videos/anim/credit31.jpg",
+   "since": "2026-11-04",
+   "skills": [
+    "Barrel Bomb",
+    "Cannon Bazooka"
+   ]
+  },
+  {
+   "id": 32,
+   "class": "Blaze Wizard",
+   "videos": [
+    58
+   ],
+   "credit": "Pigoo",
+   "creditImage": "videos/anim/credit32.jpg",
+   "since": "2026-11-04",
+   "skills": [
+    "Orbital Flame"
+   ]
+  },
+  {
+   "id": 33,
+   "class": "Wind Archer",
+   "videos": [
+    59,
+    60
+   ],
+   "credit": "Pigoo",
+   "creditImage": "videos/anim/credit33.jpg",
+   "since": "2026-11-04",
+   "skills": [
+    "Emerald Flower",
+    "Song of Heaven"
+   ]
+  },
+  {
+   "id": 34,
+   "class": "Battle Mage",
+   "videos": [
+    61,
+    62
+   ],
+   "credit": "Pigoo",
+   "creditImage": "videos/anim/credit34.jpg",
+   "since": "2026-11-04",
+   "skills": [
+    "Sweeping Staff",
+    "Finishing Blow"
+   ]
+  },
+  {
+   "id": 35,
+   "class": "Xenon",
+   "videos": [
+    63,
+    64
+   ],
+   "credit": "Pigoo",
+   "creditImage": "videos/anim/credit35.jpg",
+   "since": "2026-11-04",
+   "skills": [
+    "Orbital Cataclysm",
+    "Beam Blade"
+   ]
+  },
+  {
+   "id": 36,
+   "class": "Kain",
+   "videos": [
+    65,
+    66
+   ],
+   "credit": "Pigoo",
+   "creditImage": "videos/anim/credit36.jpg",
+   "since": "2026-11-04",
+   "skills": [
+    "Chain Sickle",
+    "Strike Arrow"
+   ]
+  }
+ ],
+ "days": [
+  1
+ ]
+}

@@ -1225,7 +1225,7 @@ html.dark .achvstats div { border-color: rgba(255, 255, 255, 0.12); }
   #infoBody { max-width: none; width: min(780px, 70vw); columns: 2; column-gap: 32px; }
   #infoBody > * { break-inside: avoid; }
   #infoBody > :first-child { margin-top: 0; }
-  #infoBody > ul { break-inside: auto; }   /* a page with one long list splits it over both columns, a line at a time */
+  #infoBody:not(:has(> h3)) > ul { break-inside: auto; }   /* a page with one long list splits it over both columns, a line at a time */
   #infoBody li { break-inside: avoid; }
   #infoBody h3 { break-after: avoid; }
   #infoBody .warn { column-span: all; text-align: center; margin-top: 16px; }   /* "Spot a mistake?" under both columns */
