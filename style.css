@@ -1108,7 +1108,7 @@ html.dark .achvtier.t-unique { color: #ffcc33; } html.dark .achvtier.t-legendary
 .achvbanner .back { position: absolute; left: 0; top: 0; width: 1366px; height: 231px; }
 .achvbanner .front { position: absolute; z-index: 2; }   /* placed per tier (achv.js BANNER_ART) */
 /* the points: MapleStory's own digits (achievementCompleteEffect.normal.num, 8 x 13 each), at their size, in the box under the trophy */
-.achvbanner .achvap { position: absolute; left: 665px; top: 134px; width: 36px; height: 13px; z-index: 1; display: flex; justify-content: center; animation: achvtext 0.3s 0.15s both; }
+.achvbanner .achvap { position: absolute; left: 665px; top: 136px; width: 36px; height: 13px; z-index: 1; display: flex; justify-content: center; animation: achvtext 0.3s 0.15s both; }
 .achvbanner .achvap img { width: 8px; height: 13px; image-rendering: pixelated; }
 .achvbanner .achvname { position: absolute; left: 393px; top: 163px; width: 580px; height: 36px; z-index: 1; text-align: center; font: 700 22px/36px system-ui, sans-serif;
                         white-space: nowrap; overflow: hidden; text-overflow: ellipsis; animation: achvtext 0.3s 0.15s both;
