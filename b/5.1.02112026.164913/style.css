@@ -1,0 +1,1189 @@
+/* Shared by index.html (Guess the Boss) and class.html (Guess the Class). */
+/* Rubik (self-hosted, from Google Fonts; one variable file covers every weight). */
+@font-face { font-family: 'Rubik'; font-style: normal; font-weight: 300 900; font-display: swap; src: url("fonts/rubik-latin.woff2") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: 'Rubik'; font-style: normal; font-weight: 300 900; font-display: swap; src: url("fonts/rubik-latin-ext.woff2") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+html { font-family: Rubik, system-ui, sans-serif; }
+button, input, select, textarea { font-family: inherit; }
+h1 { font-weight: 900; }
+body { text-align: center; margin: 0; min-height: 100vh; display: flex; flex-direction: column; align-items: center;
+       background: #3b8fe0 url("images/background.webp") center bottom / cover no-repeat fixed; }
+html.inshell body { background: transparent; }   /* inside the main page (shell.js), which draws the background */
+.panel { background: rgba(var(--wb), 0.55);
+         border-radius: 12px; padding: 8px 16px 16px; margin: 16px; max-width: calc(100% - 64px); }
+.table-wrap { overflow-x: auto; }
+footer.panel { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); z-index: 3; margin: 0;
+               padding: 6px 16px; border-radius: 12px 12px 0 0; font-size: 14px; white-space: nowrap; }
+.game { position: relative; z-index: 4; margin-bottom: 80px; }
+#version { position: fixed; bottom: 8px; left: 10px; z-index: 5; margin: 0; padding: 4px 10px; font-size: 12px;
+           border: none; cursor: pointer; font-family: inherit; }
+#archiveBtn { position: fixed; top: 12px; left: 12px; z-index: 5; margin: 0; padding: 6px 12px; font-size: 14px;
+              border: none; cursor: pointer; font-family: inherit; }
+/* Credit box with characters peeking out from behind it. */
+#creditWrap { position: fixed; bottom: 8px; right: 10px; z-index: 5; }
+#credit { position: relative; z-index: 5; margin: 0; padding: 4px 10px; font-size: 12px; cursor: pointer;
+          white-space: nowrap; max-width: none; user-select: none; -webkit-user-select: none;
+          background: #d7e9f9; }  /* solid, so peeking characters stay fully hidden behind it */
+/* Each clip is a window the character slides through; its edge sits at the middle of the box,
+   so the character looks like it's coming out from behind the box. */
+.peekclip { position: absolute; z-index: 1; overflow: hidden; pointer-events: none; }
+.peekclip img { position: absolute; width: 120px; image-rendering: pixelated; transition: transform 0.35s ease; }
+/* Layering: sato (left) in front of elysia (middle) in front of moeko (right), all behind the box. */
+#clip-left { z-index: 4; }
+#clip-mid { z-index: 3; }
+#clip-right { z-index: 2; }
+#clip-mid, #clip-right { bottom: 12px; width: 120px; height: 110px; }
+#clip-mid { left: calc(40% - 54px); }
+#clip-right { left: calc(78% - 60px); }
+#clip-mid img, #clip-right img { left: 50%; bottom: 0; transform: translate(-50%, 100%); }
+#clip-mid.up img, #clip-right.up img { transform: translate(-50%, 8%); }
+/* The left one isn't cropped at all: she fades in while sliding out from behind the box's left side and tilting. */
+#clip-left { right: calc(100% - 95px); bottom: 0; width: 170px; height: 150px; overflow: visible; }
+#clip-left img { right: 0; bottom: 18px; transform-origin: bottom right; opacity: 0;
+                 transform: translateX(35%) rotate(0deg); transition: transform 0.35s ease, opacity 0.25s ease; }
+#clip-left.up img { opacity: 1; transform: translateX(-8%) rotate(-20deg); }
+#archive, #changelog, #info { position: fixed; inset: 0; z-index: 6; background: rgba(0, 0, 0, 0.4); display: flex;
+           align-items: flex-start; justify-content: center; }
+#archive[hidden], #changelog[hidden], #info[hidden] { display: none; }
+#changelogBody, #infoBody { text-align: left; max-width: 420px; }
+#changelogBody h3, #infoBody h3 { margin: 12px 0 4px; }
+/* Close button stays visible at the bottom while the window scrolls. */
+.closebar { position: sticky; bottom: -16px; margin: 0 -16px -16px; padding: 10px 0 14px;
+            background: #d6dae0; }
+/* Every window's Close: like the shop popups' buttons (light grey, see .buybtns .plain) */
+.closebar button { font-family: inherit; font-size: 15px; font-weight: 700; min-width: 96px; padding: 6px 18px; border-radius: 8px;
+                   cursor: pointer; color: #222; background: #f2f2f2; border: 1px solid rgba(0, 0, 0, 0.25);
+                   transition: transform 0.15s ease, filter 0.15s ease; }
+.closebar button:hover { transform: translateY(-2px) scale(1.05); filter: brightness(1.04); }
+#changelogBody .date { font-size: 13px; font-weight: normal; margin-left: 8px; opacity: 0.75; }
+#changelogBody ul, #infoBody ul { margin: 0; padding-left: 20px; }
+#infoBody li { margin: 2px 0; }
+#infoBody .warn { margin: 12px 0 0; }
+/* Windows: nearly solid now that there's no frosted glass, so the page behind doesn't show through the text. */
+:is(#archive, #changelog, #info, #themes, .popup) > .panel { background: #d6dae0; }
+#archive .panel, #changelog .panel, #info .panel { margin-top: 48px; max-height: calc(100vh - 96px); overflow-y: auto; min-width: 280px; }
+/* Hide the scrollbar but keep scrolling (wheel, trackpad, touch). */
+#archive .panel, #changelog .panel, #info .panel { scrollbar-width: none; }
+#archive .panel::-webkit-scrollbar, #changelog .panel::-webkit-scrollbar, #info .panel::-webkit-scrollbar { display: none; }
+/* While one of these windows is open, scrolling only moves the window, never the page behind it. */
+#archive .panel, #changelog .panel, #info .panel, #themes .panel { overscroll-behavior: contain; }
+html:has(#archive:not([hidden]), #changelog:not([hidden]), #info:not([hidden]), #themes:not([hidden])) { overflow: hidden; }
+#archiveTabs { margin-bottom: 8px; }
+#archiveList button { display: block; width: 100%; margin: 4px 0; padding: 6px; text-align: left;
+                      background: rgba(var(--wb), 0.4); border: 1px solid rgba(0, 0, 0, 0.15); border-radius: 6px; cursor: pointer; }
+#archiveList button:hover { background: rgba(var(--wb), 0.65); }
+#archiveList button.firsttry { border-color: rgba(230, 160, 0, 0.9); background: rgba(255, 236, 160, 0.55); }
+/* the row's glow only fades in and out (a pre-drawn shadow), so it costs nothing to keep going */
+#archiveList button.firsttry, #archiveList button.diamond { position: relative; box-shadow: 0 0 2px 1px rgba(255, 200, 40, .5); }
+#archiveList button.firsttry::after, #archiveList button.diamond::after { content: ''; position: absolute; inset: -1px; border-radius: inherit; pointer-events: none;
+  box-shadow: 0 0 10px 4px rgba(255, 200, 40, 1); animation: glow 0.8s ease-in-out infinite alternate; }
+@media (prefers-reduced-motion: reduce) { #archiveList button.firsttry::after, #archiveList button.diamond::after { animation: none; opacity: .9; } }
+th { background: rgba(var(--wb), 0.6); }
+td, th { border: 1px solid #999; padding: 4px 8px; }
+table { border-collapse: collapse; margin: 8px auto; }
+.green { background: #6c6; }
+.yellow { background: #ec5; }
+.red { background: #e66; }
+.answer td { background: #9cf; font-weight: bold; }
+#stats { max-width: 420px; margin: 12px auto 0; }
+.statrow { display: flex; align-items: center; gap: 8px; margin: 3px 0; }
+.statrow .label { width: 44px; text-align: right; }
+.statrow .track { flex: 1; background: rgba(0, 0, 0, 0.12); border-radius: 4px; height: 18px; overflow: hidden; }
+.statrow .bar { display: block; height: 100%; background: #888; }
+.statrow.mine .bar { background: #3a3; }
+.statrow.mine .label { font-weight: bold; }
+#statsAvg { white-space: pre-line; }
+.grey { background: #9a9a9a; }
+td.cardcell { background: #b9bdc6; }
+.bestrow td { border-bottom: 3px solid #333; }
+.bestrow .best { font-weight: bold; background: rgba(var(--wb), 0.7); }
+.hintrow .card .noimg { font-size: 22px; }
+.statrow .pct { width: 40px; text-align: left; }
+.card { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 90px; }
+.card img, .card .noimg { width: 56px; height: 56px; object-fit: contain; border-radius: 8px; }
+.card .noimg { display: flex; align-items: center; justify-content: center; background: #555; color: #fff; font-size: 28px; }
+#games { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin: -8px 0 8px; }
+#games button { padding: 6px 14px; font-size: 15px; border-radius: 8px; border: 1px solid rgba(0, 0, 0, 0.2);
+                background: rgba(var(--wb), 0.5); font-family: inherit; }
+#games button.on { font-weight: bold; outline: 2px solid var(--ol); background: rgba(var(--wb), 0.8); }
+#games button:disabled { color: #555; opacity: 0.7; cursor: not-allowed; }
+#games small { display: block; font-size: 11px; }
+#modes .on, #archiveTabs .on { font-weight: bold; outline: 2px solid var(--ol); }
+/* Boss picker: search box with a dropdown of photo + name rows (plain styling for now). */
+#picker { position: relative; display: block; width: min(420px, 100%); margin: 8px auto; }
+#picker[hidden] { display: none; }
+#guess { box-sizing: border-box; width: 100%; padding: 6px 8px; font-size: 15px; }
+#list { position: absolute; top: 100%; left: 0; right: 0; max-height: 300px; overflow-y: auto; z-index: 6;
+        background: #fff; border: 1px solid #999; text-align: left; }
+#list .item { display: flex; align-items: center; gap: 10px; padding: 4px 8px; cursor: pointer; }
+#list .item img, #list .item .noimg { width: 40px; height: 40px; object-fit: contain; flex: none; }
+#list .item .noimg { display: flex; align-items: center; justify-content: center; background: #ddd; }
+#list .item.active { background: #ddd; }   /* one highlight: follows the mouse and the arrow keys */
+/* Phones: keep the corner boxes clear of the Discord box and the game panel. */
+@media (max-width: 700px) {
+  #version, #creditWrap { bottom: 64px; }
+  .game { margin-top: 56px; }
+}
+/* Guess the Class: group cards hold several portraits side by side, so let them be wider. */
+.card img.wide { width: auto; max-width: 150px; }
+#list .item img.wide { width: auto; max-width: 96px; }
+#subgames { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin: 0 0 8px; }
+#subgames button { padding: 4px 12px; font-size: 14px; border-radius: 8px; border: 1px solid rgba(0, 0, 0, 0.2);
+                   background: rgba(var(--wb), 0.5); font-family: inherit; }
+#subgames button.on { font-weight: bold; outline: 2px solid var(--ol); background: rgba(var(--wb), 0.8); }
+#subgames button:disabled { color: #555; opacity: 0.7; cursor: not-allowed; }
+#subgames small { display: block; font-size: 11px; }
+#games a { text-decoration: none; color: inherit; }
+/* Game buttons you can switch to: pointer + highlight on hover. Automatic for every button in #games / #subgames
+   that isn't the current one (.on) or a "Coming soon" one (disabled), so new game modes get it for free. */
+#games button:not(.on):not(:disabled), #subgames button:not(.on):not(:disabled) { cursor: pointer;
+  transition: background 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease; }
+#games button:not(.on):not(:disabled):hover, #subgames button:not(.on):not(:disabled):hover {
+  background: rgba(var(--wb), 0.85); transform: translateY(-2px); box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2); }
+/* A new guess row flips in cell by cell (fx.js sets each cell's delay). */
+td.flip { animation: flip 0.5s ease both; }
+@keyframes flip { from { transform: rotateX(90deg); } to { transform: rotateX(0); } }
+/* Win confetti (fx.js). */
+.confetti { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 21; image-rendering: pixelated; }   /* one canvas */
+/* First-guess win: a Sol Hecate skill screen over the whole page (fx.js playHecate), under the mesos */
+.hecatefx { position: fixed; inset: 0; width: 100vw; height: 100vh; object-fit: cover; z-index: 20; pointer-events: none; }
+/* First-guess win: the game box shakes once; a puzzle won on the first guess glows gold for good. */
+.game.shake { animation: shake 0.5s cubic-bezier(.36, .07, .19, .97) both; }
+/* The glow is a shadow drawn once on a layer behind the box that only fades in and out: animating the box's own
+   shadow repainted the blurred box every frame, for as long as the page stayed open. */
+.game.glow:not(.rainbow):not(.limborb)::after { content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: -1;
+  box-shadow: 0 0 22px 8px rgba(255, 200, 40, .95), 0 0 60px 20px rgba(255, 170, 0, .55); animation: glow 0.8s ease-in-out infinite alternate; }
+@keyframes shake {
+  10%, 90% { transform: translate(-2px, 1px); } 20%, 80% { transform: translate(4px, -2px); }
+  30%, 50%, 70% { transform: translate(-8px, 3px); } 40%, 60% { transform: translate(8px, -3px); } }
+@keyframes glow { from { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { td.flip { animation: none; } .confetti { display: none; }
+  .game.glow:not(.rainbow):not(.limborb)::after { animation: none; } }
+.later { animation: appear 0.3s ease both; }
+@keyframes appear { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .later { animation: none; } }
+#soundBox { position: fixed; top: 12px; right: 12px; z-index: 5; margin: 0; padding: 2px 4px;
+            display: flex; align-items: center; max-width: none; }
+#soundBtn { margin: 0; padding: 2px 6px; font-size: 16px; border: none; background: none; cursor: pointer; font-family: inherit; }
+/* The volume slider stays tucked away until you hover the sound button (computers) or tap it (phones). */
+#soundBox input { width: 0; margin: 0; opacity: 0; accent-color: #e0a000; cursor: pointer;
+                  transition: width 0.2s, margin 0.2s, opacity 0.2s; }
+#soundBox.open input, #soundBox.held input { width: 90px; margin: 0 6px 0 2px; opacity: 1; }
+#volTip { position: absolute; top: calc(100% + 6px); transform: translateX(-50%); padding: 2px 6px; border-radius: 4px;
+          background: rgba(0, 0, 0, 0.75); color: #fff; font-size: 13px; white-space: nowrap; pointer-events: none; }
+#volTip[hidden] { display: none; }
+@media (hover: hover) { #soundBox:hover input, #soundBox:has(:focus-visible) input { width: 90px; margin: 0 6px 0 2px; opacity: 1; } }
+#soundBox input:disabled { filter: grayscale(1) opacity(0.5); cursor: default; }
+/* Search box with the "?" (how to play) button beside it. */
+.pickrow { display: flex; justify-content: center; align-items: center; gap: 8px; margin: 8px auto; }
+.pickrow #picker { margin: 0; width: min(420px, calc(100% - 44px)); }
+#infoBtn { flex: none; width: 34px; height: 34px; border-radius: 4px; border: 1px solid rgba(0, 0, 0, 0.25);
+           background: rgba(var(--wb), 0.7); font-family: inherit; font-size: 17px; font-weight: bold; cursor: pointer; }
+#infoBtn:hover { background: rgba(var(--wb), 0.95); }
+/* Animation Attack: the two skill clips side by side (stacked on narrow screens). */
+#clips { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; margin: 12px 0; }
+#clips[hidden] { display: none; }
+#clips figure { margin: 0; width: 360px; max-width: 100%; }   /* (a plain width: the box around them sizes to 360, not to the video's own size) */
+#clips figcaption { font-size: 15px; margin-top: 2px; }
+#clips video, #clips .locked { display: block; width: 100%; aspect-ratio: 16 / 9; border-radius: 8px; background: #222; object-fit: contain; }
+#clips .locked { display: flex; align-items: center; justify-content: center; color: #ddd; background: rgba(0, 0, 0, 0.45); font-size: 14px; }
+#clues td { min-width: 70px; }
+#clues[hidden], #guessTable[hidden] { display: none; }
+#guessTable .card { flex-direction: row; gap: 8px; }
+/* Animation Attack win screen. */
+#congrats { margin: 12px auto; padding: 10px 16px 14px; max-width: 420px; border-radius: 12px; background: rgba(var(--wb), 0.6); }
+#congrats[hidden] { display: none; }
+#congrats h2 { margin: 4px 0; }
+#congrats p { margin: 4px 0; font-size: 17px; }
+#congrats img { display: block; margin: 8px auto 0; max-width: 100%; border-radius: 8px; }
+#congrats img[hidden] { display: none; }
+/* Animation Attack guesses: one bar per guess, in the same tile style as the other games. */
+#rows .gbar { display: flex; align-items: center; gap: 10px; width: min(380px, 100%); margin: 4px auto; padding: 4px 8px;
+              box-sizing: border-box; border: 1px solid #999; text-align: left; }
+#rows .gbar img { width: 40px; height: 40px; object-fit: contain; border-radius: 8px; }
+#rows .gbar.flip { animation: flip 0.5s ease both; }
+@media (prefers-reduced-motion: reduce) { #rows .gbar.flip { animation: none; } }
+/* Animation Attack: click a clip / the win picture to see it big (works like the Changelog window). */
+#clips video, #congrats img { cursor: zoom-in; }
+#zoom { position: fixed; inset: 0; z-index: 9; background: rgba(0, 0, 0, 0.6); display: flex; align-items: center; justify-content: center; }
+#zoom[hidden] { display: none; }
+#zoom .panel { position: relative; margin: 0; padding: 12px; max-width: calc(100vw - 32px); }
+#zoomClose { position: absolute; top: 18px; right: 18px; z-index: 1; width: 40px; height: 40px; padding: 0; border-radius: 6px;
+             border: 2px solid #fff; background: rgba(0, 0, 0, 0.65); color: #fff; font-size: 28px; line-height: 34px;
+             font-family: Arial, sans-serif; cursor: pointer; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5); }
+#zoomClose:hover { background: rgba(0, 0, 0, 0.85); }
+#zoomBody video, #zoomBody img { display: block; width: min(calc(100vw - 56px), calc((100vh - 80px) * 16 / 9)); max-height: calc(100vh - 80px);
+                                 object-fit: contain; border-radius: 8px; background: #000; }
+#zoomBody img { width: auto; height: min(calc(100vh - 80px), 900px); max-width: calc(100vw - 56px); background: none; }
+/* Under each clip: "Clip N" header + its skill name (locked until that hint), like the category row. */
+#clips .cliptag { width: 100%; margin: 4px 0 0; }
+#clips .cliptag td { font-size: 15px; }
+#clips .cliptag tr[hidden] { display: none; }
+#archiveTabs { display: flex; flex-direction: column; align-items: center; gap: 4px; max-width: 520px; margin: 0 auto 8px; }
+#archiveTabs .tabrow { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; }
+#archiveTabs button:disabled { opacity: 0.55; cursor: not-allowed; }
+
+/* Extreme twist: one column hidden for the day. */
+#twist { font-weight: bold; color: #8a1c1c; }
+#board[data-hide="2"] tr > :nth-child(2) { display: none; }
+#board[data-hide="3"] tr > :nth-child(3) { display: none; }
+#board[data-hide="4"] tr > :nth-child(4) { display: none; }
+#board[data-hide="5"] tr > :nth-child(5) { display: none; }
+#board[data-hide="6"] tr > :nth-child(6) { display: none; }
+#board[data-hide="7"] tr > :nth-child(7) { display: none; }
+#board[data-hide="8"] tr > :nth-child(8) { display: none; }
+
+/* BGM Clip: one locked play bar. Checkpoints (0.5s ... 30s) are marked on it; the light grey part is what you've unlocked,
+   the green part what has played, and the label above follows the playhead. After the game it covers the whole track. */
+#player { width: min(420px, 100%); margin: 12px auto 4px; }
+#player[hidden], #bonus[hidden], #bonusAsk[hidden] { display: none; }
+#track { position: relative; padding-top: 30px; }
+#markerText, #markerArrow { position: absolute; transform: translateX(-50%); white-space: nowrap; pointer-events: none; line-height: 1.1; }
+#markerText { top: 0; font-size: 14px; }
+#markerArrow { top: 16px; font-size: 11px; }
+#bar { position: relative; height: 20px; border-radius: 4px; overflow: hidden; border: 1px solid rgba(0, 0, 0, 0.4);
+       background: #6f6f6f; touch-action: none; }   /* locked: dark grey */
+#open, #fill { position: absolute; top: 0; bottom: 0; left: 0; }
+#open { background: #d6d6d6; }   /* unlocked: light grey */
+#fill { background: #6c6; }
+#ticks i { position: absolute; top: 0; bottom: 0; width: 2px; margin-left: -1px; background: rgba(0, 0, 0, 0.5); }
+#tickLabels { position: relative; height: 16px; font-size: 11px; }
+#tickLabels span { position: absolute; top: 2px; transform: translateX(-50%); opacity: 0.5; }
+#tickLabels span.start { transform: translateX(-2px); }   /* near the left edge: start at the line */
+#tickLabels span.end { transform: translateX(-100%); }
+#tickLabels span.open { opacity: 1; font-weight: bold; }
+#track.seek #bar { cursor: pointer; }
+#controls { display: flex; justify-content: center; align-items: center; gap: 12px; margin-top: 6px; }
+#play { width: 44px; height: 40px; border-radius: 4px; border: 1px solid rgba(0, 0, 0, 0.35); background: #fff;
+        font-size: 18px; font-family: inherit; cursor: pointer; }
+#play:hover { background: #f2f2f2; }
+#bgmVol { width: 120px; accent-color: #e0a000; cursor: pointer; }
+#skip { flex: none; height: 34px; padding: 0 12px; border-radius: 4px; border: 1px solid rgba(0, 0, 0, 0.25);
+        background: rgba(var(--wb), 0.9); font-family: inherit; font-size: 15px; cursor: pointer; }
+#skip:hover { background: #fff; }
+#skip[hidden] { display: none; }
+#rows .gbar.grey { color: #222; }
+#bonus { margin: 12px auto; padding: 8px 16px 12px; max-width: 420px; border-radius: 12px; background: rgba(var(--wb), 0.6); }
+#bonus h3 { margin: 4px 0; }
+#bonus p { margin: 6px 0; }
+#bonusAsk { display: flex; gap: 6px; justify-content: center; align-items: center; margin: 6px 0; }
+#bonusPick { font-family: inherit; font-size: 15px; padding: 4px; }
+#bonusPick[hidden], #bossField[hidden], #bossList[hidden] { display: none; }
+#bonusGo { font-family: inherit; font-size: 15px; padding: 4px 12px; }
+/* The mashup bonus: the main guess box's boss search (photos, A-Z) instead of a dropdown */
+#bossField { position: relative; flex: 1; max-width: 320px; }
+#bossPick { width: 100%; box-sizing: border-box; font-family: inherit; font-size: 15px; padding: 6px 8px; border: 1px solid #999; border-radius: 4px; }
+#bossList { position: absolute; top: 100%; left: 0; right: 0; max-height: 260px; overflow-y: auto; z-index: 6;
+            background: #fff; border: 1px solid #999; text-align: left; }
+#bossList .item { display: flex; align-items: center; gap: 10px; padding: 4px 8px; cursor: pointer; }
+#bossList .item img { width: 36px; height: 36px; object-fit: contain; flex: none; }
+#bossList .item.active { background: #ddd; }
+#bossList .none { padding: 5px 8px; font-size: 14px; color: #888; }
+#bonusResult.right, #titleResult.right { color: #1d6b1d; font-weight: bold; }
+#bonusResult.wrong, #titleResult.wrong { color: #8a1c1c; font-weight: bold; }
+
+/* BGM Clip 💎 (first guess + bonus right): blue instead of gold, on the game box and its Archive day. */
+#archiveList button.diamond { border-color: rgba(30, 140, 255, 0.9); background: rgba(170, 215, 255, 0.55); box-shadow: 0 0 2px 1px rgba(60, 170, 255, .5); }
+#archiveList button.diamond::after { box-shadow: 0 0 10px 4px rgba(60, 170, 255, 1); }
+.game.glow.diamond:not(.rainbow):not(.limborb)::after { box-shadow: 0 0 22px 8px rgba(80, 190, 255, .95), 0 0 60px 20px rgba(30, 130, 255, .55); }
+
+/* Tiny "NEW" tag in the top left corner of a new game tab (fx.js). */
+#games button, #subgames button { position: relative; }
+.newtag { position: absolute; top: -6px; left: -6px; padding: 0 3px; border-radius: 3px; background: #e33; color: #fff;
+          font-size: 8px; font-weight: bold; line-height: 12px; letter-spacing: 0.3px; pointer-events: none; }
+.pickrow[hidden] { display: none; }
+/* BGM Clip: the bonus row under Everyone's results (% who got the bonus right), set a little apart. */
+.statrow.bonusrow { margin-top: 10px; }
+.statrow.bonusrow .label { width: 52px; margin-left: -8px; }
+#mashupRow { display: flex; flex-direction: column; align-items: center; gap: 8px; margin: 6px 0; }
+#mashupRow[hidden] { display: none; }
+#limboTip { margin: 0; font-size: 13px; font-style: italic; color: #7a3fc4; }   /* Limbo's mashup: try pausing (bgm.js limboPause) */
+#limboTip[hidden] { display: none; }
+/* The mashup's own bar (under its Play button): green fill like the main bar, click to jump around */
+#mashupTrack { display: flex; align-items: center; gap: 8px; width: min(320px, 100%); }
+#mashupBar { position: relative; flex: 1; height: 12px; border-radius: 4px; overflow: hidden; border: 1px solid rgba(0, 0, 0, 0.4);
+             background: #d6d6d6; cursor: pointer; }
+#mashupFill { position: absolute; top: 0; bottom: 0; left: 0; width: 0; background: #6c6; }
+#mashupTime { font-size: 12px; min-width: 76px; text-align: right; font-variant-numeric: tabular-nums; }
+#mashupTrack.barglitch #mashupBar { transform: translateX(3px) skewX(-6deg);
+                                    filter: drop-shadow(3px 0 0 rgba(255, 0, 80, 0.8)) drop-shadow(-3px 0 0 rgba(0, 220, 255, 0.8)); }
+#mashupTrack.barglitch #mashupFill { background: #c6f; }
+#mashupTrack.barglitch #mashupTime { text-shadow: 2px 0 rgba(255, 0, 80, 0.8), -2px 0 rgba(0, 220, 255, 0.8); }
+#mashupPlay { font-family: inherit; font-size: 15px; padding: 6px 14px; border-radius: 4px; border: 1px solid rgba(0, 0, 0, 0.35); background: #fff; cursor: pointer; }
+#mashupPlay:disabled { cursor: not-allowed; opacity: 0.55; }   /* Limbo's fade-out playing (bgm.js limboExit) */
+/* BGM Clip Easter eggs: a glitched mashup fades the background to the boss's map and glitches the screen while it plays
+   (Malefic Star: Unglamoured Ruins; Limbo: Limbo's Subconscious (Light); Von Bon: Von Bon's Realm <Chaos>; Bellona: her fight map in Solatum). */
+body::before { content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none; opacity: 0; transition: opacity 3s ease;
+               background: center bottom / cover no-repeat; }
+/* Secret themes (fx.js): an unlocked map as a background layer for every page, under a playing mashup's egg. */
+.themebg { position: fixed; inset: 0; z-index: -2; pointer-events: none; background: #222 center bottom / cover no-repeat; transition: opacity 1s ease; }
+body.egg-deepsea::before { opacity: 1; background-color: #0d1f2a; background-image: url("images/deepsea.webp"); }
+body.egg-limbo::before { opacity: 1; background-color: #3a3348; background-image: url("images/limbo.webp"); }
+/* Limbo's Easter egg (bgm.js limboEnter): the map (light / dark side) behind the game, the alert border over the page's
+   edges, and the full-screen fade-in / fade-out on top of everything. A swap flashes the map and border for a moment. */
+#limbobg { position: fixed; inset: 0; z-index: -1; pointer-events: none; }
+#limbobg div { position: absolute; inset: 0; background: center bottom / cover no-repeat; transition: opacity 0.12s steps(2); }
+#limbobg .light { background-color: #3a3348; background-image: url("images/limbo.webp"); }
+#limbobg .dark { background-color: #101826; background-image: url("images/limbo-dark.webp"); opacity: 0; }
+#limbobg.dark .dark { opacity: 1; }
+#limboborder, #cfx, .cfxout { position: fixed; inset: 0; z-index: 2; pointer-events: none; }
+#limboborder video, #limboborder img, #cfx video, #cfx img, .cfxout video, .cfxout img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: fill; }
+#cfx, .cfxout { z-index: 2; }   /* right under the game box, buttons and windows; over the shark transition */
+#cfx [hidden] { display: none; }
+body:has(#limboborder) #cfx { display: none; }   /* Limbo's Easter egg brings its own border */
+#limboborder [hidden] { display: none; }
+.limboscreen { position: fixed; inset: 0; width: 100vw; height: 100vh; object-fit: cover; z-index: 22; pointer-events: none; }
+body.limboswap #limbobg, body.limboswap #limboborder, body.limboswap #cfx, body.limboswap .themebg { animation: limboswap 0.32s steps(4) both; }
+@keyframes limboswap {
+  0% { transform: translate(-8px, 2px); filter: hue-rotate(90deg) saturate(2) contrast(1.3); }
+  25% { transform: translate(6px, -3px) skewX(-4deg); filter: invert(0.2) drop-shadow(6px 0 0 rgba(255, 0, 80, 0.7)); }
+  50% { transform: translate(-4px, 0); filter: hue-rotate(-60deg) brightness(1.4); }
+  75% { transform: translate(3px, 2px); filter: drop-shadow(-6px 0 0 rgba(0, 220, 255, 0.7)); }
+  100% { transform: none; filter: none; }
+}
+@media (prefers-reduced-motion: reduce) { body.limboswap #limbobg, body.limboswap #limboborder, body.limboswap #cfx, body.limboswap .themebg { animation: none; } }
+/* Customize > Custom Effects: an on / off switch (Limbo's light / dark swap) */
+.fxswitch { display: flex; align-items: center; gap: 10px; padding: 8px 6px; font-size: 14px; text-align: left; cursor: pointer; }
+.fxswitch input { position: absolute; opacity: 0; pointer-events: none; }
+.fxswitch .knob { flex: none; position: relative; width: 40px; height: 22px; border-radius: 11px; background: #bbb; transition: background 0.2s ease; }
+.fxswitch .knob::after { content: ''; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff;
+                         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3); transition: transform 0.2s ease; }
+.fxswitch input:checked + .knob { background: #2fa84f; }
+.fxswitch input:checked + .knob::after { transform: translateX(18px); }
+.fxswitch input:focus-visible + .knob { outline: 2px solid var(--ol); outline-offset: 2px; }
+body.egg-vonbon::before { opacity: 1; background-color: #2c4544; background-image: url("images/vonbon.webp"); }
+body.egg-bellona::before { opacity: 1; background-color: #23292a; background-image: url("images/bellona.webp"); }
+body.glitch::after { content: ''; position: fixed; inset: 0; z-index: 10; pointer-events: none; mix-blend-mode: overlay;
+                     background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.18) 0 2px, transparent 2px 4px);
+                     animation: glitchflash 1.7s steps(1) infinite; }
+body.glitch .game { animation: glitchslice 2.3s steps(1) infinite; }
+/* and all the text on the page glitches with it: every 1.6 s cyan and pink copies jump out to the sides for a moment
+   (a shadow every text inherits from the page; text with its own shadow keeps that). Only while the glitch lasts. */
+body.glitch { animation: textglitch 1.6s steps(1) infinite; }
+body.glitch :is(button, input, select) { text-shadow: inherit; }   /* the browser gives these no shadow of their own otherwise */
+@keyframes textglitch {
+  0%, 58%, 72%, 78%, 86%, 100% { text-shadow: none; }
+  60% { text-shadow: -2px 0 rgba(0, 229, 255, 0.85), 2px 0 rgba(255, 47, 208, 0.85); }
+  63% { text-shadow: 3px 1px rgba(0, 229, 255, 0.85), -3px -1px rgba(255, 47, 208, 0.85); }
+  66% { text-shadow: -4px 0 rgba(0, 229, 255, 0.7), 1px 0 rgba(255, 47, 208, 0.9); }
+  69% { text-shadow: 1px -1px rgba(0, 229, 255, 0.85), -2px 1px rgba(255, 47, 208, 0.85); }
+  80% { text-shadow: 2px 0 rgba(0, 229, 255, 0.85), -2px 0 rgba(255, 47, 208, 0.85), 0 0 6px rgba(160, 60, 255, 0.7); }
+  83% { text-shadow: -1px 1px rgba(0, 229, 255, 0.85), 3px 0 rgba(255, 47, 208, 0.7); }
+}
+@keyframes glitchslice {
+  0%, 100% { clip-path: none; transform: none; filter: none; }
+  12% { transform: translate(-4px, 1px); filter: drop-shadow(3px 0 0 rgba(255, 0, 80, 0.7)) drop-shadow(-3px 0 0 rgba(0, 220, 255, 0.7)); }
+  14% { transform: translate(3px, -2px) skewX(-3deg); }
+  16% { transform: none; filter: none; }
+  31% { clip-path: polygon(0 0, 100% 0, 100% 38%, 0 38%, 0 44%, 100% 44%, 100% 100%, 0 100%); transform: translateX(6px); }
+  33% { clip-path: none; transform: none; }
+  47% { transform: translate(2px, 0); filter: hue-rotate(90deg) drop-shadow(-4px 0 0 rgba(0, 255, 200, 0.6)); }
+  49% { transform: none; filter: none; }
+  62% { clip-path: polygon(0 0, 100% 0, 100% 70%, 0 70%, 0 76%, 100% 76%, 100% 100%, 0 100%); transform: translateX(-8px); }
+  64% { clip-path: none; transform: none; }
+  73% { transform: translate(-6px, 2px) skewX(6deg); filter: invert(0.15) drop-shadow(5px 0 0 rgba(255, 0, 120, 0.6)); }
+  75% { transform: translate(5px, -1px); }
+  77% { transform: none; filter: none; }
+  88% { transform: translate(3px, 2px) skewX(-4deg); }
+  90% { transform: none; }
+}
+@keyframes glitchflash {
+  0%, 100% { opacity: 0.6; background-position: 0 0; }
+  30% { opacity: 1; background-position: 0 3px; }
+  32% { opacity: 0.6; }
+  64% { opacity: 0.9; background-color: rgba(0, 255, 220, 0.08); }
+  66% { opacity: 0.6; background-color: transparent; }
+}
+@media (prefers-reduced-motion: reduce) { body.glitch, body.glitch .game, body.glitch::after { animation: none; } }
+/* Customize button: under Achievements (under Settings), only once you have something to customize. It opens a window like the Changelog. */
+#themeBtn { position: fixed; top: 96px; right: 12px; z-index: 5; margin: 0; max-width: none; width: 34px; height: 34px; padding: 0;
+            display: flex; align-items: center; justify-content: center; font-size: 18px; line-height: 1; border: none; border-radius: 8px; cursor: pointer; }
+#themeBtn:hover { background: rgba(var(--wb), 0.8); }
+#themeBtn img { width: 24px; height: 24px; object-fit: contain; }
+#themes { position: fixed; inset: 0; z-index: 6; background: rgba(0, 0, 0, 0.4); display: flex; align-items: flex-start; justify-content: center; }
+#themes[hidden] { display: none; }
+#themes .panel { margin-top: 48px; max-height: calc(100vh - 96px); overflow-y: auto; min-width: 280px; scrollbar-width: none; }
+#themes .panel::-webkit-scrollbar { display: none; }
+.themehelp { margin: 0 0 10px; font-size: 14px; max-width: 360px; margin-inline: auto; }
+.themetabs { display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; margin: 0 0 10px; }
+.themetabs button { font-family: inherit; font-size: 14px; padding: 5px 12px; border-radius: 8px; border: 1px solid rgba(0, 0, 0, 0.25);
+                    background: rgba(var(--wb), 0.55); cursor: pointer; }
+.themetabs button:hover { background: rgba(var(--wb), 0.85); }
+.themetabs button.on { font-weight: bold; outline: 2px solid var(--ol); background: rgba(var(--wb), 0.9); }
+/* "NEW" tags (fx.js newTag): the Shop button, shop items, the Customize tabs and cards */
+#shopBtn, .shopitem, .themetabs button, .themecard { position: relative; }
+.shopitem .newtag, .themecard .newtag { top: -5px; left: -5px; font-size: 9px; line-height: 13px; padding: 0 4px; }
+/* Win Effect: a bought bundle opens and closes like a Changelog box, its colours inside */
+.fxbundle > summary { list-style: none; }
+.fxbundle > summary::-webkit-details-marker { display: none; }
+.fxbundle > summary::after { content: '▸'; margin-left: auto; padding: 0 10px; font-size: 18px; opacity: 0.6; }
+.fxbundle[open] > summary::after { content: '▾'; }
+.fxbundle .themename small { display: block; font-weight: normal; font-size: 12px; opacity: 0.75; }
+.fxbundlelist { display: flex; flex-direction: column; gap: 6px; margin: 6px 0 2px 18px; }
+.fxbundlelist .themecard { font-size: 14px; }
+#themeList { display: flex; flex-direction: column; gap: 8px; width: min(360px, calc(100vw - 96px)); margin: 0 auto 8px; }
+.themecard { display: flex; align-items: center; gap: 12px; padding: 6px; border-radius: 8px; cursor: pointer; font-family: inherit;
+             font-size: 15px; text-align: left; border: 1px solid rgba(0, 0, 0, 0.2); background: rgba(var(--wb), 0.5); }
+.themecard:hover { background: rgba(var(--wb), 0.8); }
+.themecard.on { font-weight: bold; outline: 2px solid var(--ol); background: rgba(var(--wb), 0.85); }
+.themepic { flex: none; width: 112px; height: 63px; border-radius: 5px; background: center / cover no-repeat; }
+.themepic.default { background-image: url("images/background.webp"); }
+/* Mesos (fx.js): the count in the game box's top-right corner, and its window (like the Changelog). */
+#mesoCorner { position: absolute; top: 14px; right: 14px; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+#mesoBtn { position: relative; display: flex; align-items: center; gap: 6px; padding: 5px 10px 5px 7px;
+           border-radius: 10px; border: 1px solid rgba(160, 110, 0, 0.45); background: rgba(255, 244, 200, 0.75); cursor: pointer;
+           font-family: inherit; font-size: 15px; font-weight: 900; color: #ffd23f; -webkit-text-stroke: 1px #6b3f00; paint-order: stroke fill;
+           text-shadow: 0 1px 0 #6b3f00; letter-spacing: 0.5px; }
+#mesoBtn:hover { background: rgba(255, 238, 170, 0.95); }
+#mesoBtn img { width: 22px; height: 22px; image-rendering: pixelated; }
+#mesoBtn.bump { animation: mesobump 0.5s ease; }
+@keyframes mesobump { 40% { transform: scale(1.18); } }
+.mesoplus { position: absolute; right: 6px; top: 100%; font-size: 14px; pointer-events: none; animation: mesoplus 2.2s ease-out forwards; }
+@keyframes mesoplus { 0% { opacity: 0; transform: translateY(-6px); } 15% { opacity: 1; } 100% { opacity: 0; transform: translateY(14px); } }
+/* Windows opened from fx.js (Mesos, Shop): like the Changelog. */
+.popup { position: fixed; inset: 0; z-index: 6; background: rgba(0, 0, 0, 0.4); display: flex; align-items: flex-start; justify-content: center; }
+.popup[hidden] { display: none; }
+.popup .panel { margin-top: 48px; max-height: calc(100vh - 96px); overflow-y: auto; min-width: 280px; scrollbar-width: none; }
+.popup .panel::-webkit-scrollbar { display: none; }
+/* Shop: "Are you sure you want to purchase?" (fx.js askBuy), over the shop window */
+.popup.buyask { z-index: 7; align-items: center; }
+.buyask .panel { margin-top: 0; display: flex; flex-direction: column; align-items: center; gap: 8px; max-width: 340px; }
+.buyask h2 { font-size: 20px; margin: 0 0 4px; }
+.buyask .themepic { width: 224px; height: 126px; border: 1px solid rgba(0, 0, 0, 0.2); }
+.buyask .buyname { font-size: 17px; }
+.buyask .price { display: flex; align-items: center; gap: 5px; font-weight: 700; font-size: 17px; color: #8a6000; }
+.buyask .price img { width: 20px; height: 20px; image-rendering: pixelated; }
+.buybtns { display: flex; gap: 12px; margin: 6px 0 2px; }
+.buybtns button { font-family: inherit; font-size: 16px; font-weight: 700; min-width: 96px; padding: 7px 18px; border-radius: 8px;
+                  cursor: pointer; color: #fff; border: 1px solid rgba(0, 0, 0, 0.25); transition: transform 0.15s ease, filter 0.15s ease; }
+.buybtns .yes { background: #2fa84f; }
+.buybtns .no { background: #d9443b; }
+.buybtns .plain { background: #f2f2f2; color: #222; }
+/* Shop: click an item's picture to see it big (fx.js zoomItem) */
+.shopitem .zoomable { cursor: zoom-in; transition: transform 0.15s ease; }
+.shopitem .zoomable:hover { transform: scale(1.04); }
+.zoomview { position: fixed; inset: 0; z-index: 8; background: rgba(0, 0, 0, 0.75); display: flex; flex-direction: column;
+            align-items: center; justify-content: center; gap: 10px; cursor: zoom-out; animation: zoomin 0.18s ease; }
+.zoomview img { max-width: 92vw; max-height: 80vh; border-radius: 10px; box-shadow: 0 6px 30px rgba(0, 0, 0, 0.5); }
+.zoomview b { color: #fff; font-size: 20px; text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6); }
+@keyframes zoomin { from { opacity: 0; transform: scale(0.94); } to { opacity: 1; transform: none; } }
+.buybtns button:hover { transform: translateY(-2px) scale(1.05); filter: brightness(1.08); }
+.popupbody { width: min(440px, calc(100vw - 96px)); text-align: left; }
+.popupbody h3 { margin: 14px 0 4px; }
+.popupbody h3 small { font-weight: normal; opacity: 0.7; }
+#shopBtn { font-family: inherit; font-size: 13px; font-weight: 600; padding: 3px 10px; border-radius: 10px; cursor: pointer;
+           border: 1px solid rgba(0, 0, 0, 0.2); background: rgba(var(--wb), 0.7); }
+#shopBtn:hover { background: rgba(var(--wb), 0.95); }
+.shopempty { text-align: center; opacity: 0.75; margin: 18px 0; }
+.pager { display: flex; justify-content: center; align-items: center; gap: 4px; margin: 8px 0 0; }
+.pager button { min-width: 30px; height: 30px; padding: 0 6px; font-family: inherit; font-size: 14px; border-radius: 6px; cursor: pointer;
+                border: 1px solid rgba(0, 0, 0, 0.2); background: rgba(var(--wb), 0.6); }
+.pager button.on { font-weight: 700; outline: 2px solid var(--ol); background: rgba(var(--wb), 0.95); }
+.pager button:disabled { opacity: 0.35; cursor: default; }
+.pager .gap { padding: 0 2px; opacity: 0.6; }
+.mesototal { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 0 0 8px; font-size: 30px; font-weight: 900; color: #ffd23f;
+              -webkit-text-stroke: 1.5px #6b3f00; paint-order: stroke fill; text-shadow: 0 2px 0 #6b3f00; letter-spacing: 0.5px; }
+.mesototal img { width: 32px; height: 32px; image-rendering: pixelated; }
+.mesoevent { padding: 6px 10px; border-radius: 8px; background: rgba(255, 220, 120, 0.6); border: 1px solid rgba(180, 120, 0, 0.4); }
+.mesoshop { font-size: 14px; }
+.mesorecent { margin: 0; padding: 0; list-style: none; font-size: 14px; }
+.mesorecent li { display: flex; justify-content: space-between; gap: 12px; padding: 2px 0; border-bottom: 1px solid rgba(0, 0, 0, 0.08); }
+.mesorecent b { color: #8a6000; white-space: nowrap; }
+.mesotable { border-collapse: collapse; font-size: 13px; margin: 0; }
+.mesotable th, .mesotable td { padding: 2px 7px; border: 1px solid rgba(0, 0, 0, 0.15); text-align: center; }
+.mesotable th { text-align: left; background: rgba(var(--wb), 0.5); }
+.mesobonus { margin: 4px 0 0; font-size: 13px; }
+@media (max-width: 700px) {
+  #mesoCorner { top: 8px; right: 8px; flex-direction: row-reverse; align-items: center; }
+  #mesoBtn { padding: 3px 8px 3px 5px; font-size: 13px; }
+  #shopBtn { font-size: 12px; padding: 3px 8px; }
+  .shopitem { gap: 8px; }
+  .shopitem .themepic { width: 84px; height: 47px; }
+  .shopinfo b { font-size: 14px; }
+  #mesoBtn img { width: 18px; height: 18px; }
+  .mesotable { font-size: 12px; }
+  .mesotable th, .mesotable td { padding: 2px 4px; }
+}
+/* "+40" with a spinning gold meso under the result (fx.js); fades in after the last row has flipped. */
+#mesoGain { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 4px 0 8px; font-size: 26px; font-weight: 900;
+            color: #ffd23f; -webkit-text-stroke: 1.5px #6b3f00; paint-order: stroke fill; text-shadow: 0 2px 0 #6b3f00; letter-spacing: 0.5px; cursor: pointer; animation: mesogainin 0.5s ease 0.6s both; }
+#mesoGain img { width: 30px; height: 30px; image-rendering: pixelated; animation: mesospin 1.4s linear infinite; }
+@keyframes mesospin { from { transform: perspective(200px) rotateY(0deg); } to { transform: perspective(200px) rotateY(360deg); } }
+@keyframes mesogainin { from { opacity: 0; transform: translateY(-4px); } }
+@media (prefers-reduced-motion: reduce) { #mesoGain img { animation: none; } }
+/* Meso event tag on a game tab (fx.js): "3x" + a gold meso in the top-right corner. */
+.mesotag { position: absolute; top: -8px; right: -8px; display: flex; align-items: center; gap: 1px; padding: 0 3px 0 4px;
+           border-radius: 8px; background: #ffd34d; border: 1px solid #b07800; color: #5a3d00; font-size: 10px; font-weight: bold;
+           line-height: 14px; pointer-events: none; }
+.mesotag img { width: 12px; height: 12px; image-rendering: pixelated; }
+/* Info strip (fx.js showPuzzle / showTimer): PUZZLE | NEXT ... IN | STREAK in one rounded bar. */
+.infostrip { display: grid; grid-template-columns: 1fr 1.4fr 1fr; width: min(460px, 100%); margin: 6px auto 10px; border-radius: 10px;
+             background: rgba(var(--wb), 0.65); border: 1px solid rgba(0, 0, 0, 0.1); }
+.infostrip[hidden] { display: none; }
+.infostrip > div { padding: 6px 4px; min-width: 0; }
+.infostrip > div + div { border-left: 1px solid rgba(0, 0, 0, 0.1); }
+.infostrip .k { display: block; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #3d4d70; }
+.infostrip .v { display: block; font-size: 18px; font-weight: 700; color: #1a2440; font-variant-numeric: tabular-nums; }
+#status { font-size: 18px; font-weight: 700; }
+/* Moving backgrounds (fx.js): a looping video filling the screen, in a theme layer or BGM Clip's track Easter egg. */
+.themebg video, .eggscene video, #limbobg video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.themebg video.off { opacity: 0; }   /* the other side of a pair: keeps playing, unseen */
+.themebg .themescreen, #limbobg .themescreen { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: fill; opacity: 0; }   /* stretched: its dark edges stay at the screen's edges */
+.themebg .themescreen.on, #limbobg .themescreen.on { opacity: 1; transition: opacity 0.25s linear 2s; }   /* comes in 2 s after the side does, like the game's (no fade going out: the swap's flash covers it) */
+.eggscene { position: fixed; inset: 0; z-index: -1; pointer-events: none; opacity: 0; transition: opacity 3s ease;
+            background: #1b1430 center / cover no-repeat; }
+.eggscene.on { opacity: 1; }
+/* Shop (in the Mesos window). */
+.shoplist { display: flex; flex-direction: column; gap: 8px; }
+.shopitem { display: flex; align-items: center; gap: 12px; padding: 6px; border-radius: 8px; border: 1px solid rgba(0, 0, 0, 0.2);
+            background: rgba(var(--wb), 0.6); }
+.shopinfo { flex: 1; display: flex; flex-direction: column; gap: 2px; text-align: left; }
+.shopinfo small { opacity: 0.7; }
+.shopinfo .price { display: flex; align-items: center; gap: 4px; font-weight: 700; color: #8a6000; }
+.shopinfo .price img { width: 16px; height: 16px; image-rendering: pixelated; }
+.shopitem button { font-family: inherit; font-size: 15px; font-weight: 700; padding: 6px 16px; border-radius: 8px; cursor: pointer;
+                   border: 1px solid #b07800; background: #ffd34d; color: #5a3d00; }
+.shopitem .owned { font-weight: 700; color: #2a7a2a; padding: 0 8px; }
+.shopitem button.poor { background: #d8d8d8; border-color: #aaa; color: #888; }
+.shopinfo .price > * { transition: opacity 0.15s ease; }
+.shopinfo .price.swap > * { opacity: 0; }
+.shopinfo .price { transition: color 0.3s ease; }
+.shopinfo .price.short { color: #d22; }
+/* Buy pops up on hover (only when you can afford it), with a soft gold glow. */
+.shopitem button:not(.poor) { transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease; }
+.shopitem button:not(.poor):hover { transform: translateY(-2px) scale(1.08); background: #ffdd66;
+  box-shadow: 0 4px 10px rgba(176, 120, 0, 0.35), 0 0 0 3px rgba(255, 211, 77, 0.45); }
+.shopitem button:not(.poor):active { transform: translateY(0) scale(0.97); box-shadow: 0 1px 3px rgba(176, 120, 0, 0.35); }
+.shopitem button.poor { cursor: not-allowed; }
+#bonusHelp, #bonusResult, #titleResult { white-space: pre-line; }   /* bgm.js breaks these into two lines */
+#status { white-space: pre-line; }   /* BGM Clip puts its last-guess hint on a second line */
+#hintTable { margin: 4px auto 10px; } #hintTable td, #hintTable th { min-width: 56px; font-size: 15px; } #hintWrap[hidden] { display: none; }
+@media (max-width: 700px) { #hintTable td, #hintTable th { min-width: 0; font-size: 12px; padding: 4px 4px; } }
+/* Gold notice under the Mode buttons (fx.js), and the "+0" meso line when another mode already paid more. */
+.mesonote { display: inline-flex; align-items: center; gap: 6px; margin: 6px auto 4px; padding: 4px 12px; border-radius: 10px; font-size: 13px;
+            background: rgba(255, 236, 160, 0.75); border: 1px solid rgba(176, 120, 0, 0.45); color: #5a3d00; }
+.mesonote img { width: 16px; height: 16px; image-rendering: pixelated; }
+#mesoGain.none { font-size: 14px; font-weight: 600; color: #6b5a30; -webkit-text-stroke: 0; text-shadow: none; letter-spacing: 0; }
+#mesoGain.none img { width: 20px; height: 20px; animation: none; opacity: 0.6; }
+/* BGM Clip Normal: Easter eggs are Extreme only (bgm.js shows this in Normal). */
+.eggnote { display: block; width: fit-content; max-width: 100%; box-sizing: border-box; margin: 4px auto 6px; padding: 4px 12px; border-radius: 10px;
+           font-size: 13px; background: rgba(220, 200, 255, 0.7); border: 1px solid rgba(110, 70, 170, 0.45); color: #3b2466; }
+.eggnote[hidden] { display: none; }
+.mesonote { display: flex; width: fit-content; max-width: 100%; box-sizing: border-box; }
+/* Settings (fx.js): the ⚙️ in the top-right corner and its window. */
+#settingsBtn { position: fixed; top: 12px; right: 12px; z-index: 5; margin: 0; width: 34px; height: 34px; padding: 0; border: none; border-radius: 10px;
+               font-size: 18px; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; max-width: none; }
+#settingsBtn:hover { background: rgba(var(--wb), 0.8); }
+.setrow { display: flex; align-items: center; gap: 10px; margin: 10px 0; flex-wrap: wrap; }
+.setlabel { font-weight: 700; min-width: 160px; }
+#setMute, #setBgm, .seg button { font-family: inherit; font-size: 14px; padding: 4px 10px; border-radius: 8px; cursor: pointer;
+                        border: 1px solid rgba(0, 0, 0, 0.2); background: rgba(var(--wb), 0.6); }
+#setVol, #setBgmVol { width: 120px; accent-color: #e0a000; }
+#setVol:disabled, #setBgmVol:disabled { filter: grayscale(1) opacity(0.5); }
+#setVolPct, #setBgmPct { min-width: 3em; font-variant-numeric: tabular-nums; }
+.seg { display: inline-flex; gap: 4px; }
+.seg button.on { font-weight: 700; outline: 2px solid var(--ol); background: rgba(var(--wb), 0.95); }
+.setnote { font-size: 13px; opacity: 0.75; }
+/* Weekend 2x falling leaves, behind the game (fx.js). */
+#leaves { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+#leaves img { position: absolute; top: 0; opacity: 0; }
+#mesoBtn .mesotag { top: -9px; right: -9px; }
+#mesoBtn .weekendtag { white-space: nowrap; right: -12px; }
+@media (max-width: 700px) { #mesoBtn .weekendtag { right: -3px; top: -12px; } }
+/* (i) buttons in Settings: hover (or tap) shows what the setting does. */
+.infotip { width: 22px; height: 22px; padding: 0; margin-left: 4px; border-radius: 4px; border: 1px solid rgba(0, 0, 0, 0.25);   /* like the [?] button */
+           background: rgba(var(--wb), 0.7); font-family: inherit; font-size: 13px; font-weight: bold; line-height: 1; cursor: pointer; vertical-align: middle; }
+.infotip:hover { background: rgba(var(--wb), 0.95); }
+.infotip.open { background: #222; color: #fff; }
+.setrow { position: relative; }
+.tiptext { position: absolute; left: 0; width: max-content; max-width: 100%; box-sizing: border-box; top: calc(100% + 2px); z-index: 5; margin: 0; padding: 6px 10px; border-radius: 6px;
+           background: #222; color: #fff; font-size: 12px; line-height: 1.35; opacity: 0; pointer-events: none; transition: opacity 0.2s ease; }
+.tiptext.show { opacity: 1; }
+/* BGM Clip: "Bonus below!" call-out under the result, and a soft gold glow on the bonus box until it's answered. */
+#bonusCall { margin: 2px 0 8px; }
+#bonusCall button { font-family: inherit; font-size: 14px; padding: 6px 14px; border-radius: 10px; cursor: pointer; color: #5a3d00;
+                    background: rgba(255, 228, 140, 0.9); border: 1px solid rgba(176, 120, 0, 0.55); animation: bonuscall 1.6s ease-in-out infinite; position: relative; }
+#bonusCall[hidden] { display: none; }
+/* (the glows here are drawn once and only fade in and out: animating the shadow itself redrew the box every frame) */
+#bonusCall button::after { content: ''; position: absolute; inset: -1px; border-radius: inherit; pointer-events: none;
+  box-shadow: 0 4px 12px rgba(176, 120, 0, 0.35); opacity: 0; animation: fadepulse 1.6s ease-in-out infinite; }
+@keyframes bonuscall { 50% { transform: translateY(-2px); } }
+@keyframes fadepulse { 50% { opacity: 1; } }
+#bonus.waiting { position: relative; box-shadow: 0 0 0 3px rgba(255, 200, 60, 0.5); }
+#bonus.waiting::after { content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  box-shadow: 0 0 0 3px rgba(255, 200, 60, 0.85), 0 0 18px rgba(255, 190, 40, 0.6); animation: bonusglow 1.6s ease-in-out infinite; }
+@keyframes bonusglow { 50% { opacity: 0.25; } }
+#bonus.waiting.limbo { box-shadow: 0 0 0 3px rgba(160, 80, 255, 0.55); }   /* Limbo's mashup: Limbo's colours */
+#bonus.waiting.limbo::after { box-shadow: 0 0 0 3px rgba(190, 90, 255, 0.95), 0 0 18px rgba(214, 36, 159, 0.7), 0 0 30px rgba(41, 211, 255, 0.3); }
+@media (prefers-reduced-motion: reduce) { #bonusCall button, #bonusCall button::after, #bonus.waiting::after { animation: none; } }
+/* VIP player in Settings (secret passcode). */
+#vipCode { font-family: inherit; font-size: 14px; padding: 4px 8px; width: 120px; border: 1px solid #999; border-radius: 6px; }
+#vipGo, .vipctl button { font-family: inherit; font-size: 14px; padding: 4px 12px; border-radius: 8px; cursor: pointer; border: 1px solid rgba(0, 0, 0, 0.2); background: rgba(var(--wb), 0.7); }
+.vipfield { position: relative; display: inline-block; }
+#vipMsg { position: absolute; left: 2px; top: calc(100% + 2px); font-size: 12px; color: #c22; white-space: nowrap; opacity: 0; transition: opacity 0.4s ease; pointer-events: none; }
+#vipMsg.show { opacity: 1; transition: opacity 0.15s ease; }
+.vipon { font-weight: 700; color: #8a5a00; }
+#vipBox { margin: 4px 0 10px; padding: 10px 12px; border-radius: 10px; background: rgba(var(--wb), 0.5); border: 1px solid rgba(176, 120, 0, 0.35); }
+#vipBox[hidden] { display: none; }
+.vipctl { display: flex; gap: 8px; justify-content: center; }
+#vipNow { margin: 8px 0 4px; text-align: center; font-weight: 600; font-size: 14px; }
+#vipTrack { position: relative; padding-top: 30px; }
+#vipText { position: absolute; top: 0; font-size: 13px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+#vipArrow { position: absolute; top: 15px; font-size: 11px; line-height: 1; }
+#vipBar { height: 14px; border-radius: 4px; background: #d6d6d6; border: 1px solid #999; overflow: hidden; cursor: pointer; }
+#vipFill { height: 100%; width: 0; background: #5bbf5b; }
+.setrow:has(.vipfield) { margin-bottom: 24px; }   /* room for "Wrong passcode" under the box */
+/* 🌈 (BGM Clip: first guess + both bonuses right): a rainbow that spins clockwise around the game box's border (with a
+   soft glow outside it and a faint tint in the see-through panel), and around the Archive row's border. */
+.game.rainbow { background: linear-gradient(rgba(var(--wb), min(1, calc(var(--boxRA, .42) * var(--fxk, 1)))), rgba(var(--wb), min(1, calc(var(--boxRA, .42) * var(--fxk, 1))))),   /* static light pastel rainbow panel */
+  linear-gradient(90deg, rgba(255, 60, 60, var(--boxT, .38)), rgba(255, 160, 30, var(--boxT, .38)), rgba(255, 230, 40, var(--boxT, .38)), rgba(60, 210, 90, var(--boxT, .38)), rgba(50, 140, 255, var(--boxT, .38)), rgba(170, 80, 255, var(--boxT, .38))), #fff0; }
+/* the border: a 3 px spinning rainbow ring just around the box, and the glow: the same rainbow, blurred, only outside
+   the box (bgm.js adds both). The rainbow is drawn (and blurred) once and only turns: animating its angle redrew and
+   re-blurred it every frame, which kept the computer busy for as long as the page was open. */
+.rbring, .rbglow { display: none; position: absolute; pointer-events: none; overflow: hidden; container-type: size;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); }
+.game.rainbow > .rbring, .game.rainbow > .rbglow, .game.limborb > .rbring, .game.limborb > .rbglow { display: block; }
+.rbring { inset: -3px; padding: 3px; border-radius: 15px; }
+.rbglow { inset: -48px; z-index: -1; padding: 0; opacity: 0.95; animation: glow 0.8s ease-in-out infinite alternate;
+  /* fades out with distance from the box like the gold glow's shadow: four edge strips plus four rounded corners
+     (around the box's 12 px corners); the box itself is left out so the glow doesn't tint it */
+  --m: linear-gradient(to top, #000 0px, rgba(0, 0, 0, 0.95) 4px, rgba(0, 0, 0, 0.78) 8px, rgba(0, 0, 0, 0.5) 16px, rgba(0, 0, 0, 0.28) 24px, rgba(0, 0, 0, 0.12) 32px, rgba(0, 0, 0, 0.04) 40px, transparent 48px),
+    linear-gradient(to bottom, #000 0px, rgba(0, 0, 0, 0.95) 4px, rgba(0, 0, 0, 0.78) 8px, rgba(0, 0, 0, 0.5) 16px, rgba(0, 0, 0, 0.28) 24px, rgba(0, 0, 0, 0.12) 32px, rgba(0, 0, 0, 0.04) 40px, transparent 48px),
+    linear-gradient(to left, #000 0px, rgba(0, 0, 0, 0.95) 4px, rgba(0, 0, 0, 0.78) 8px, rgba(0, 0, 0, 0.5) 16px, rgba(0, 0, 0, 0.28) 24px, rgba(0, 0, 0, 0.12) 32px, rgba(0, 0, 0, 0.04) 40px, transparent 48px),
+    linear-gradient(to right, #000 0px, rgba(0, 0, 0, 0.95) 4px, rgba(0, 0, 0, 0.78) 8px, rgba(0, 0, 0, 0.5) 16px, rgba(0, 0, 0, 0.28) 24px, rgba(0, 0, 0, 0.12) 32px, rgba(0, 0, 0, 0.04) 40px, transparent 48px),
+    radial-gradient(circle at 100% 100%, transparent 11.5px, #000 12px, rgba(0, 0, 0, 0.95) 16px, rgba(0, 0, 0, 0.78) 20px, rgba(0, 0, 0, 0.5) 28px, rgba(0, 0, 0, 0.28) 36px, rgba(0, 0, 0, 0.12) 44px, rgba(0, 0, 0, 0.04) 52px, transparent 60px),
+    radial-gradient(circle at 0 100%, transparent 11.5px, #000 12px, rgba(0, 0, 0, 0.95) 16px, rgba(0, 0, 0, 0.78) 20px, rgba(0, 0, 0, 0.5) 28px, rgba(0, 0, 0, 0.28) 36px, rgba(0, 0, 0, 0.12) 44px, rgba(0, 0, 0, 0.04) 52px, transparent 60px),
+    radial-gradient(circle at 100% 0, transparent 11.5px, #000 12px, rgba(0, 0, 0, 0.95) 16px, rgba(0, 0, 0, 0.78) 20px, rgba(0, 0, 0, 0.5) 28px, rgba(0, 0, 0, 0.28) 36px, rgba(0, 0, 0, 0.12) 44px, rgba(0, 0, 0, 0.04) 52px, transparent 60px),
+    radial-gradient(circle at 0 0, transparent 11.5px, #000 12px, rgba(0, 0, 0, 0.95) 16px, rgba(0, 0, 0, 0.78) 20px, rgba(0, 0, 0, 0.5) 28px, rgba(0, 0, 0, 0.28) 36px, rgba(0, 0, 0, 0.12) 44px, rgba(0, 0, 0, 0.04) 52px, transparent 60px);
+  -webkit-mask: none; -webkit-mask-image: var(--m); -webkit-mask-repeat: no-repeat; -webkit-mask-size: calc(100% - 120px) 48px, calc(100% - 120px) 48px, 48px calc(100% - 120px), 48px calc(100% - 120px), 60px 60px, 60px 60px, 60px 60px, 60px 60px; -webkit-mask-position: 60px 0, 60px 100%, 0 60px, 100% 60px, 0 0, 100% 0, 0 100%, 100% 100%;
+  mask: none; mask-image: var(--m); mask-repeat: no-repeat; mask-size: calc(100% - 120px) 48px, calc(100% - 120px) 48px, 48px calc(100% - 120px), 48px calc(100% - 120px), 60px 60px, 60px 60px, 60px 60px, 60px 60px; mask-position: 60px 0, 60px 100%, 0 60px, 100% 60px, 0 0, 100% 0, 0 100%, 100% 100%; mask-composite: add; }
+.rbring i, .rbglow i, #archiveList button.rainbow::before, #archiveList button.limborb::before { position: absolute; left: 50%; top: 50%; width: 150cqmax; height: 150cqmax;
+  background: conic-gradient(#ff3c3c, #ffa01e, #ffe628, #3cd25a, #328cff, #aa50ff, #ff3c3c); animation: rbturn 4s linear infinite; }
+@keyframes rbturn { from { transform: translate(-50%, -50%) rotate(0); } to { transform: translate(-50%, -50%) rotate(360deg); } }
+.game.glow.rainbow, .game.glow.limborb { animation: none; box-shadow: none; }   /* the rainbow glow replaces the gold one */
+.game.shake.glow.rainbow, .game.shake.glow.limborb { animation: shake 0.5s cubic-bezier(.36, .07, .19, .97) both; }
+body.glitch .game.glow.rainbow, body.glitch .game.glow.limborb { animation: glitchslice 2.3s steps(1) infinite; }
+#archiveList button.rainbow, #archiveList button.limborb { position: relative; isolation: isolate; overflow: hidden; border: 0; padding: 8px; background: none; }   /* the 2 px ring is the rainbow showing around ::after */
+#archiveList button.rainbow::before, #archiveList button.limborb::before { content: ''; width: 150%; height: auto; aspect-ratio: 1; z-index: -1; }
+#archiveList button.rainbow::after, #archiveList button.limborb::after { content: ''; position: absolute; inset: 2px; border-radius: 4px; z-index: -1; background: rgba(var(--wb), 0.75); }
+#archiveList button.rainbow:hover::after, #archiveList button.limborb:hover::after { background: rgba(var(--wb), 0.85); }
+@media (prefers-reduced-motion: reduce) { .game.rainbow, .game.glow.rainbow, .game.glow.limborb, .rbglow { animation: none; }
+  .rbring i, .rbglow i, #archiveList button.rainbow::before, #archiveList button.limborb::before { animation: none; transform: translate(-50%, -50%); } }
+/* Limbo's border (BGM Clip, Limbo's mashup day: first guess + the mashup right): the 🌈 ring and glow in Limbo's
+   colours, turning slower, a Limbo tint in the panel; the Archive row the same. */
+.game.limborb { background: linear-gradient(rgba(255, 255, 255, min(1, calc(var(--boxRA, .42) * var(--fxk, 1)))), rgba(255, 255, 255, min(1, calc(var(--boxRA, .42) * var(--fxk, 1))))),
+  linear-gradient(120deg, rgba(74, 26, 140, var(--boxT, .38)), rgba(123, 47, 247, var(--boxT, .38)), rgba(214, 36, 159, var(--boxT, .38)), rgba(41, 211, 255, var(--boxT, .38))), #fff0; }
+.game.limborb .rbring i, .game.limborb .rbglow i, #archiveList button.limborb::before {
+  background: conic-gradient(#7b2ff7, #d6249f, #ff6ad5, #4a1a8c, #29d3ff, #7b2ff7); animation-duration: 7s; }
+#archiveList button.limborb::after { background: linear-gradient(rgba(255, 255, 255, 0.38), rgba(255, 255, 255, 0.38)),
+  linear-gradient(120deg, rgba(74, 26, 140, 0.92), rgba(123, 47, 247, 0.85) 40%, rgba(214, 36, 159, 0.8) 75%, rgba(41, 211, 255, 0.7)); background-color: #fff; }
+#archiveList button.limborb, #archiveList button.limborb:hover { color: #fff; font-weight: 700; text-shadow: 0 0 4px rgba(214, 36, 159, 0.95), 0 0 9px rgba(123, 47, 247, 0.8); }
+#archiveList button.limborb:hover::after { background: linear-gradient(rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.3)),
+  linear-gradient(120deg, rgba(74, 26, 140, 0.92), rgba(123, 47, 247, 0.85) 40%, rgba(214, 36, 159, 0.8) 75%, rgba(41, 211, 255, 0.7)); }
+#titleAsk { display: flex; gap: 6px; justify-content: center; margin: 6px 0; }
+#titleField { position: relative; flex: 1; max-width: 320px; }
+#titlePick { width: 100%; box-sizing: border-box; font-family: inherit; font-size: 15px; padding: 6px 8px; border: 1px solid #999; border-radius: 4px; }
+#titleList { position: absolute; top: 100%; left: 0; right: 0; max-height: 240px; overflow-y: auto; z-index: 6; background: #fff; border: 1px solid #999; text-align: left; }
+#titleList[hidden] { display: none; }
+#titleList .item { padding: 5px 8px; cursor: pointer; font-size: 14px; }
+#titleList .item.active { background: #ddd; }
+#titleList .none { padding: 5px 8px; font-size: 14px; color: #888; }
+#titleAsk[hidden] { display: none; } #titleGo { font-family: inherit; } #titleHead { margin: 14px 0 4px; }
+/* Settings > Transparent box: the main game box has no background (borders and glows stay). */
+/* Settings > Box opacity (fx.js sets the variables). */
+.game { background: rgba(var(--wb), min(1, calc(var(--boxA, .55) * var(--fxk, 1)))); --fxk: 1.4; }
+/* No frosted glass (backdrop blur) anywhere: the browser re-blurred everything behind every frosted box on every frame
+   anything moved (mesos, leaves, a glowing border, scrolling), which kept the GPU very busy. The game box is a bit
+   whiter instead, so the background behind it still doesn't get in the way. */
+#setBox { width: 120px; accent-color: #e0a000; }
+#setBoxPct { min-width: 3em; font-variant-numeric: tabular-nums; }
+.vipctl { flex-wrap: wrap; } .vipctl button.on { font-weight: 700; outline: 2px solid var(--ol); background: rgba(var(--wb), 0.95); }
+#titleGo { font-size: 15px; padding: 4px 10px; }
+#changelogBody ul ul { list-style-type: circle; }   /* every sub-bullet level is a hollow circle */
+#changelogBody .clnote { margin: 4px 0 0; font-weight: 600; }
+#changelogBody .clnote.clsect { margin: 10px 0 2px; font-size: 1.1em; font-weight: 700; }   /* "### ✨ New" */
+#changelogBody li b { font-weight: 700; }
+/* "### ✨ New": two tiny stars twinkle around the word and it glows softly now and then (its colour stays the same) */
+.sparkle { position: relative; animation: sparkglow 3.2s ease-in-out infinite; }
+.sparkle::before, .sparkle::after { content: '✦'; position: absolute; pointer-events: none; color: #f2b600; opacity: 0;
+                                    font-size: 11px; line-height: 1; animation: twinkle 2.4s ease-in-out infinite; }
+.sparkle::before { top: -5px; right: -11px; }
+.sparkle::after { bottom: -2px; right: 40%; font-size: 8px; animation-delay: 1.2s; }
+@keyframes twinkle { 0%, 60%, 100% { opacity: 0; transform: scale(0.4) rotate(0deg); } 75% { opacity: 0.9; transform: scale(1) rotate(45deg); } }
+@keyframes sparkglow { 0%, 100% { text-shadow: none; } 50% { text-shadow: 0 0 8px rgba(255, 200, 60, 0.6); } }
+@media (prefers-reduced-motion: reduce) { .sparkle, .sparkle::before, .sparkle::after { animation: none; } }
+/* Changelog boxes (fx.js buildChangelog): a group per major version (alpha v4, v3, ...) holding a box per version, both
+   styled like the Archive's day buttons and opened / closed by clicking their title. */
+#changelogBody .clgroup { margin: 8px 0; padding: 4px 8px; border: 1px solid rgba(0, 0, 0, 0.25); border-radius: 8px;
+                          background: rgba(var(--wb), 0.2); }
+#changelogBody .clver { margin: 6px 0; padding: 4px 8px; border: 1px solid rgba(0, 0, 0, 0.15); border-radius: 6px;
+                        background: rgba(var(--wb), 0.4); }
+#changelogBody summary { cursor: pointer; list-style: none; padding: 2px 0; }
+#changelogBody summary::-webkit-details-marker { display: none; }
+#changelogBody summary::before { content: '▸'; display: inline-block; width: 1em; opacity: 0.6; }
+#changelogBody details[open] > summary::before { content: '▾'; }
+#changelogBody .clgroup > summary { font-size: 1.25em; font-weight: 800; }
+#changelogBody .clver > summary { font-size: 1.05em; }
+#changelogBody .clver > summary:hover, #changelogBody .clgroup > summary:hover { opacity: 0.75; }
+#changelogBody .clver[open] > summary { margin-bottom: 2px; }
+#changelogBody .clver > ul { margin-bottom: 4px; }
+/* Halloween effects (fx.js halloweenFx): behind the game box, like the weekend leaves. */
+#hwfx { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+#hwfx img { position: absolute; image-rendering: pixelated; }
+#hwfx .flyer { left: 0; }
+#hwfx .ghost { opacity: 0; }
+#hwfx .fog { position: absolute; left: -50%; width: 200%; bottom: -6vh; height: 34vh;
+  background: radial-gradient(ellipse 18% 55% at 12% 70%, rgba(210, 220, 240, .28), transparent 70%),
+              radial-gradient(ellipse 22% 60% at 38% 75%, rgba(210, 220, 240, .22), transparent 70%),
+              radial-gradient(ellipse 20% 55% at 63% 72%, rgba(210, 220, 240, .26), transparent 70%),
+              radial-gradient(ellipse 24% 60% at 88% 76%, rgba(210, 220, 240, .22), transparent 70%);
+  filter: blur(6px); animation: fogdrift 50s linear infinite; }
+#hwfx .fog.f2 { bottom: -10vh; opacity: .8; animation-duration: 80s; animation-direction: reverse; }
+@keyframes fogdrift { to { transform: translateX(25%); } }
+/* A BGM Clip Easter egg background (glitch maps, Lucid's sky) takes over: no Halloween effects while it's up. */
+body[class*="egg-"] #hwfx, body:has(.eggscene) #hwfx, body:has(#limbobg) #hwfx { display: none; }
+/* Limbo's wrong guess effect: the bar / dragon clip over a guess row; while the row is eaten its text stays on top */
+.limboguess { position: absolute; z-index: 3; pointer-events: none; animation: gfxin 0.2s ease both; }   /* the bar fades in over 0.2 s */
+.limboguess.out { opacity: 0; transition: opacity 0.2s ease; }   /* right guess: the bar fades out over 0.2 s */
+.limboguess.still { animation: none; }   /* a dragon from before (page load) is just there */
+.limboguess > * { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: fill; }
+.limboguess > .dragon { left: -7%; width: 114%; }   /* head further right, tail further left (past the row's ends) */
+@keyframes gfxin { from { opacity: 0; } }
+.limboeaten > td, #rows .gbar.limboeaten { position: relative; z-index: 4; background: transparent !important; border-color: transparent;
+  color: #fff !important; text-shadow: 0 0 3px #000, 0 0 6px #000, 0 1px 2px #000;
+  -webkit-text-stroke: 3px #000; paint-order: stroke fill; font-weight: 700; }   /* a black outline (outside the letters and arrows) so they read over the dragon */
+/* the tile colour lives on in the text, so the clues still show under the dragon */
+.limboeaten > .green, #rows .gbar.limboeaten.green { color: #8f8 !important; }
+.limboeaten > .yellow, #rows .gbar.limboeaten.yellow { color: #ffe066 !important; }
+.limboeaten > .red, #rows .gbar.limboeaten.red { color: #ff8a8a !important; }
+/* Limbo's transition between its light and dark side (Limbo mode): pool along the bottom, three bursts, then the dome */
+.limbotrans { position: fixed; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; }   /* the shark: under the alert border and the boxes */
+.limbowhite { position: fixed; inset: 0; z-index: -1; pointer-events: none; background: #fff; transition: opacity 0.12s linear; }   /* over the background, under the page */
+.limbowhite.out { opacity: 0; }
+.limbotrans > * { position: absolute; height: auto; }
+.limbotrans { --plat: calc(50vh - 0.332 * max(100vh, 61.67vw)); }   /* the platform's top in the moving map (cover-fit 1920x1184, at 16.8% up) */
+/* Two big pools (1278x242: two 718-wide ones overlapping in the middle), lying on the platform; they spread, then loop */
+.limbotrans .pools { width: 160vw; left: -30vw; bottom: calc(var(--plat) - 8vh - 2.96vw); transition: opacity 0.3s ease; }
+.limbotrans .pools.out { opacity: 0; }
+/* The two sharks (1544x708: the left clip's shark facing left, the middle clip's other shark facing right; bases at x 555 / 957,
+   y 627) come out of the pools: small for a moment, then giant, heads past the top */
+.limbotrans .sharks { width: auto; height: 200vh; left: calc(50vw - 206.8vh); bottom: calc(var(--plat) - 42.9vh); }
+.limbotrans .end { width: 100vw; left: 0; bottom: -8.4vw; }
+/* A hidden shop item before it's found: a locked card with only its price */
+.shopitem .hiddenpic { display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #2b2b3a, #11111a);
+  color: rgba(255, 255, 255, 0.85); font-size: 30px; font-weight: 800; text-shadow: 0 0 8px rgba(180, 120, 255, 0.8); }
+.shopitem .locked { font-weight: 700; color: #777; padding: 0 8px; white-space: nowrap; }
+.shopitem.lockeditem b { color: #555; }
+/* The guess boxes are type="search" so browsers' password managers leave them alone; look like plain text boxes. */
+input[type="search"] { -webkit-appearance: none; appearance: none; }
+input[type="search"]::-webkit-search-cancel-button, input[type="search"]::-webkit-search-decoration { -webkit-appearance: none; display: none; }
+/* The VIP passcode: a text box shown as dots (not a password box, so browsers don't treat the page as a login form). */
+#vipCode { -webkit-text-security: disc; text-security: disc; }
+/* A wrong bonus answer eaten by Limbo's dragon: its text on top, light red */
+#bonusResult.limboeaten, #titleResult.limboeaten { position: relative; z-index: 4; color: #ff8a8a !important;
+  text-shadow: 0 0 3px #000, 0 0 6px #000, 0 1px 2px #000; -webkit-text-stroke: 3px #000; paint-order: stroke fill; }
+/* "Play the mashup first!": the Play button gives a little shake */
+#mashupPlay.nudge { animation: nudge 0.45s ease; }
+@keyframes nudge { 20%, 60% { transform: translateX(-5px); } 40%, 80% { transform: translateX(5px); } }
+/* A limited hidden item on the day you find it: 90% off (old price crossed out, a red tag with the time left) */
+.price.deal s { color: #888; font-weight: 600; margin-right: 2px; }
+.dealtag { display: inline-block; margin-top: 2px; padding: 1px 7px; border-radius: 6px; background: #e0302a; color: #fff;
+  font-size: 11px; font-weight: 800; letter-spacing: .3px; width: fit-content; }
+/* Limbo's Life Count / Timer (fx.js): the in-game Erosion HUD. Card only: in the info strip's middle box, with room around
+   it; Limbo mode: under the info strip. Its smoke fades out before the things around it. */
+.infostrip > div.limbohudcell { position: relative; padding: 14px 4px; }
+.infostrip:has(.limbohudcell) { margin: 26px auto 26px; }
+.infostrip:has(.limbohudcell) > div { display: flex; flex-direction: column; justify-content: center; }
+.limbohudcell > .k, .limbohudcell > .v { visibility: hidden; }
+#limbohud { position: absolute; left: 50%; width: 384px; height: 217px; z-index: 2; pointer-events: none; }
+.limbohudcell #limbohud { top: 50%; margin: -141px 0 0 -196px;
+  -webkit-mask-image: linear-gradient(transparent 33%, #000 45%); mask-image: linear-gradient(transparent 33%, #000 45%); }
+#limbohudbox { position: relative; height: 64px; margin: 4px auto 8px; pointer-events: none; }
+#limbohudbox #limbohud { top: 0; margin: -107px 0 0 -196px;
+  -webkit-mask-image: linear-gradient(transparent 41%, #000 50%, #000 76%, transparent 86%);
+  mask-image: linear-gradient(transparent 41%, #000 50%, #000 76%, transparent 86%); }
+#status.hudhide { display: none; }
+.dealtag.limbodeal { display: inline-flex; align-items: center; gap: 2px; background: #2a0f3d; padding: 0 4px 0 8px; }
+.limboclock { width: auto; height: 34px; margin: -6px -14px; image-rendering: pixelated; }
+/* A bundle box's own switch (Limbo's "All effects"), on the box itself: knob over a small label, before the arrow */
+.fxswitch.onbox { flex-direction: column; align-items: center; text-align: center; gap: 6px; margin-left: auto; padding: 0 4px; font-size: 10px; font-weight: 700; color: #444; }
+.fxbundle > summary:has(.onbox)::after { margin-left: 6px; }
+/* "(Bundle of N)" in the shop: dotted underline; hover / tap shows what's in it */
+.bundletip { text-decoration: underline dotted; text-underline-offset: 2px; cursor: help; }
+#bundletipbox { position: fixed; z-index: 30; text-align: left; max-width: 280px; padding: 8px 12px; border-radius: 10px; background: #fff; color: #1a2440;
+  border: 1px solid rgba(0, 0, 0, 0.15); font-size: 13px; line-height: 1.45; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25); pointer-events: none; }
+#bundletipbox ol { margin: 0; padding-left: 20px; }
+#bundletipbox p { margin: 4px 0 0; color: #b07800; }
+/* Limbo Transition (a wide win effect) fills the whole screen like the others (.hecatefx: cover): the sides run off a
+   normal screen, the top and bottom off a very wide one */
+/* Account (account.js): the row at the top of Settings, and its small windows (Create an Account, Log in, Account Settings). */
+.acctbtn { font-family: inherit; font-size: 14px; padding: 4px 12px; border-radius: 8px; cursor: pointer; border: 1px solid rgba(0, 0, 0, 0.2); background: rgba(var(--wb), 0.7); }
+.acctbtn:hover { background: rgba(var(--wb), 0.95); }
+.acctbtn.acctmain { font-weight: 700; background: #2fa84f; color: #fff; }
+.acctbtn.acctmain:hover { background: #2fa84f; filter: brightness(1.08); }
+.acctwelcome { font-size: 15px; }
+.acctform { display: flex; flex-direction: column; gap: 6px; }
+.acctwin .panel { width: 320px; align-items: stretch; }
+.acctwin h2 { text-align: center; }
+.acctfield { display: flex; flex-direction: column; gap: 3px; font-size: 13px; font-weight: 700; }
+.acctfield input { font-family: inherit; font-size: 15px; padding: 6px 9px; border: 1px solid #999; border-radius: 6px; background: rgba(var(--wb), 0.9); }
+.acctfield input:focus { outline: 2px solid #2fa84f; outline-offset: -1px; }
+.accthint { margin: 0; font-size: 12px; opacity: 0.7; }
+.acctwarn { margin: 4px 0 0; padding: 6px 9px; border-radius: 6px; font-size: 12.5px; line-height: 1.35; color: #6b3a00; background: rgba(255, 214, 120, 0.55); border: 1px solid rgba(176, 120, 0, 0.4); }
+.acctwarn a { color: inherit; font-weight: 700; }
+.accterr { margin: 0; min-height: 1.2em; font-size: 13px; color: #c22; }
+.acctform .buybtns { justify-content: center; margin-top: 0; }
+.acctform .buybtns button:disabled { opacity: 0.6; cursor: default; }
+.accttext { margin: 0; text-align: center; line-height: 1.4; }
+.acctfield { text-align: left; }
+.pwbox { position: relative; display: flex; }
+.pwbox input { flex: 1; min-width: 0; padding-right: 38px; }
+.pweye { position: absolute; right: 3px; top: 50%; transform: translateY(-50%); width: 32px; height: 28px; padding: 0; border: none; border-radius: 5px;
+         background: transparent; font-size: 16px; line-height: 1; cursor: pointer; opacity: 0.55; }
+.pweye:hover, .pweye.on { opacity: 1; background: rgba(0, 0, 0, 0.06); }
+.acctchoices { display: flex; flex-direction: column; gap: 8px; margin: 4px 0; }
+.acctchoices .acctbtn { font-size: 15px; padding: 8px 14px; }
+.acctwin .panel > .buybtns { justify-content: center; }
+/* "Oops! Data out of sync!": another device played since, so this one reloads with the account's progress. */
+.acctoops { position: fixed; left: 50%; top: 40%; transform: translate(-50%, -50%); z-index: 12; padding: 16px 28px; border-radius: 12px;
+            background: rgba(30, 30, 30, 0.92); color: #fff; font-size: 20px; font-weight: 700; box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
+            animation: acctoops 0.25s ease-out; }
+@keyframes acctoops { from { opacity: 0; transform: translate(-50%, -40%); } }
+.acctinfo { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+.acctbtns { display: flex; gap: 8px; }
+.acctbtn.acctout { background: #d9443b; color: #fff; font-weight: 700; }
+.acctbtn.acctout:hover { background: #d9443b; filter: brightness(1.08); }
+.fielderr { font-size: 12px; font-weight: 400; color: #c22; line-height: 1.3; white-space: pre-line; }
+.fielderr:empty { display: none; }
+#acctRow:has(.acctinfo) { align-items: baseline; }   /* "Account" on the same line as "Welcome back, ...!" */
+.acctuid { display: block; margin-top: 2px; font-size: 12px; font-weight: 400; color: #777; }   /* the account's number, under Account */
+/* Customize > Background: a background's own music on / off (its card's right end) */
+.thememute { margin-left: auto; flex: none; padding: 4px 8px; border-radius: 8px; font-size: 20px; line-height: 1; cursor: pointer; }
+.thememute:hover { background: rgba(0, 0, 0, 0.08); }
+.thememute.off { opacity: 0.6; }
+.themecard.fxcard.on { outline-color: #1f8a3a; }   /* an on / off card that's on: green border */
+.themename.fxon { color: #1f8a3a; }   /* Customize > Custom Effects: an on / off effect, on */
+.themename.fxoff { color: #c0392b; }
+/* Customize: the ✓ / ✕ before an on / off effect, and the message that fades in over the window when something's clicked */
+.fxmark { display: inline-block; width: 1.3em; font-size: 1.05em; }
+#themes .panel { position: relative; }
+.fxtoast { position: absolute; left: 50%; bottom: 64px; transform: translate(-50%, 6px); z-index: 2; width: max-content; max-width: calc(100% - 40px); padding: 8px 16px;
+           border-radius: 10px; background: rgba(30, 30, 30, 0.9); color: #fff; font-size: 14px; font-weight: 600; text-align: center;
+           box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3); opacity: 0; pointer-events: none; transition: opacity 0.25s ease, transform 0.25s ease; }
+.fxtoast.show { opacity: 1; transform: translate(-50%, 0); }
+.fxtoast.yes { background: rgba(31, 120, 55, 0.95); }
+.fxtoast.no { background: rgba(170, 45, 35, 0.95); }
+.themecard.locked { cursor: not-allowed; }   /* Customize on a holiday: its background / effect can't be changed that day */
+.accttext:empty { display: none; }
+/* MapleStory Character (account.js): the avatar from Nexon's rankings, next to "Welcome back" and in its windows */
+.acctside { display: flex; align-items: center; gap: 6px; }
+#acctRow:has(.acctava) { align-items: center; flex-wrap: nowrap; }
+#acctRow:has(.acctava) .setlabel { min-width: 96px; }   /* the avatar sits in the label column's spare room, so the row stays one line */
+.acctava { width: 64px; height: 64px; flex: none; margin: -8px -2px -8px -10px; }   /* left of Welcome back + the buttons */
+.acctmaple { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 2px auto 8px; text-align: left; }
+.acctmaple img { width: 96px; height: 96px; image-rendering: pixelated; }
+.acctmaple div { display: flex; flex-direction: column; gap: 2px; font-size: 14px; }
+.acctmaple b { font-size: 17px; }
+.acctsprite { object-fit: contain; image-rendering: auto; }   /* a shop avatar (animated) */
+.acctmaple .acctsprite { width: 96px; height: 96px; image-rendering: auto; }
+/* MapleStory Character: your characters and shop avatars, the one shown with a green border */
+.acctpick { display: flex; flex-direction: column; gap: 6px; max-height: 50vh; overflow-y: auto; margin: 2px -4px 0; padding: 8px 8px 6px; }
+.acctpickrow { position: relative; display: flex; align-items: center; padding: 4px 40px 4px 8px; border-radius: 10px; cursor: pointer;
+  background: rgba(var(--wb), 0.55); outline: 2px solid transparent; }
+.acctpickrow:hover { background: rgba(var(--wb), 0.85); }
+.acctpickrow.on { outline-color: #1f8a3a; background: rgba(var(--wb), 0.9); }
+.acctpickrow .acctmaple { margin: 0; justify-content: flex-start; }
+.acctpickrow .acctmaple img, .acctpickrow .acctmaple .acctsprite { width: 72px; height: 72px; }
+.acctdel { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); width: 28px; height: 28px; padding: 0; border: none; border-radius: 50%;
+  background: transparent; color: #c0392b; font-size: 16px; cursor: pointer; }
+.acctdel:hover { background: rgba(192, 57, 43, 0.12); }
+.accttag { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-size: 11px; font-weight: 700; color: #7a4bc4; }
+.acctregion { display: flex; gap: 6px; }
+.acctregion label { flex: 1; cursor: pointer; }
+.acctregion input { position: absolute; opacity: 0; pointer-events: none; }
+.acctregion span { display: block; padding: 6px 8px; border-radius: 8px; text-align: center; font-size: 14px; border: 1px solid rgba(0, 0, 0, 0.2); background: rgba(var(--wb), 0.7); }
+.acctregion input:checked + span { background: #2fa84f; color: #fff; font-weight: 700; border-color: #2fa84f; }
+.acctregion input:focus-visible + span { outline: 2px solid #2fa84f; outline-offset: 2px; }
+.acctwin h2 small { font-size: 0.6em; font-weight: 400; opacity: 0.7; }
+/* Found a hidden item: the Shop button glows gold until it's opened (fx.js shopNewTag), and BGM Clip's Limbo bonus says so */
+#shopBtn.shopcall, #settingsBtn.shopcall { animation: shopcall 1.1s ease-in-out infinite alternate; }
+#shopBtn.shopcall::after, #settingsBtn.shopcall::after { content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  box-shadow: 0 0 10px 4px rgba(255, 190, 0, 0.95); opacity: 0; animation: glowin 1.1s ease-in-out infinite alternate; }   /* drawn once, only fades */
+@keyframes shopcall { to { transform: scale(1.06); } }
+@keyframes glowin { to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { #shopBtn.shopcall, #settingsBtn.shopcall, #shopBtn.shopcall::after, #settingsBtn.shopcall::after { animation: none; }
+  #shopBtn.shopcall::after, #settingsBtn.shopcall::after { opacity: 0.85; } }
+#limboShop { margin: 6px 0 0; font-weight: 700; color: #7a3fc4; }
+#limboShop[hidden] { display: none; }
+#limboShop { white-space: nowrap; }   /* the message on one line, its button under it */
+#limboShop button { display: block; margin: 6px auto 0; font-family: inherit; font-size: 13px; font-weight: 700; padding: 3px 10px; border-radius: 8px; cursor: pointer;
+                    border: 1px solid #b07800; background: #ffd34d; color: #5a3d00; }
+
+/* NEW on Account Settings / MapleStory Character (a new shop avatar) and on the avatar's row */
+.acctbtn:has(> .newtag), .acctpickrow { position: relative; }
+.acctbtn > .newtag, .acctpickrow > .newtag { top: -6px; left: -6px; font-size: 9px; line-height: 13px; padding: 0 4px; z-index: 1; }
+/* Customize, Limbo mode on: a note over the Background / Win Effect tabs (fx.js) */
+.fxvoid { margin: 0 0 10px; padding: 10px 14px; border: 2px solid #2e9a4a; border-radius: 10px; background: rgba(120, 220, 140, 0.25);
+  color: #1d6b2e; font-size: 14px; line-height: 1.5; text-align: center; }
+/* Limbo's "Special toggle" (Customize > Custom Effects): Limbo's colours, a ✦ on the knob, gradient text, and when on a
+   soft pulsing glow (opacity only, so it costs nothing). */
+.fxswitch.onbox > span:last-child { background: linear-gradient(90deg, #7b2ff7, #d6249f, #7b2ff7); -webkit-background-clip: text; background-clip: text;
+  color: transparent; letter-spacing: 0.3px; }
+.themecard.special .fxswitch.onbox > span:last-child { background: none; color: #fff; text-shadow: 0 0 4px rgba(214, 36, 159, 0.95), 0 0 9px rgba(123, 47, 247, 0.8); }   /* readable on the purple tint */
+.fxswitch.onbox .knob { background: linear-gradient(135deg, #3a3150, #5b4d73); box-shadow: inset 0 0 0 1px rgba(160, 120, 255, 0.5); }
+.fxswitch.onbox .knob::after { content: '✦'; display: flex; align-items: center; justify-content: center; font-size: 11px; line-height: 1; color: #9a7bd0;
+  background: #f4efff; }
+.fxswitch.onbox .knob::before { content: ''; position: absolute; inset: -3px; border-radius: 14px; pointer-events: none; opacity: 0;
+  box-shadow: 0 0 8px 2px rgba(214, 36, 159, 0.8), 0 0 14px 4px rgba(123, 47, 247, 0.55); }
+.fxswitch.onbox input:checked + .knob { background: linear-gradient(135deg, #7b2ff7, #d6249f); box-shadow: none; }
+.fxswitch.onbox input:checked + .knob::after { color: #d6249f; background: #fff; }
+.fxswitch.onbox input:checked + .knob::before { animation: specialglow 1.2s ease-in-out infinite alternate; }
+@keyframes specialglow { from { opacity: 0.35; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .fxswitch.onbox input:checked + .knob::before { animation: none; opacity: 0.8; } }
+/* On: the knob and the "Special toggle" text glow too (a steady glow; only the ring around the switch pulses). */
+.fxswitch.onbox:has(input:checked) > span:last-child { filter: drop-shadow(0 0 3px rgba(214, 36, 159, 0.85)) drop-shadow(0 0 6px rgba(123, 47, 247, 0.6)); }
+.fxswitch.onbox input:checked + .knob::after { box-shadow: 0 0 6px 2px rgba(255, 120, 220, 0.95), 0 0 12px 4px rgba(214, 36, 159, 0.6); text-shadow: 0 0 4px rgba(214, 36, 159, 0.9); }
+/* Customize: Limbo's Subconscious box with the Special toggle on: a ring in Limbo's colours turning slowly clockwise
+   around it, with a soft glow (like the 🌈 box: drawn once, only turned, so it costs nothing). */
+.themecard.special { outline: none; }
+.spring, .spglow { position: absolute; pointer-events: none; overflow: hidden; container-type: size;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); }
+.spring { inset: -2px; padding: 2px; border-radius: 10px; }
+.spglow { inset: -20px; padding: 0; z-index: -1; opacity: 0.85; animation: glow 1.2s ease-in-out infinite alternate;
+  /* fades out with distance from the box, round corners (same as the 🌈 box's glow) */
+  --m: linear-gradient(to top, #000 0px, rgba(0, 0, 0, 0.9) 2px, rgba(0, 0, 0, 0.72) 4px, rgba(0, 0, 0, 0.45) 8px, rgba(0, 0, 0, 0.24) 12px, rgba(0, 0, 0, 0.09) 16px, transparent 20px),
+    linear-gradient(to bottom, #000 0px, rgba(0, 0, 0, 0.9) 2px, rgba(0, 0, 0, 0.72) 4px, rgba(0, 0, 0, 0.45) 8px, rgba(0, 0, 0, 0.24) 12px, rgba(0, 0, 0, 0.09) 16px, transparent 20px),
+    linear-gradient(to left, #000 0px, rgba(0, 0, 0, 0.9) 2px, rgba(0, 0, 0, 0.72) 4px, rgba(0, 0, 0, 0.45) 8px, rgba(0, 0, 0, 0.24) 12px, rgba(0, 0, 0, 0.09) 16px, transparent 20px),
+    linear-gradient(to right, #000 0px, rgba(0, 0, 0, 0.9) 2px, rgba(0, 0, 0, 0.72) 4px, rgba(0, 0, 0, 0.45) 8px, rgba(0, 0, 0, 0.24) 12px, rgba(0, 0, 0, 0.09) 16px, transparent 20px),
+    radial-gradient(circle at 100% 100%, transparent 7.5px, #000 8px, rgba(0, 0, 0, 0.9) 10px, rgba(0, 0, 0, 0.72) 12px, rgba(0, 0, 0, 0.45) 16px, rgba(0, 0, 0, 0.24) 20px, rgba(0, 0, 0, 0.09) 24px, transparent 28px),
+    radial-gradient(circle at 0 100%, transparent 7.5px, #000 8px, rgba(0, 0, 0, 0.9) 10px, rgba(0, 0, 0, 0.72) 12px, rgba(0, 0, 0, 0.45) 16px, rgba(0, 0, 0, 0.24) 20px, rgba(0, 0, 0, 0.09) 24px, transparent 28px),
+    radial-gradient(circle at 100% 0, transparent 7.5px, #000 8px, rgba(0, 0, 0, 0.9) 10px, rgba(0, 0, 0, 0.72) 12px, rgba(0, 0, 0, 0.45) 16px, rgba(0, 0, 0, 0.24) 20px, rgba(0, 0, 0, 0.09) 24px, transparent 28px),
+    radial-gradient(circle at 0 0, transparent 7.5px, #000 8px, rgba(0, 0, 0, 0.9) 10px, rgba(0, 0, 0, 0.72) 12px, rgba(0, 0, 0, 0.45) 16px, rgba(0, 0, 0, 0.24) 20px, rgba(0, 0, 0, 0.09) 24px, transparent 28px);
+  -webkit-mask: none; -webkit-mask-image: var(--m); -webkit-mask-repeat: no-repeat; -webkit-mask-size: calc(100% - 56px) 20px, calc(100% - 56px) 20px, 20px calc(100% - 56px), 20px calc(100% - 56px), 28px 28px, 28px 28px, 28px 28px, 28px 28px; -webkit-mask-position: 28px 0, 28px 100%, 0 28px, 100% 28px, 0 0, 100% 0, 0 100%, 100% 100%;
+  mask: none; mask-image: var(--m); mask-repeat: no-repeat; mask-size: calc(100% - 56px) 20px, calc(100% - 56px) 20px, 20px calc(100% - 56px), 20px calc(100% - 56px), 28px 28px, 28px 28px, 28px 28px, 28px 28px; mask-position: 28px 0, 28px 100%, 0 28px, 100% 28px, 0 0, 100% 0, 0 100%, 100% 100%; mask-composite: add; }
+.spring i, .spglow i { position: absolute; left: 50%; top: 50%; width: 150cqmax; height: 150cqmax;
+  background: conic-gradient(#7b2ff7, #d6249f, #ff6ad5, #4a1a8c, #29d3ff, #7b2ff7); animation: rbturn 10s linear infinite; }
+@media (prefers-reduced-motion: reduce) { .spglow { animation: none; } .spring i, .spglow i { animation: none; transform: translate(-50%, -50%); } }
+.themecard.special, .themecard.special:hover { background: linear-gradient(rgba(255, 255, 255, 0.38), rgba(255, 255, 255, 0.38)),
+  linear-gradient(120deg, rgba(74, 26, 140, 0.92), rgba(123, 47, 247, 0.85) 40%, rgba(214, 36, 159, 0.8) 75%, rgba(41, 211, 255, 0.7)); }
+/* glitching text (Limbo): glows, and every 1.6 s for a moment it jitters while cyan and pink copies jump out in slices
+   (copies drawn from data-text; small text, so cheap to redraw). Used on Limbo's Subconscious box with the Special toggle
+   on (its name and "Special toggle"). */
+.gtext { position: relative; display: inline-block; }
+.gtext::before, .gtext::after { content: attr(data-text); position: absolute; inset: 0; pointer-events: none; opacity: 0; color: #00e5ff; text-shadow: none; }
+.gtext::after { color: #ff2fd0; }
+#archiveList .limborb .gtext, .themecard.special .gtext { animation: glitchjit 1.6s steps(1) infinite; }
+#archiveList .limborb .gtext::before, .themecard.special .gtext::before { animation: glitcha 1.6s steps(1) infinite; }
+#archiveList .limborb .gtext::after, .themecard.special .gtext::after { animation: glitchb 1.6s steps(1) infinite; }
+.themecard.special .fxswitch .gtext, .themecard.special .fxswitch .gtext::before, .themecard.special .fxswitch .gtext::after { animation-delay: -0.7s; }   /* not in step with the name */
+@keyframes glitchjit { 0%, 68%, 84%, 100% { transform: none; } 70% { transform: translate(1px, 0) skewX(-6deg); } 76% { transform: translate(-2px, 0); } 80% { transform: skewX(4deg); } }
+@keyframes glitcha { 0%, 68%, 86%, 100% { opacity: 0; transform: none; clip-path: none; }
+  70% { opacity: 0.9; transform: translate(-3px, -1px); clip-path: inset(8% 0 58% 0); }
+  74% { opacity: 0.9; transform: translate(3px, 0); clip-path: inset(55% 0 12% 0); }
+  78% { opacity: 0.9; transform: translate(-2px, 1px); clip-path: inset(30% 0 45% 0); }
+  82% { opacity: 0.7; transform: translate(2px, 0); clip-path: inset(70% 0 2% 0); } }
+@keyframes glitchb { 0%, 68%, 86%, 100% { opacity: 0; transform: none; clip-path: none; }
+  70% { opacity: 0.9; transform: translate(3px, 1px); clip-path: inset(40% 0 30% 0); }
+  74% { opacity: 0.9; transform: translate(-3px, 0); clip-path: inset(5% 0 70% 0); }
+  78% { opacity: 0.9; transform: translate(2px, -1px); clip-path: inset(62% 0 10% 0); }
+  82% { opacity: 0.7; transform: translate(-2px, 0); clip-path: inset(18% 0 52% 0); } }
+@media (prefers-reduced-motion: reduce) { .gtext, .gtext::before, .gtext::after { animation: none !important; } }
+.themecard.special .themename { color: #fff; text-shadow: 0 0 2px #7b2ff7, 0 0 6px rgba(160, 60, 255, 0.95), 0 0 14px rgba(214, 36, 159, 0.8), 0 0 22px rgba(123, 47, 247, 0.6); }
+.fxbundle > summary.special::after { color: #fff; opacity: 1; text-shadow: 0 0 4px rgba(214, 36, 159, 0.95), 0 0 9px rgba(123, 47, 247, 0.8); }
+/* ---- Light (default) / dark mode (Settings; html.dark, set before the page draws by each page's <head>) ----
+   The see-through white boxes take their colour from --wb (white, or a dark slate in dark mode); the browser's own
+   buttons, inputs and default text follow color-scheme. The rest is the few places with a fixed dark text colour. */
+:root { --wb: 255, 255, 255; --ol: #333; }
+html.dark { color-scheme: dark; --wb: 30, 33, 41; --ol: #cfd4dc; color: #c3c8d1; }
+:where(html.dark) :where(button, input, select, textarea) { color: #c3c8d1; }   /* lowest priority: buttons with their own colour keep it */
+html.dark .game { --fxk: 1.5; }
+html.dark :is(#archive, #changelog, #info, #themes, .popup) > .panel, html.dark .closebar { background: #262a32; }
+html.dark :is(.closebar button, .buybtns .plain) { background: #3a3f4a; color: #eee; border-color: rgba(255, 255, 255, 0.2); }
+html.dark .infostrip .k { color: #9fb0d6; }
+html.dark .infostrip .v { color: #eef2ff; }
+html.dark #twist, html.dark :is(#bonusResult, #titleResult).wrong { color: #ff8a8a; }
+html.dark :is(#bonusResult, #titleResult).right { color: #6fdc6f; }
+html.dark #limboTip { color: #c9a6ff; }
+html.dark :is(.mesorecent b, .shopinfo .price, .buyask .price, .vipon) { color: #f0c050; }
+html.dark #mesoGain.none { color: #d9c38a; }
+html.dark .fxswitch.onbox { color: #ccc; }
+html.dark :is(#games, #subgames) button:disabled { color: #999; }
+html.dark .shopitem.lockeditem b, html.dark .shopitem .locked { color: #aaa; }
+html.dark td.cardcell { background: #3a3f4a; }
+html.dark #bundletipbox { background: #262a32; color: #c3c8d1; }
+html.dark :is(td, th) { border-color: #5a606c; }
+html.dark :is(#archiveList button, .themecard, .acctpickrow, .shopitem) { border-color: rgba(255, 255, 255, 0.15); }
+html.dark #credit { background: #2a3442; }   /* still solid (the peeking characters hide behind it) */
+html.dark #play { background: #3a3f4a; border-color: rgba(255, 255, 255, 0.25); }
+html.dark #play:hover { background: #474d5a; }
+/* Limbo's mashup day: the title's rare half-second glitch (fx.js titleGlitch): the same glitch as the Special toggle's
+   text, one go of it (its glitching part only: started 68% in, so it runs about half a second) */
+h1.tglitch .gtext { animation: glitchjit 1.6s steps(1) -1.088s 1; }
+h1.tglitch .gtext::before { animation: glitcha 1.6s steps(1) -1.088s 1; }
+h1.tglitch .gtext::after { animation: glitchb 1.6s steps(1) -1.088s 1; }
+/* Flying mesos (fx.js mesoFly) */
+.mesofly { position: fixed; z-index: 30; width: 30px; height: 30px; pointer-events: none; image-rendering: pixelated; }
+/* Achievements (achv.js): the trophy button next to Archive, its window, and the "unlocked" note */
+#achvBtn { position: fixed; top: 54px; right: 12px; z-index: 5; margin: 0; width: 34px; height: 34px; padding: 0; border: none; border-radius: 10px;
+  cursor: pointer; display: flex; align-items: center; justify-content: center; max-width: none; }
+#achvBtn, #achvBtn:hover { background: none; box-shadow: none; }   /* the icon is its own tile */
+#achvBtn:hover img { filter: brightness(1.15); }
+#achvBtn .newtag { top: -5px; left: -8px; font-size: 9px; line-height: 13px; padding: 0 4px; }
+@media (max-width: 700px) { #achvBtn { top: 12px; right: 54px; } #themeBtn { top: 12px; right: 96px; } }   /* phones: in a row beside Settings (a column would cover the game box) */
+#achvBtn img { width: 30px; height: 30px; }
+.achvlocked { margin: 18px 8px; font-weight: 600; line-height: 1.5; text-align: center; }
+.achvcount { margin: 0 0 6px; font-weight: 700; }
+.achvhead { margin: 14px 0 6px; text-align: left; }
+/* Rows: MapleStory's own achievement form (images/achv/ui), 545 x 100 (155 with the reward strip). --p is one of its
+   pixels at the list's width, so everything sits where the game puts it. */
+.achvlist { display: flex; flex-direction: column; gap: 4px; width: min(545px, 100%); min-width: min(420px, 78vw); margin: 0 auto; container-type: inline-size; }
+.achv { --p: calc(100cqw / 545); isolation: isolate; font-family: Arial, 'Liberation Sans', Helvetica, sans-serif; position: relative; width: 100%; height: calc(100 * var(--p)); flex: none; text-align: left; color: #fff;
+  background: url(images/achv/ui/incomplete-base.png) 0 0 / 100% 100% no-repeat; font-size: calc(12 * var(--p)); }
+.achv.on { background-image: url(images/achv/ui/complete-base.png); }
+.achv.rw { height: calc(155 * var(--p)); background-image: url(images/achv/ui/reward-complete-max.png); }
+.achv::after { content: ''; position: absolute; left: calc(1 * var(--p)); top: 0; width: calc(543 * var(--p)); height: calc(101 * var(--p));
+  background: url(images/achv/ui/selected-base.png) 0 0 / 100% 100%; opacity: 0; pointer-events: none; }
+.achv.rw::after { top: calc(1 * var(--p)); height: calc(153 * var(--p)); background-image: url(images/achv/ui/reward-selected-max.png); }
+.achv:hover::after { opacity: 1; }
+.achv > * { position: absolute; }
+.achvicon { left: calc(13.5 * var(--p)); top: calc(11.5 * var(--p)); width: calc(58 * var(--p)); height: calc(58 * var(--p));   /* the box's inside (x 14-71, y 12-69) */
+  display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.achvicon img { max-width: calc(44 * var(--p)); max-height: calc(44 * var(--p)); image-rendering: pixelated; }
+.achvicon img.cup { width: calc(41 * var(--p)); height: calc(32 * var(--p)); max-height: none; max-width: none; }
+.achvicon img.c-normal { width: calc(29 * var(--p)); height: calc(29 * var(--p)); }
+.achvicon i { margin-top: calc(1 * var(--p)); font: normal 700 calc(19.5 * var(--p)) / 1 Arial, 'Liberation Sans', sans-serif; color: #fff; text-shadow: 0 1px 2px #000; }
+.achv.secret .achvicon img { filter: none; }
+.achvtitle { left: calc(83 * var(--p)); top: calc(13 * var(--p)); right: calc(20 * var(--p)); font-size: calc(16.2 * var(--p)); font-weight: 400; letter-spacing: 0.015em; -webkit-text-stroke: calc(0.35 * var(--p)) currentColor;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #f2f2f2; }
+.achvhow { left: calc(83 * var(--p)); top: calc(40 * var(--p)); right: calc(120 * var(--p)); color: #a9a9a9; font-size: calc(11.5 * var(--p)); line-height: 1.3; letter-spacing: 0.04em; }
+.achv.secret .achvtitle { color: #c9a2ff; }
+.achvq { opacity: 0.45; letter-spacing: 0.15em; }
+.achvgauge { left: calc(16 * var(--p)); top: calc(82 * var(--p)); width: calc(513 * var(--p)); height: calc(4 * var(--p)); }
+.achvgauge i { display: block; height: 100%; background: url(images/achv/ui/gauge.png) 0 0 / calc(513 * var(--p)) 100% no-repeat; }
+.achvnum { right: calc(16 * var(--p)); top: calc(62 * var(--p)); color: #cfcfcf; font-variant-numeric: tabular-nums; }
+.achvdate { right: calc(6 * var(--p)); top: calc(36 * var(--p)); height: calc(19 * var(--p));
+  font: 400 calc(12 * var(--p)) / calc(19 * var(--p)) Arial, 'Liberation Sans', sans-serif; color: #e6dcc6; letter-spacing: 0.02em; white-space: nowrap; }
+.achvseal { z-index: 1; left: calc(497 * var(--p)); top: calc(53 * var(--p)); width: calc(44 * var(--p)); height: calc(41 * var(--p)); }
+.achvrwicon { left: calc(15 * var(--p)); top: calc(100 * var(--p)); width: calc(38 * var(--p)); height: calc(38 * var(--p)); display: flex; align-items: center; justify-content: center; }
+.achvrwicon img { max-width: calc(34 * var(--p)); max-height: calc(34 * var(--p)); }
+.achvreward { left: calc(112 * var(--p)); top: calc(113 * var(--p)); right: calc(110 * var(--p)); line-height: calc(16 * var(--p));
+  font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.achvreward .rwfx { color: #c9a2ff; font-weight: 700; }
+.achvreward .rwmeso { color: #ffd23f; -webkit-text-stroke: 0.6px #6b3f00; paint-order: stroke fill; }
+/* The game's Claim Reward button over the strip's greyed one (claimed: the greyed one stays) */
+.achvclaim { left: calc(443 * var(--p)); top: calc(107 * var(--p)); width: calc(89 * var(--p)); height: calc(31 * var(--p)); padding: 0; border: 0; cursor: pointer;
+  background: url(images/achv/ui/claim-normal.png) 0 0 / 100% 100% no-repeat; }
+.achvclaim:hover { background-image: url(images/achv/ui/claim-mouseOver.png); }
+.achvclaim:active { background-image: url(images/achv/ui/claim-pressed.png); }
+.achvclaimed { left: calc(443 * var(--p)); top: calc(107 * var(--p)); width: calc(89 * var(--p)); height: calc(31 * var(--p)); }
+.achvtoast { position: fixed; top: 14px; left: 50%; transform: translateX(-50%); z-index: 23; display: flex; align-items: center; gap: 10px;
+  padding: 8px 18px; border-radius: 6px; color: #fff; box-shadow: 0 0 0 1px #1a1a1a, 0 6px 20px rgba(0, 0, 0, 0.45);
+  background: linear-gradient(#3b3b3b, #262626); border: 1px solid #b08a4a; font-size: 14px; animation: achvin 0.35s ease both; transition: opacity 0.4s ease, transform 0.4s ease; }
+.achvtoast div { display: flex; flex-direction: column; }
+.achvtoast img { image-rendering: pixelated; }
+.achvtoast b { color: #ffd23f; font-size: 12px; letter-spacing: 0.04em; }
+.achvtoast.out { opacity: 0; transform: translate(-50%, -10px); }
+@keyframes achvin { from { opacity: 0; transform: translate(-50%, -14px); } }
+.achvstats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 0 0 6px; }
+.achvstats div { display: flex; flex-direction: column; gap: 2px; padding: 6px 4px; border-radius: 8px; background: rgba(var(--wb), 0.55); border: 1px solid rgba(0, 0, 0, 0.1); }
+.achvstats small { font-size: 10.5px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; opacity: 0.75; }
+.achvstats b { font-size: 17px; font-variant-numeric: tabular-nums; }
+@media (max-width: 520px) { .achvstats { grid-template-columns: repeat(2, 1fr); } }
+.achvhead small { font-size: 12px; font-weight: 600; opacity: 0.6; margin-left: 4px; }
+
+html.dark .achvstats div { border-color: rgba(255, 255, 255, 0.12); }
+
+/* An appearance effect (Seething Balance): plays once over the account's avatar when Settings opens */
+.acctside { position: relative; }
+/* 312 x 260 (the effect's 1322 x 1100 at 0.236): its middle (the eye, at 636, 534 in the effect) lands on your character's middle */
+.acctappear { position: fixed; width: 312px; height: 260px; transform: translate(calc(-50% + 5.9px), calc(-50% + 3.8px)); pointer-events: none; z-index: 20; object-fit: contain; }
+.acctpickhead { margin: 12px 0 4px; font-size: 15px; text-align: left; }
+.acctpickrow .acctfxpic { width: 72px; height: 72px; object-fit: contain; }
+.acctpickrow.acctfxrow { padding-right: 104px; }
+.acctpick:empty { display: none; }
+.acctappeartop { position: fixed; margin: 0; z-index: 21; pointer-events: none; }   /* your character, over its appearance effect */
+/* Achievement tiers: MapleStory's grade colours */
+/* Achievement complete banner (MapleStory's, 1366 x 231; the front is 693 x 194 at 336, 31 over it): scaled to fit */
+.achvbanner { position: fixed; top: calc(6px + 75px * var(--s)); left: 50%; z-index: 23; width: 1366px; height: 231px; pointer-events: none;
+              --s: min(0.75, calc((100vw - 8px) / 640px)); transform: translateX(-50%) scale(var(--s)); transform-origin: top center; transition: opacity 0.45s; }
+.achvbanner.out { opacity: 0; }
+.achvbannerin { position: absolute; inset: 0; }
+.achvbanner .back { position: absolute; left: 0; top: 0; width: 1366px; height: 231px; }
+.achvbanner .front { position: absolute; z-index: 2; }   /* placed per tier (achv.js BANNER_ART) */
+/* the points: MapleStory's own digits (achievementCompleteEffect.normal.num, 8 x 13 each), at their size, in the box under the trophy */
+.achvbanner .achvap { position: absolute; left: 665px; top: 136px; width: 36px; height: 13px; z-index: 1; display: flex; justify-content: center; animation: achvtext 0.3s 0.15s both; }
+.achvbanner .achvap img { width: 8px; height: 13px; image-rendering: pixelated; }
+.achvbanner .achvname { position: absolute; left: 393px; top: 163px; width: 580px; height: 36px; z-index: 1; text-align: center; font: 700 22px/36px system-ui, sans-serif;
+                        white-space: nowrap; overflow: hidden; text-overflow: ellipsis; animation: achvtext 0.3s 0.15s both;
+                        /* like the game: Arial-style bold, flat colour per tier, a soft dark shadow */
+                        color: #c8d4d6; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6); letter-spacing: 0.2px; }
+.achvbanner .achvname { font-family: Arial, 'Liberation Sans', Helvetica, sans-serif; }
+.achvbanner.t-rare .achvname { color: #86dde6; }
+.achvbanner.t-epic .achvname { color: #d9b8ff; }
+.achvbanner.t-unique .achvname { color: #f3ee9e; }
+.achvbanner.t-legendary .achvname { color: #e6ef95; }
+@keyframes achvtext { from { opacity: 0; } to { opacity: 1; } }
+.achvrank { display: flex; flex-direction: column; align-items: center; margin: 0 0 12px; }
+.achvrank img { width: 96px; height: auto; margin-bottom: -10px; }
+.achvrank b { font-size: 30px; font-weight: 900; line-height: 1; color: #fff; letter-spacing: 1px;
+              -webkit-text-stroke: 4px #2b2b33; paint-order: stroke fill; text-shadow: 0 2px 3px rgba(0, 0, 0, 0.35); }
+.achvtoast.achvrankup img { width: 48px; height: auto; image-rendering: auto; }
+.achvtoast.achvrankup b { font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: #ffe9a6; text-shadow: 0 1px 0 #6b4a12; }
+.achvtoast.achvrankup span { font-size: 17px; font-weight: 800; color: #f2f2f2; }
+
+/* The Achievements window, like MapleStory's: dark frame, its yellow title top left, an X top right (no Close bar) */
+#achv.maplewin > .panel { position: relative; padding: 0 14px 14px; border-radius: 6px; color: #ddd; background: linear-gradient(#3c3c3c, #2a2a2a 120px, #262626);
+  border: 1px solid #141414; box-shadow: inset 0 0 0 1px #5a5a5a, 0 10px 34px rgba(0, 0, 0, 0.55); }
+#achv.maplewin h2 { position: sticky; top: 0; z-index: 3; margin: 0 -14px 10px; padding: 10px 50px 8px 16px; text-align: left; background: linear-gradient(#3c3c3c, #333);
+  border-bottom: 1px solid #1c1c1c; box-shadow: 0 1px 0 #4a4a4a; font: 800 21px/1.2 Arial, 'Liberation Sans', sans-serif; text-transform: uppercase; letter-spacing: 0.01em;
+  color: #e4f53c; text-shadow: 0 1px 0 #4d5410, 0 0 6px rgba(228, 245, 60, 0.25); }
+#achv.maplewin .closebar { display: none; }
+.achvx { position: absolute; top: 12px; right: 12px; width: 21px; height: 21px; padding: 0; margin: 0; border: 0; cursor: pointer;
+  background: url(images/achv/ui/close-normal.png) 0 0 / 100% 100%; }   /* the game's own X */
+.achvx:hover { background-image: url(images/achv/ui/close-mouseOver.png); }
+.achvx:active { background-image: url(images/achv/ui/close-pressed.png); }
+#achv.maplewin .popupbody { padding: 12px; border-radius: 6px; background: #232323; border: 1px solid #111; box-shadow: inset 0 0 0 1px #3e3e3e; }
+#achv.maplewin .achvhead { color: #e3c48c; }
+#achv.maplewin .achvhead small { color: #aaa; opacity: 1; }
+#achv.maplewin .achvstats div { background: #2e2e2e; border: 1px solid #141414; box-shadow: inset 0 0 0 1px #444; }
+#achv.maplewin .achvstats small { color: #a9a9a9; opacity: 1; }
+#achv.maplewin .achvstats b { color: #f2f2f2; }
+#achv.maplewin .achvlocked, #achv.maplewin .achvcount { color: #ddd; }
+
+/* Screens that fit it (Achievements at 60%+): the game's window itself, its title and the emblem's box baked in. The emblem and
+   your stats down the left, the achievements scrolling on the right. */
+@media (min-width: 470px) and (min-height: 460px) {
+  #achv.maplewin { align-items: center; }
+  #achv.maplewin > .panel { flex: none; width: 754px; height: 741px; max-width: none; max-height: none; margin: 0; padding: 0; overflow: visible;
+    border: 0; border-radius: 0; box-shadow: none; background: url(images/achv/ui/window.png) 0 0 / 100% 100% no-repeat; transform: scale(var(--ws, 1)); }
+  #achv.maplewin h2 { position: absolute; inset: 0 0 auto 0; height: 44px; margin: 0; padding: 0; background: none; border: 0; box-shadow: none;
+    font-size: 0; color: transparent; text-shadow: none; }   /* (the title is in the window art) */
+  #achv.maplewin .achvx { top: 11px; right: 13px; }
+  #achv.maplewin .popupbody { position: absolute; inset: 0; width: auto; padding: 0; border: 0; border-radius: 0; background: none; box-shadow: none; }
+  #achv.maplewin .achvside { position: absolute; left: 18px; top: 62px; width: 136px; }
+  /* As big as the game shows it: the emblem a bit over its own size (Master 170 px, the others 153 px), rising out of the top of
+     its box, the points big along the box's bottom */
+  #achv.maplewin .achvrank { position: relative; height: 135px; margin: 0 0 12px; }
+  #achv.maplewin .achvrank img { position: absolute; left: 50%; top: -22px; width: 153px; margin: 0; transform: translateX(-50%); }
+  #achv.maplewin .achvrank img.r-master { width: 170px; top: -30px; }
+  #achv.maplewin .achvrank b { position: absolute; left: -10px; right: -10px; top: 100px; text-align: center; font-size: 29px; letter-spacing: 0;
+    -webkit-text-stroke: 3px #3a3a3a; text-shadow: 0 0 6px rgba(255, 255, 255, 0.55), 0 0 2px rgba(255, 255, 255, 0.6); }
+  #achv.maplewin .achvstats { grid-template-columns: 1fr; gap: 4px; margin: 0; }
+  #achv.maplewin .achvstats div { padding: 4px 8px; flex-direction: row; justify-content: space-between; align-items: baseline; height: 52px; box-sizing: border-box;
+    flex-direction: column; justify-content: center; align-items: flex-start; border-radius: 5px; }
+  #achv.maplewin .achvmain { position: absolute; left: 170px; right: 12px; top: 48px; bottom: 14px; overflow-y: auto; padding: 0 6px 0 4px;
+    scrollbar-width: thin; scrollbar-color: #6a6a6a transparent; }
+  #achv.maplewin .achvmain .achvhead:first-child { margin-top: 4px; }
+  #achv.maplewin .achvlist { width: 545px; min-width: 0; margin: 0; }
+  #achv.maplewin .achvlocked, #achv.maplewin .achvcount { position: absolute; left: 170px; right: 12px; top: 300px; }
+}
+.achv[hidden], .achvlist[hidden], .achvhead[hidden] { display: none; }
+.achvsearch { display: block; width: 100%; margin: 10px 0 0; box-sizing: border-box; font: 12px Arial, 'Liberation Sans', sans-serif; padding: 3px 6px;
+  border: 1px solid #111; border-radius: 3px; background: #fff; color: #111; }
+.achvnone { margin: 120px 0; text-align: center; font: 700 18px Arial, 'Liberation Sans', sans-serif; color: #eee; }
+@media (min-width: 470px) and (min-height: 460px) {
+  #achv.maplewin .achvsearch { position: absolute; left: -2px; top: 637px; width: 91px; height: 16px; margin: 0; padding: 0 4px; border: 0; border-radius: 2px; background: transparent; font-size: 11px; }
+}

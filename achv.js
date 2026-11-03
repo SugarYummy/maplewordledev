@@ -311,7 +311,7 @@
     // Like the game's achievement window: your rank's emblem with your points under it
     body.innerHTML = '<div class="achvside"></div><div class="achvmain"></div>';
     const side = body.firstChild, main = body.lastChild;
-    side.innerHTML = `<div class="achvrank" title="${rk[1]}${next ? ` · ${fmt(next[2] - ap)} AP to ${next[1]}` : ''}"><img src="images/achv/rank/${rk[0]}.png" alt="${rk[1]}"><b>${ap}</b></div>` + '<div class="achvstats">' + tiles.map(([k, v]) => `<div><small>${k}</small><b>${typeof v === 'number' ? fmt(v) : v}</b></div>`).join('') + '</div>';
+    side.innerHTML = `<div class="achvrank" title="${rk[1]}${next ? ` · ${fmt(next[2] - ap)} AP to ${next[1]}` : ''}"><img class="r-${rk[0]}" src="images/achv/rank/${rk[0]}.png" alt="${rk[1]}"><b>${ap}</b></div>` + '<div class="achvstats">' + tiles.map(([k, v]) => `<div><small>${k}</small><b>${typeof v === 'number' ? fmt(v) : v}</b></div>`).join('') + '</div>';
     // Rows like the game's achievement window (images/achv/ui, MapleStory's own form pieces): the tier's cup with its AP
     // (hidden ones keep their own picture), name, description, the gauge, the seal and date when done. Unlocked hidden
     // ones get the reward strip with the Claim Reward button.

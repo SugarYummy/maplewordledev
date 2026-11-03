@@ -1164,9 +1164,13 @@ html.dark .achvstats div { border-color: rgba(255, 255, 255, 0.12); }
   #achv.maplewin .achvx { top: 11px; right: 13px; }
   #achv.maplewin .popupbody { position: absolute; inset: 0; width: auto; padding: 0; border: 0; border-radius: 0; background: none; box-shadow: none; }
   #achv.maplewin .achvside { position: absolute; left: 18px; top: 62px; width: 136px; }
-  #achv.maplewin .achvrank { height: 135px; margin: 0 0 12px; justify-content: center; }
-  #achv.maplewin .achvrank img { width: 92px; margin-bottom: -12px; }
-  #achv.maplewin .achvrank b { font-size: 26px; }
+  /* As big as the game shows it: the emblem a bit over its own size (Master 170 px, the others 153 px), rising out of the top of
+     its box, the points big along the box's bottom */
+  #achv.maplewin .achvrank { position: relative; height: 135px; margin: 0 0 12px; }
+  #achv.maplewin .achvrank img { position: absolute; left: 50%; top: -22px; width: 153px; margin: 0; transform: translateX(-50%); }
+  #achv.maplewin .achvrank img.r-master { width: 170px; top: -30px; }
+  #achv.maplewin .achvrank b { position: absolute; left: -10px; right: -10px; top: 100px; text-align: center; font-size: 29px; letter-spacing: 0;
+    -webkit-text-stroke: 3px #3a3a3a; text-shadow: 0 0 6px rgba(255, 255, 255, 0.55), 0 0 2px rgba(255, 255, 255, 0.6); }
   #achv.maplewin .achvstats { grid-template-columns: 1fr; gap: 4px; margin: 0; }
   #achv.maplewin .achvstats div { padding: 4px 8px; flex-direction: row; justify-content: space-between; align-items: baseline; height: 52px; box-sizing: border-box;
     flex-direction: column; justify-content: center; align-items: flex-start; border-radius: 5px; }
