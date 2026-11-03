@@ -217,7 +217,7 @@
       if (safari) setTimeout(() => front.remove(), 340); else front.addEventListener('ended', () => front.remove());
       // Like the game: the name bar about half the screen wide, a little above the middle (its middle at 44% down; in the
       // art it's at y 181). Phones: big enough to read, its sides cut off.
-      const sc = Math.max(Math.min(innerWidth / 1240, innerHeight / 780), Math.min(0.75, (innerWidth - 8) / 640));
+      const sc = Math.max(Math.min(1.5, innerWidth / 1240, innerHeight / 780), Math.min(0.75, (innerWidth - 8) / 640));   // (at most 1.5x: sharp)
       el.style.setProperty('--s', sc);
       el.style.top = `${Math.max(6, innerHeight * 0.44 - 181 * sc)}px`;
       document.body.appendChild(el);
@@ -293,7 +293,7 @@
       x.addEventListener('click', () => { win.hidden = true; });
       win.querySelector('h2').appendChild(x);
       // Big enough screens get the game's own window (images/achv/ui/window.png, 754 x 741), scaled to fill the screen
-      const fit = () => win.style.setProperty('--ws', Math.min((innerWidth - 16) / 754, (innerHeight - 16) / 741));   // as big as the screen allows
+      const fit = () => win.style.setProperty('--ws', Math.min(1.5, (innerWidth - 16) / 754, (innerHeight - 16) / 741));   // as big as the screen allows (at most 1.5x, so the art stays sharp)
       fit(); addEventListener('resize', fit);
     }
     if (!loggedIn()) {
