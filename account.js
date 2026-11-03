@@ -333,7 +333,19 @@ function acctAppearPlay(into) {   // once, then gone (Settings, when it opens)
     document.body.appendChild(top);
     if (top.tagName === 'VIDEO') { top.currentTime = ava.currentTime; top.play?.().catch(() => {}); }
   }
-  const gone = () => { el.remove(); top?.remove(); watch?.disconnect(); };
+  // Follow your character while it plays: the Settings box can still move (it's centred on wide screens, and grows as the
+  // rest of it loads in), so the effect and the copy re-line up every frame instead of staying where it first was
+  let follow = 0;
+  const track = () => {
+    if (!el.isConnected) return;
+    const q = (ava && ava.isConnected ? ava : into).getBoundingClientRect();
+    el.style.left = (ava ? q.left + q.width / 2 : q.left - 46) + 'px';
+    el.style.top = q.top + q.height / 2 + 'px';
+    if (top) Object.assign(top.style, { left: q.left + 'px', top: q.top + 'px', width: q.width + 'px', height: q.height + 'px' });
+    follow = requestAnimationFrame(track);
+  };
+  follow = requestAnimationFrame(track);
+  const gone = () => { cancelAnimationFrame(follow); el.remove(); top?.remove(); watch?.disconnect(); };
   // Leaving Settings (Close, Esc, clicking outside): the effect, the copy of your character and its sound all stop
   const set = document.getElementById('settings');
   const watch = set && new MutationObserver(() => {
