@@ -128,6 +128,11 @@ function answerFor(d) {
   let e = entryFor(d);
   // Test build only (tools/dev/dev.js console: /egg lucid): today's Extreme clip is Lucid's Garden of Eternal Dream.
   if (window.devEgg === 'lucid' && MODE === 'bgm' && d === Math.floor(Date.now() / DAY_MS)) e = pool.find((x) => data.tracks[x.track]?.egg === 'lucid') ?? e;
+  // Test build only (/bgm kai): today's Extreme clip is one of that boss's BGMs (which one: picked at random when typed).
+  if (window.devBgm && MODE === 'bgm' && d === Math.floor(Date.now() / DAY_MS)) {
+    const list = pool.filter((x) => x.boss.name === window.devBgm.boss);
+    if (list.length) e = list[Math.floor(window.devBgm.r * list.length) % list.length];
+  }
   const boss = e.boss, track = e.track;
   const t = data.tracks[track];
   const h = hash(`${MODE}|${d}|start`);
@@ -445,6 +450,7 @@ function start(d) {
   for (const id of ['player', 'skip', 'picker', 'pickrow', 'infostrip', 'rows']) $(id).hidden = false;
   firstTryGlow(false);
   answer = answerFor(day);
+  if (MODE === 'bgm' && typeof bossKillFor === 'function' && bossKillFor(answer.name)) setTimeout(() => bossKillLoad(bossKillFor(answer.name)), 2000);   // its finishing attack ready for the end
   showPuzzle(day - firstDay() + 1, dateLabel(day), live);   // the info strip (fx.js)
   $('today').hidden = live;
   guesses = [];
@@ -577,14 +583,18 @@ function guess(name) {
   setTimeout(renderEnd, flipMs);
   scheduleEnd();
   limboOver(won(), flipMs);   // Limbo's alert border: gone on a win, its fail screen on a loss
+  // BGM Clip Extreme on Kai's, Malefic Star's, Mayrin's or Bellona's BGM: that boss's finishing attack plays when the
+  // game ends, won (any guess) or lost; a first-guess win plays it in place of your win effect (fx.js bossKill).
+  const kill = MODE === 'bgm' && typeof bossKillFor === 'function' ? bossKillFor(answer.name) : null;
   if (won()) {
-    setTimeout(() => confetti(guesses.length === 1), flipMs);
+    setTimeout(() => (kill ? (guesses.length > 1 && confetti(false), bossKill(kill, guesses.length === 1)) : confetti(guesses.length === 1)), flipMs);
     // First-guess win: Mayrin's Descend plays (the BGM pauses for it). Other wins: no music, the BGM is already playing.
     if (guesses.length === 1 && live) { pause(); resultSound(true, flipMs, 'firstTry'); }
   } else if (live) {
     pause();
-    resultSound(false, flipMs);   // Star Force Destroy
-  }
+    if (kill) setTimeout(() => bossKill(kill, false), flipMs);   // its own sound, in place of Star Force Destroy
+    else resultSound(false, flipMs);   // Star Force Destroy
+  } else if (kill) setTimeout(() => bossKill(kill, false), flipMs);
   if (!audio.playing) { audio.pos = 0; audio.ended = false; drawBar(); }   // not playing: the full track starts from 0:00
   updateStreak();
   loadStats();

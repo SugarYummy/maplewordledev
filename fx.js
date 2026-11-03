@@ -312,6 +312,26 @@ function bigWin() {
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   setTimeout(mesoShow, playHecate());
 }
+// BGM Clip Extreme on a boss with a finishing attack (Kai, Malefic Star, Mayrin, Bellona): that attack plays for everyone
+// when the game ends, won or lost (bgm.js). A first-guess win plays it in place of your win effect, with the meso show after.
+const bossKillFor = (boss) => Object.keys(HECATE).find((id) => HECATE[id].achv === `kill:${boss}`) || null;
+const bossKillBlob = {};
+function bossKillLoad(id) {
+  if (SOUNDS[id]) soundFile(SOUNDS[id]).catch(() => {});
+  bossKillBlob[id] ??= fetch(`video/hecate/${id}.${SAFARI ? 'webp' : 'webm'}${HECATE[id].v ? '?v=' + HECATE[id].v : ''}`).then((r) => (r.ok ? r.blob() : null)).catch(() => null);
+  return bossKillBlob[id];
+}
+async function bossKill(id, firstTry) {
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const blob = await bossKillLoad(id);
+  if (!blob) return firstTry ? bigWin() : undefined;
+  const keep = hecate, was = hecateLast;
+  hecate = { id, skin: HECATE[id], blob };
+  const burst = playHecate(true);
+  hecate = keep;
+  hecateLast = was;
+  if (firstTry) setTimeout(mesoShow, burst);
+}
 // Limbo's glitch mashup answered right (BGM Clip): Limbo's cutscene for everyone (only that: no meso show or glow).
 let limboCutBlob = null;
 function limboCutLoad() {
