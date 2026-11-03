@@ -1924,12 +1924,11 @@ function openMeso(page = 1) {
       `<table class="mesotable"><tr><th>Guesses</th>${cells}</tr><tr><th>Mesos</th>${vals}</tr></table>${bonus}`;
   };
   body.innerHTML =
-    // Two columns on computers / landscape screens (style.css): your mesos on the left, how to earn on the right.
-    '<div class="mesocol">' + `<p class="mesototal"><img src="images/fx/meso-gold.png" alt=""> ${fmt(mesoTotal())}</p>` + ev +
+    `<p class="mesototal"><img src="images/fx/meso-gold.png" alt=""> ${fmt(mesoTotal())}</p>` + ev +
     '<p>Finish puzzles to earn mesos. The fewer guesses, the more you get! Archive days pay 10% (rounded up). Spend them in the 🛍️ Shop.</p>' +
-    (all.length ? '<h3>Recent</h3><ul class="mesorecent">' + recent.map(mesoRow).join('') + '</ul>' + pager(page, last) : '') + '</div><div class="mesocol">' +
+    (all.length ? '<h3>Recent</h3><ul class="mesorecent">' + recent.map(mesoRow).join('') + '</ul>' + pager(page, last) : '') +
     '<h3 class="mesohow">How to earn</h3><p class="mesobonus">Boss Wordle and BGM Clip: only your best mode each day pays (do better on another mode and you get the difference), and the bonus pays once a day.</p>' +
-    Object.keys(MESO_TABLE).map(rows).join('') + '</div>';
+    Object.keys(MESO_TABLE).map(rows).join('');
   // The list is as tall as its tallest page (some rows take 2 lines), so the arrows under it never move and can be spammed.
   const ul = body.querySelector('.mesorecent');
   if (ul && last > 1) {

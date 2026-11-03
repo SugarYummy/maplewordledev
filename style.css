@@ -1210,12 +1210,10 @@ html.dark .achvstats div { border-color: rgba(255, 255, 255, 0.12); }
 }
 /* Computers and landscape screens: the other windows wide and in the middle too (after their own rules, so these win) */
 @media (min-width: 900px) and (orientation: landscape) {
-  /* Mesos, Shop and Customize too: wide and in the middle, in two columns */
+  /* Mesos, Shop and Customize too: wide and in the middle (Shop and Customize in two columns) */
   :is(#meso, #shop, #themes) { align-items: center; }
   :is(#meso, #shop, #themes) > .panel { margin: 0; box-sizing: border-box; max-height: calc(100vh - 48px); }
   :is(#meso, #shop) .popupbody { width: min(780px, 70vw); }
-  #meso .popupbody { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; align-items: start; }
-  #meso .mesocol > h3:first-child { margin-top: 0; }
   #shop .shoplist { display: grid; grid-template-columns: 1fr 1fr; }
   #themeList { display: grid; grid-template-columns: 1fr 1fr; width: min(720px, 64vw); }
   /* How to play (two columns of text), the Archive (three columns of days) and Settings: the same */
