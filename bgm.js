@@ -588,8 +588,8 @@ function guess(name) {
   // BGM Clip Extreme on Kai's, Malefic Star's, Mayrin's or Bellona's BGM: that boss's finishing attack plays when the
   // game ends, won (any guess) or lost; a first-guess win plays it in place of your win effect (fx.js bossKill).
   const kill = MODE === 'bgm' && typeof bossKillFor === 'function' ? bossKillFor(answer.name) : null;
-  // ...and on Jupiter's: your character's entrance under Share (account.js), the BGM quiet meanwhile; then the BGM plays
-  // (from 0:00) along with the mesos. It takes the place of a first-guess win effect and the win / lose music, so it's
+  // ...and on Jupiter's: your character's entrance under Share (account.js), the BGM quiet until it peaks; then the BGM
+  // plays (from 0:00) along with the mesos. It takes the place of a first-guess win effect and the win / lose music, so it's
   // seen and heard. No character: the usual.
   if (MODE === 'bgm' && answer.name === 'Jupiter' && typeof acctJupiterEntrance === 'function' && acct() && acctMapleImg()) {
     const game = answer;
@@ -608,8 +608,8 @@ function guess(name) {
       const ms = await bossKill(kill, !won() ? null : guesses.length === 1 ? 'show' : 'rain');
       setTimeout(() => bgmAfter(game), ms);
     }, flipMs);
-  } else if (won() && guesses.length === 1 && typeof hecate !== 'undefined' && (hecate?.id === 'limboCut' || (!hecate && limboAllOn()))) {
-    // A first-guess win whose win effect is Limbo Transition (Limbo mode, or picked in Customize): like the finishing
+  } else if (won() && guesses.length === 1 && typeof limboAllOn === 'function' && limboAllOn()) {
+    // A first-guess win in Limbo mode (its win effect: Limbo Transition): like the finishing
     // attacks, the BGM is quiet while it plays (its own sound in place of the first-guess music), then in from 0:00.
     const game = answer;
     pause();

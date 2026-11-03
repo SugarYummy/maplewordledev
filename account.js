@@ -303,7 +303,8 @@ const ACCT_AVATARS = {
 const ACCT_APPEAR = 'mapleWordle:appearFx';
 const acctClaimed = (id) => { try { return JSON.parse(localStorage.getItem('mapleWordle:achv'))?._claimed?.[id] != null; } catch { return false; } };
 const ACCT_EFFECTS = {
-  seethingBalance: { name: 'Seething Balance', from: 'Seething Balance (achievement)', src: 'images/avatars/seething-balance',
+  // apex: ms into it when it peaks (the white flash before it bursts open); BGM Clip's mesos and BGM come in then
+  seethingBalance: { name: 'Seething Balance', from: 'Seething Balance (achievement)', src: 'images/avatars/seething-balance', apex: 2460,
     pic: 'images/achv/seething-balance.png?v=2', owned: () => acctClaimed('kill:Jupiter') },
 };
 const acctAppearOn = () => { const id = acct() && localStorage.getItem(ACCT_APPEAR); return id && ACCT_EFFECTS[id]?.owned() ? id : null; };
@@ -360,8 +361,8 @@ function acctAppearPlay(into, id = acctAppearOn()) {   // once, then gone (Setti
   if (safari) setTimeout(gone, 3700);
 }
 // BGM Clip Extreme on Jupiter's BGM: when the game ends (won in any number of guesses or lost), your MapleStory character
-// steps in under the Share button with Jupiter's entrance (Seething Balance), for everyone with a character. Returns how
-// long it plays (ms) so the win's meso show waits for it; 0 (no character, or reduced motion): nothing happens.
+// steps in under the Share button with Jupiter's entrance (Seething Balance), for everyone with a character. Returns when
+// it peaks (ms), for the mesos and the BGM to come in then; 0 (no character, or reduced motion): right away.
 function acctJupiterEntrance() {
   const share = document.getElementById('share'), img = acct() ? acctMapleImg() : '';
   document.getElementById('jupiterChar')?.remove();
@@ -370,7 +371,7 @@ function acctJupiterEntrance() {
   share.closest('p').after(box);
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) return 0;
   acctAppearPlay(box, 'seethingBalance');
-  return 3600;
+  return ACCT_EFFECTS.seethingBalance.apex;
 }
 // A shop avatar you haven't looked at yet (new in the MapleStory Character list): the Settings cog glows with NEW, and
 // Account Settings, MapleStory Character and the avatar itself say NEW, until that list is opened.
