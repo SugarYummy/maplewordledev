@@ -148,9 +148,9 @@
   const TIER_OF = {"col:bgm": "legendary", "col:boss": "legendary", "col:class": "unique", "col:anim": "unique", "win1": "common", "wins10": "common", "wins50": "rare", "wins100": "epic", "wins500": "unique", "first1": "common", "first10": "rare", "first50": "epic", "diamond": "rare", "rainbow": "rare", "allgames": "rare", "days7": "common", "days30": "rare", "days100": "epic", "streak3": "common", "streak7": "rare", "streak30": "epic", "streak100": "unique", "meso1k": "common", "meso10k": "rare", "meso50k": "epic", "buy1": "common", "buy5": "rare", "buy10": "epic", "kill:Jupiter": "epic", "limbo": "epic"};
   for (const a of ALL) a.tier = TIER_OF[a.id] || (a.id.startsWith('kill:') ? 'epic' : 'common');
   const apOf = (got) => ALL.reduce((t, a) => t + (got[a.id] != null ? TIERS[a.tier][1] : 0), 0);
-  // Ranks by AP, with MapleStory's emblems (images/achv/rank). Master (501+ and the site's top 10) needs a site-wide
+  // Ranks by AP, with MapleStory's emblems (images/achv/rank). Master (500+ and the site's top 10) needs a site-wide
   // ranking, which isn't there yet.
-  const RANKS = [['bronze', 'Bronze', 0], ['silver', 'Silver', 101], ['gold', 'Gold', 201], ['platinum', 'Platinum', 301], ['diamond', 'Diamond', 501]];
+  const RANKS = [['bronze', 'Bronze', 0], ['silver', 'Silver', 100], ['gold', 'Gold', 200], ['platinum', 'Platinum', 300], ['diamond', 'Diamond', 500]];
   const rankOf = (ap) => RANKS.filter((r) => ap >= r[2]).pop();
   // Ranked up (more AP than the rank saved last time): GradeUp plays, after the achievement banners. Saved in _rank.
   function rankCheck(got, announce) {
