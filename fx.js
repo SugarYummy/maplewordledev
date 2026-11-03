@@ -1266,7 +1266,7 @@ function drawThemeButton() {
   // Each tab: the default ones first (Default background, Sol Hecate, Remove all effects), then the rest A to Z (a bundle by its name).
   const FIRST = ['Remove all effects', THEMES.default, HECATE.default.name];
   const fillSorted = fill;
-  const labelOf = (el) => (el.querySelector('.themename')?.firstChild?.textContent || '').trim();
+  const labelOf = (el) => ([...(el.querySelector('.themename')?.childNodes || [])].find((n) => n.nodeType === 3)?.textContent || '').trim();   // its name (not the ✓ / ✕ or "1 of 5 on")
   const rank = (el) => (el.classList.contains('fxvoid') ? -1 : FIRST.includes(labelOf(el)) ? FIRST.indexOf(labelOf(el)) : 9);
   fill = () => {
     fillSorted();
