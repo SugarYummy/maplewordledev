@@ -38,7 +38,7 @@
   // Everything the achievements look at, from this browser's (= the account's) saves.
   function stats(L) {
     const s = { played: 0, wins: 0, firstTry: 0, firstReg: 0, diamond: 0, rainbow: 0, days: new Set(), games: new Set(), streak: 0, mesos: 0,
-      won: { bgm: new Set(), boss: new Set(), class: new Set(), anim: new Set() }, winsBy: { boss: 0, bgm: 0, class: 0, anim: 0 }, limbo: false,
+      won: { bgm: new Set(), boss: new Set(), class: new Set(), anim: new Set() }, winsBy: { boss: 0, bgm: 0, class: 0, anim: 0 }, extremeWins: 0, limbo: false,
       tracks: new Set(json('mapleWordle:bgmTracks', [])), buys: 0,
       limboMash: read('mapleWordle:limboMash') === '1' };
     const byMode = {};   // each mode's days played: [day, won]
@@ -54,6 +54,7 @@
       if (!w) continue;
       s.wins++;
       s.winsBy[game]++;
+      if (mode === 'extreme' || mode === 'bgm') s.extremeWins++;   // Extreme: Boss Wordle Extreme and BGM Clip Extreme
       s.games.add(game);
       if (+w[1] === 1) { s.firstTry++; if (game === 'boss' || game === 'class') s.firstReg++; }   // (a star; regular Wordle: Boss and Class)
       if (r.endsWith('💎')) s.diamond++;
@@ -112,6 +113,8 @@
         (n) => times(n, 'Win a game of BGM Clip.', 'Win # games of BGM Clip.'), (s) => s.winsBy.bgm, [1, 10, 25, 100, 500]),
       ...steps('classwins', ['Class Rookie', 'Class Expert', 'Class Elite', 'Class Legend', 'Class Transcendent'],
         (n) => times(n, 'Win a game of Class Wordle or Attack Animation.', 'Win # games of Class Wordle or Attack Animation.'), (s) => s.winsBy.class + s.winsBy.anim, [1, 10, 25, 100, 500]),
+      ...steps('extremewins', ['Extreme Beginner', 'Extreme Effort', 'Extreme Mastery', 'Extreme Legend', 'Extreme Champion'],
+        (n) => times(n, 'Win a game in Extreme (Boss Wordle or BGM Clip).', 'Win # games in Extreme (Boss Wordle or BGM Clip).'), (s) => s.extremeWins, [1, 10, 25, 100, 500]),
     ]],
     ['Dedication', [
       ...steps('days', ['Just Getting Started', 'Dedicated', 'Tryhard', 'Obsession', 'Addiction'],
