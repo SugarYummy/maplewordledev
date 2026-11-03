@@ -1055,13 +1055,10 @@ h1.tglitch .gtext::after { animation: glitchb 1.6s steps(1) -1.088s 1; }
 .achvicon img.cup { width: calc(41 * var(--p)); height: calc(32 * var(--p)); max-height: none; max-width: none; }
 .achvicon img.c-normal { width: calc(29 * var(--p)); height: calc(29 * var(--p)); }
 .achvicon i { margin-top: calc(1 * var(--p)); font: normal 700 calc(19.5 * var(--p)) / 1 Arial, 'Liberation Sans', sans-serif; color: #fff; text-shadow: 0 1px 2px #000; }
-.achv:not(.on) .achvicon img { filter: grayscale(1) brightness(0.7); }
-.achv:not(.on) .achvicon i { color: #9a9a9a; }
 .achv.secret .achvicon img { filter: none; }
 .achvtitle { left: calc(83 * var(--p)); top: calc(13 * var(--p)); right: calc(20 * var(--p)); font-size: calc(16.2 * var(--p)); font-weight: 400; letter-spacing: 0.015em; -webkit-text-stroke: calc(0.35 * var(--p)) currentColor;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #f2f2f2; }
 .achvhow { left: calc(83 * var(--p)); top: calc(40 * var(--p)); right: calc(120 * var(--p)); color: #a9a9a9; font-size: calc(11.5 * var(--p)); line-height: 1.3; letter-spacing: 0.04em; }
-.achv:not(.on) .achvtitle { color: #a8a8a8; }
 .achv.secret .achvtitle { color: #c9a2ff; }
 .achvq { opacity: 0.45; letter-spacing: 0.15em; }
 .achvgauge { left: calc(16 * var(--p)); top: calc(82 * var(--p)); width: calc(513 * var(--p)); height: calc(4 * var(--p)); }
@@ -1144,11 +1141,10 @@ html.dark .achvstats div { border-color: rgba(255, 255, 255, 0.12); }
   border-bottom: 1px solid #1c1c1c; box-shadow: 0 1px 0 #4a4a4a; font: 800 21px/1.2 Arial, 'Liberation Sans', sans-serif; text-transform: uppercase; letter-spacing: 0.01em;
   color: #e4f53c; text-shadow: 0 1px 0 #4d5410, 0 0 6px rgba(228, 245, 60, 0.25); }
 #achv.maplewin .closebar { display: none; }
-.achvx { position: absolute; top: 9px; right: 10px; width: 26px; height: 26px; padding: 0; margin: 0; border-radius: 4px; cursor: pointer;
-  border: 1px solid #111; background: linear-gradient(#5a5a5a, #3a3a3a); box-shadow: inset 0 1px 0 #777; color: #fff;
-  font: 900 14px/24px Arial, sans-serif; text-shadow: 0 1px 1px #000; }
-.achvx:hover { background: linear-gradient(#6c6c6c, #474747); }
-.achvx:active { background: linear-gradient(#3a3a3a, #4a4a4a); }
+.achvx { position: absolute; top: 12px; right: 12px; width: 21px; height: 21px; padding: 0; margin: 0; border: 0; cursor: pointer;
+  background: url(images/achv/ui/close-normal.png) 0 0 / 100% 100%; }   /* the game's own X */
+.achvx:hover { background-image: url(images/achv/ui/close-mouseOver.png); }
+.achvx:active { background-image: url(images/achv/ui/close-pressed.png); }
 #achv.maplewin .popupbody { padding: 12px; border-radius: 6px; background: #232323; border: 1px solid #111; box-shadow: inset 0 0 0 1px #3e3e3e; }
 #achv.maplewin .achvhead { color: #e3c48c; }
 #achv.maplewin .achvhead small { color: #aaa; opacity: 1; }
@@ -1156,3 +1152,34 @@ html.dark .achvstats div { border-color: rgba(255, 255, 255, 0.12); }
 #achv.maplewin .achvstats small { color: #a9a9a9; opacity: 1; }
 #achv.maplewin .achvstats b { color: #f2f2f2; }
 #achv.maplewin .achvlocked, #achv.maplewin .achvcount { color: #ddd; }
+
+/* Screens that fit it (Achievements at 60%+): the game's window itself, its title and the emblem's box baked in. The emblem and
+   your stats down the left, the achievements scrolling on the right. */
+@media (min-width: 470px) and (min-height: 460px) {
+  #achv.maplewin { align-items: center; }
+  #achv.maplewin > .panel { flex: none; width: 754px; height: 741px; max-width: none; max-height: none; margin: 0; padding: 0; overflow: visible;
+    border: 0; border-radius: 0; box-shadow: none; background: url(images/achv/ui/window.png) 0 0 / 100% 100% no-repeat; transform: scale(var(--ws, 1)); }
+  #achv.maplewin h2 { position: absolute; inset: 0 0 auto 0; height: 44px; margin: 0; padding: 0; background: none; border: 0; box-shadow: none;
+    font-size: 0; color: transparent; text-shadow: none; }   /* (the title is in the window art) */
+  #achv.maplewin .achvx { top: 11px; right: 13px; }
+  #achv.maplewin .popupbody { position: absolute; inset: 0; width: auto; padding: 0; border: 0; border-radius: 0; background: none; box-shadow: none; }
+  #achv.maplewin .achvside { position: absolute; left: 18px; top: 62px; width: 136px; }
+  #achv.maplewin .achvrank { height: 135px; margin: 0 0 12px; justify-content: center; }
+  #achv.maplewin .achvrank img { width: 92px; margin-bottom: -12px; }
+  #achv.maplewin .achvrank b { font-size: 26px; }
+  #achv.maplewin .achvstats { grid-template-columns: 1fr; gap: 4px; margin: 0; }
+  #achv.maplewin .achvstats div { padding: 4px 8px; flex-direction: row; justify-content: space-between; align-items: baseline; height: 52px; box-sizing: border-box;
+    flex-direction: column; justify-content: center; align-items: flex-start; border-radius: 5px; }
+  #achv.maplewin .achvmain { position: absolute; left: 170px; right: 12px; top: 48px; bottom: 14px; overflow-y: auto; padding: 0 6px 0 4px;
+    scrollbar-width: thin; scrollbar-color: #6a6a6a transparent; }
+  #achv.maplewin .achvmain .achvhead:first-child { margin-top: 4px; }
+  #achv.maplewin .achvlist { width: 545px; min-width: 0; margin: 0; }
+  #achv.maplewin .achvlocked, #achv.maplewin .achvcount { position: absolute; left: 170px; right: 12px; top: 300px; }
+}
+.achv[hidden], .achvlist[hidden], .achvhead[hidden] { display: none; }
+.achvsearch { display: block; width: 100%; margin: 10px 0 0; box-sizing: border-box; font: 12px Arial, 'Liberation Sans', sans-serif; padding: 3px 6px;
+  border: 1px solid #111; border-radius: 3px; background: #fff; color: #111; }
+.achvnone { margin: 120px 0; text-align: center; font: 700 18px Arial, 'Liberation Sans', sans-serif; color: #eee; }
+@media (min-width: 470px) and (min-height: 460px) {
+  #achv.maplewin .achvsearch { position: absolute; left: -2px; top: 637px; width: 91px; height: 16px; margin: 0; padding: 0 4px; border: 0; border-radius: 2px; background: transparent; font-size: 11px; }
+}

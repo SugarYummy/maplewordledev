@@ -288,10 +288,13 @@
     const win = document.getElementById('achv');
     if (!win.classList.contains('maplewin')) {   // like the game's achievement window: its title bar and an X (a click outside or Esc closes it too)
       win.classList.add('maplewin');
-      const x = Object.assign(document.createElement('button'), { className: 'achvx', title: 'Close', innerHTML: '&#x2715;' });
+      const x = Object.assign(document.createElement('button'), { className: 'achvx', title: 'Close' });
       x.setAttribute('aria-label', 'Close');
       x.addEventListener('click', () => { win.hidden = true; });
       win.querySelector('h2').appendChild(x);
+      // Big enough screens get the game's own window (images/achv/ui/window.png, 754 x 741), scaled down to fit
+      const fit = () => win.style.setProperty('--ws', Math.min(1, (innerWidth - 16) / 754, (innerHeight - 16) / 741));
+      fit(); addEventListener('resize', fit);
     }
     if (!loggedIn()) {
       body.innerHTML = '<p class="achvlocked">Achievements need an account.<br>Log in or create an account in settings.</p>';
@@ -306,14 +309,16 @@
       ['Best streak', s.streak], ['Mesos earned', fmt(s.mesos)], ['Achievements', `${done} / ${ALL.length}`]];
     const ap = apOf(got), rk = rankOf(ap), next = RANKS[RANKS.indexOf(rk) + 1];
     // Like the game's achievement window: your rank's emblem with your points under it
-    body.innerHTML = `<div class="achvrank" title="${rk[1]}${next ? ` · ${fmt(next[2] - ap)} AP to ${next[1]}` : ''}"><img src="images/achv/rank/${rk[0]}.png" alt="${rk[1]}"><b>${ap}</b></div>` + '<div class="achvstats">' + tiles.map(([k, v]) => `<div><small>${k}</small><b>${typeof v === 'number' ? fmt(v) : v}</b></div>`).join('') + '</div>';
+    body.innerHTML = '<div class="achvside"></div><div class="achvmain"></div>';
+    const side = body.firstChild, main = body.lastChild;
+    side.innerHTML = `<div class="achvrank" title="${rk[1]}${next ? ` · ${fmt(next[2] - ap)} AP to ${next[1]}` : ''}"><img src="images/achv/rank/${rk[0]}.png" alt="${rk[1]}"><b>${ap}</b></div>` + '<div class="achvstats">' + tiles.map(([k, v]) => `<div><small>${k}</small><b>${typeof v === 'number' ? fmt(v) : v}</b></div>`).join('') + '</div>';
     // Rows like the game's achievement window (images/achv/ui, MapleStory's own form pieces): the tier's cup with its AP
     // (hidden ones keep their own picture), name, description, the gauge, the seal and date when done. Unlocked hidden
     // ones get the reward strip with the Claim Reward button.
     for (const [title, list, hidden] of SECTIONS) {
       const n = list.filter((a) => got[a.id] != null).length;
-      body.insertAdjacentHTML('beforeend', `<h3 class="achvhead">${title} <small>${n} / ${list.length}</small></h3>`);
-      const box = body.appendChild(Object.assign(document.createElement('div'), { className: 'achvlist' }));
+      main.insertAdjacentHTML('beforeend', `<h3 class="achvhead">${title} <small>${n} / ${list.length}</small></h3>`);
+      const box = main.appendChild(Object.assign(document.createElement('div'), { className: 'achvlist' }));
       for (const a of list) {
         const [have, need] = a.prog(s, L), on = got[a.id] != null, hide = hidden && !on, rw = on && hidden && a.reward;
         const claimed = rw && got._claimed?.[a.id];
@@ -329,6 +334,7 @@
           (rw ? `<div class="achvrwicon"><img src="${a.mesos ? 'images/fx/meso-bag.png' : a.fx ? `images/fx/hecate/${a.fx}.webp?v=6` : 'images/fx/seething-balance.webp?v=2'}" alt=""></div>` +
             '<small class="achvreward"></small>' + (claimed ? '<img class="achvclaimed" src="images/achv/ui/claim-disabled.png" alt="Claimed">' : '<button class="achvclaim" aria-label="Claim Reward"></button>') : '');
         row.title = `${TIERS[a.tier][0]} · ${TIERS[a.tier][1]} AP`;
+        row.dataset.q = `${on ? a.full || a.name : a.name} ${hide ? '' : a.how}`.toLowerCase();
         row.querySelector('.achvtitle').textContent = on ? a.full || a.name : a.name;
         row.querySelector('.achvhow').textContent = hide ? '???' : a.how;
         if (hide) row.querySelector('.achvhow').classList.add('achvq');
@@ -341,6 +347,20 @@
         if (cb) { cb.addEventListener('click', () => claim(a, cb)); if (typeof hoverSound === 'function') hoverSound(cb); }
       }
     }
+    // The window's search box (the game's, bottom left): shows only the achievements whose name or description match
+    const q = side.appendChild(Object.assign(document.createElement('input'), { className: 'achvsearch', type: 'search', placeholder: 'Search', spellcheck: false }));
+    q.setAttribute('aria-label', 'Search achievements');
+    q.addEventListener('input', () => {
+      const t = q.value.trim().toLowerCase();
+      for (const list of main.querySelectorAll('.achvlist')) {
+        let any = false;
+        for (const r of list.children) { const hit = !t || r.dataset.q.includes(t); r.hidden = !hit; any ||= hit; }
+        list.hidden = list.previousElementSibling.hidden = !any;
+      }
+      let none = main.querySelector('.achvnone');
+      if (!main.querySelector('.achvlist:not([hidden])')) { if (!none) main.insertAdjacentHTML('beforeend', '<p class="achvnone">No results found.</p>'); }
+      else none?.remove();
+    });
   }
 
   const btn = Object.assign(document.createElement('button'), { id: 'achvBtn', className: 'panel', title: 'Achievements', innerHTML: '<img src="images/achv/menu-icon.png" alt="">' });
