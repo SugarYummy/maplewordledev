@@ -1029,10 +1029,11 @@ h1.tglitch .gtext::after { animation: glitchb 1.6s steps(1) -1.088s 1; }
 /* Achievements (achv.js): the trophy button next to Archive, its window, and the "unlocked" note */
 #achvBtn { position: fixed; top: 54px; right: 12px; z-index: 5; margin: 0; width: 34px; height: 34px; padding: 0; border: none; border-radius: 10px;
   cursor: pointer; display: flex; align-items: center; justify-content: center; max-width: none; }
-#achvBtn:hover { background: rgba(var(--wb), 0.8); }
+#achvBtn, #achvBtn:hover { background: none; box-shadow: none; }   /* the icon is its own tile */
+#achvBtn:hover img { filter: brightness(1.15); }
 #achvBtn .newtag { top: -5px; left: -8px; font-size: 9px; line-height: 13px; padding: 0 4px; }
 @media (max-width: 700px) { #achvBtn { top: 12px; right: 54px; } #themeBtn { top: 12px; right: 96px; } }   /* phones: in a row beside Settings (a column would cover the game box) */
-#achvBtn img { width: 22px; height: 23px; image-rendering: pixelated; }
+#achvBtn img { width: 30px; height: 30px; }
 .achvlocked { margin: 18px 8px; font-weight: 600; line-height: 1.5; text-align: center; }
 .achvcount { margin: 0 0 6px; font-weight: 700; }
 .achvhead { margin: 14px 0 6px; text-align: left; }

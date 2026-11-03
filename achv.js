@@ -335,7 +335,7 @@
     }
   }
 
-  const btn = Object.assign(document.createElement('button'), { id: 'achvBtn', className: 'panel', title: 'Achievements', innerHTML: '<img src="images/achv/4000038.png" alt="">' });
+  const btn = Object.assign(document.createElement('button'), { id: 'achvBtn', className: 'panel', title: 'Achievements', innerHTML: '<img src="images/achv/menu-icon.png" alt="">' });
   btn.setAttribute('aria-label', 'Achievements');
   btn.addEventListener('click', open);
   document.body.appendChild(btn);
