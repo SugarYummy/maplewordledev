@@ -297,8 +297,8 @@
       x.setAttribute('aria-label', 'Close');
       x.addEventListener('click', () => { win.hidden = true; });
       win.querySelector('h2').appendChild(x);
-      // Big enough screens get the game's own window (images/achv/ui/window.png, 754 x 741), scaled down to fit
-      const fit = () => win.style.setProperty('--ws', Math.min(1, (innerWidth - 16) / 754, (innerHeight - 16) / 741));
+      // Big enough screens get the game's own window (images/achv/ui/window.png, 754 x 741), scaled to fill the screen
+      const fit = () => win.style.setProperty('--ws', Math.min((innerWidth - 16) / 754, (innerHeight - 16) / 741));   // as big as the screen allows
       fit(); addEventListener('resize', fit);
     }
     if (!loggedIn()) {
