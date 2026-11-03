@@ -285,6 +285,14 @@
   }
   async function open() {
     const body = popup('achv', 'Achievements');
+    const win = document.getElementById('achv');
+    if (!win.classList.contains('maplewin')) {   // like the game's achievement window: its title bar and an X (a click outside or Esc closes it too)
+      win.classList.add('maplewin');
+      const x = Object.assign(document.createElement('button'), { className: 'achvx', title: 'Close', innerHTML: '&#x2715;' });
+      x.setAttribute('aria-label', 'Close');
+      x.addEventListener('click', () => { win.hidden = true; });
+      win.querySelector('h2').appendChild(x);
+    }
     if (!loggedIn()) {
       body.innerHTML = '<p class="achvlocked">Achievements need an account.<br>Log in or create an account in settings.</p>';
       return;
