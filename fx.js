@@ -306,11 +306,18 @@ function playHecate(special = false) {   // special: Limbo's mashup win (plays w
   document.body.appendChild(el);
   el.play?.().catch(done);
   if (SOUNDS[id]) {   // its skill sound, in step with the clip (from when its video really starts)
-    const lag = id === 'limboCut' ? 150 : 0;
+    // Guide of Destiny's sound starts 0.56 s late, so its last hit (2.08 s in) lands on the card exploding (2.64 s in)
+    const lag = id === 'limboCut' ? 150 : id === 'mayrinKill' ? 560 : 0;
     if (SAFARI) resultSound(true, lag, id);
     else el.addEventListener('playing', () => resultSound(true, lag, id), { once: true });
   }
   return skin.burst;
+}
+// A first-guess win with a boss finishing attack as the win effect: the first-guess music waits for its burst (with the
+// mesos) and starts at full volume, like on that boss's BGM Clip Extreme day. 0 for any other win effect.
+function firstTryBurst() {
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches || limboAllOn() || typeof hecate === 'undefined' || !hecate) return 0;
+  return HECATE[hecate.id]?.achv ? HECATE[hecate.id].burst : 0;
 }
 function bigWin() {
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
