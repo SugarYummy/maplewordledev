@@ -4,7 +4,7 @@
 // note (the first look ever unlocks what was earned before quietly). Logged out, the window just says to make an account.
 // The window: your stats on top, then each group of achievements; secret ones show as ??? until found.
 (() => {
-  const ACHV_KEY = 'mapleWordle:achv';   // { <id>: <day unlocked>, _bestStreak }
+  const ACHV_KEY = 'mapleWordle:achv';   // { <id>: <day unlocked>, _bestWinStreak }
   const DAY_MS = 86400000, today = () => Math.floor(Date.now() / DAY_MS);
   const GAMES = { boss: ['story', 'normal', 'hard', 'extreme'], bgm: ['bgmnormal', 'bgm'], class: ['class'], anim: ['anim'] };
   const ALL_MODES = Object.values(GAMES).flat();
@@ -37,7 +37,7 @@
 
   // Everything the achievements look at, from this browser's (= the account's) saves.
   function stats(L) {
-    const s = { played: 0, wins: 0, firstTry: 0, diamond: 0, rainbow: 0, days: new Set(), games: new Set(), streak: 0, mesos: 0,
+    const s = { played: 0, wins: 0, firstTry: 0, firstReg: 0, diamond: 0, rainbow: 0, days: new Set(), games: new Set(), streak: 0, mesos: 0,
       won: { bgm: new Set(), boss: new Set(), class: new Set(), anim: new Set() }, limbo: false,
       tracks: new Set(json('mapleWordle:bgmTracks', [])), buys: 0,
       limboMash: read('mapleWordle:limboMash') === '1' };
@@ -54,7 +54,7 @@
       if (!w) continue;
       s.wins++;
       s.games.add(game);
-      if (+w[1] === 1) s.firstTry++;
+      if (+w[1] === 1) { s.firstTry++; if (game === 'boss' || game === 'class') s.firstReg++; }   // (a star; regular Wordle: Boss and Class)
       if (r.endsWith('💎')) s.diamond++;
       if (r.endsWith('🌈')) s.rainbow++;
       if (read(`mapleWordle:style:${mode}:${d}`) === 'limborb') s.limbo = true;
@@ -64,18 +64,12 @@
       const last = g[g.length - 1];
       if (last) s.won[game].add(game === 'boss' ? (L?.bossOf[last] || last) : last);
     }
-    for (const m of ALL_MODES) s.streak = Math.max(s.streak, json(`mapleWordle:streak:${m}`, {}).count || 0);
-    // ...and the best streak in everything saved (the Archive too, day by day), like the games count it: Story counts
-    // days in a row; the other modes count wins in a row (a loss ends it)
-    for (const [mode, list] of Object.entries(byMode)) {
-      let run = 0, prev = null;
-      for (const [d, won] of list.sort((a, b) => a[0] - b[0])) {
-        run = mode === 'story' ? (prev === d - 1 ? run + 1 : 1) : won ? run + 1 : 0;
-        prev = d;
-        s.streak = Math.max(s.streak, run);
-      }
+    // The best win streak in any one mode: wins in a row, day by day through everything saved (the Archive too); a loss ends it
+    for (const list of Object.values(byMode)) {
+      let run = 0;
+      for (const [, won] of list.sort((a, b) => a[0] - b[0])) { run = won ? run + 1 : 0; s.streak = Math.max(s.streak, run); }
     }
-    s.streak = Math.max(s.streak, json(ACHV_KEY, {})._bestStreak || 0);   // the best one seen, kept (a streak can end)
+    s.streak = Math.max(s.streak, json(ACHV_KEY, {})._bestWinStreak || 0);   // the best one seen, kept (a streak can end)
     // Shop buys: every shop item you own (fx.js)
     try { s.buys = Object.keys(SHOP).filter(shopOwned).length; } catch {}
     s.mesos = json('mapleWordle:mesoLog', []).reduce((t, e) => t + Math.max(0, e.amount || 0), 0);
@@ -93,42 +87,38 @@
   const kill = (boss, name, full, img, fx) => A(`kill:${boss}`, name, `Played all versions of ${boss}'s BGM in Extreme mode.`,
     (s, L) => { const t = L?.tracksOf[boss] || []; return [t.filter((x) => s.tracks.has(x)).length, t.length || 1]; },
     `images/bosses/${img}.png`, { full, fx, reward: 'Guess in 1 win effect' });
+  // Five steps per kind: 10 / 20 / 30 / 40 / 100 AP (Common / Rare / Epic / Unique / Legendary). Cups as icons (hidden: their own).
+  const steps = (id, names, how, val, needs) => names.map((n, i) => A(`${id}${needs[i]}`, n, how(needs[i]), (s) => upTo(val(s), needs[i]), '', { ap: [10, 20, 30, 40, 100][i] }));
+  const times = (n, one, many) => n === 1 ? one : many.replace('#', fmt(n));
   const SECTIONS = [
-    ['Collections', [
-      A('col:bgm', 'MMF Meister', 'Win BGM Clip with every boss.', (s, L) => [count(s.won.bgm, L?.bgm), L?.bgm.length || 1], '1142989'),
-      A('col:boss', 'Legendary Hunter', 'Win Boss Wordle with every boss.', (s, L) => [count(s.won.boss, L?.bosses), L?.bosses.length || 1], '1142005'),
-      A('col:class', 'Master Collector', 'Win Class Wordle with every class.', (s, L) => [count(s.won.class, L?.classes), L?.classes.length || 1], '1142325'),
-      A('col:anim', 'Amazing Collector', 'Win Attack Animation with every class.', (s, L) => [count(s.won.anim, L?.anim), L?.anim.length || 1], '1142324'),
-    ]],
     ['Milestones', [
-      A('win1', 'Special Training Beginner', 'Win a game.', (s) => upTo(s.wins, 1), '1142242'),
-      A('wins10', 'Special Training Intermediate', 'Win 10 games.', (s) => upTo(s.wins, 10), '1142243'),
-      A('wins50', 'Special Training Graduate', 'Win 50 games.', (s) => upTo(s.wins, 50), '1142244'),
-      A('wins100', 'Special Training Superior', 'Win 100 games.', (s) => upTo(s.wins, 100), '1142245'),
-      A('wins500', 'Special Training Master', 'Win 500 games.', (s) => upTo(s.wins, 500), '1142246'),
-      A('first1', "I'm a Lucky Guy", 'Win on your first guess.', (s) => upTo(s.firstTry, 1), '1142249'),
-      A('first10', 'Lucky Star', 'Win on your first guess 10 times.', (s) => upTo(s.firstTry, 10), '1142573'),
-      A('first50', "Cassandra's Crystal Ball", 'Win on your first guess 50 times.', (s) => upTo(s.firstTry, 50), '4001305'),
-      A('diamond', 'Born to Be Diamond', 'Get a diamond in BGM Clip.', (s) => upTo(s.diamond, 1), '1142914'),
-      A('rainbow', 'Rainbow Badge', 'Get a rainbow in BGM Clip.', (s) => upTo(s.rainbow, 1), '1182007'),
-      A('allgames', 'Honorable Explorer', 'Win every game once.', (s) => [s.games.size, 4], '1142184'),
+      ...steps('wins', ['Beginner', 'Intermediate', 'Advanced', 'Expert', 'Master'], (n) => times(n, 'Win a game.', 'Win # games.'), (s) => s.wins, [1, 10, 50, 100, 500]),
+      ...steps('reg', ["Beginner's Luck", 'Plot Armor', 'The Chosen One', 'Blessed by RNGesus', 'The Stars Aligned'],
+        (n) => times(n, 'Win on your first guess in Boss or Class Wordle.', 'Win on your first guess # times in Boss or Class Wordle.'), (s) => s.firstReg, [1, 2, 5, 10, 20]),
+      ...steps('star', ['Born to Be Gold', 'Written in the Stars', 'Heart of God', "Midas' Touch", 'Beyond the Stars'],
+        (n) => times(n, 'Get a star (win on your first guess).', 'Get # stars (win on your first guess).'), (s) => s.firstTry, [1, 5, 10, 20, 50]),
+      ...steps('diamond', ['Born to Be Diamond', 'Priceless Gem', 'Heart of the Ocean', 'Diamond Hands', 'A Diamond is Forever'],
+        (n) => times(n, 'Get a diamond by guessing in 1.', 'Get # diamonds by guessing in 1.'), (s) => s.diamond, [1, 5, 10, 20, 50]),
+      ...steps('rainbow', ['Born to Be Rainbow', 'Pot of Gold', 'What a Wonderful World', 'Prismatic', 'Eternal Spectrum'],
+        (n) => times(n, 'Get a rainbow by guessing in 1.', 'Get # rainbows by guessing in 1.'), (s) => s.rainbow, [1, 5, 10, 20, 50]),
+      A('allgames', 'Exploring the Sea', 'Win every game once.', (s) => [s.games.size, 4], '', { ap: 10 }),
     ]],
     ['Dedication', [
-      A('days7', 'Beginner Explorer', 'Play on 7 days.', (s) => upTo(s.days.size, 7), '1142127'),
-      A('days30', 'Diligent Explorer', 'Play on 30 days.', (s) => upTo(s.days.size, 30), '1142000'),
-      A('days100', 'Perfect Attendance', 'Play on 100 days.', (s) => upTo(s.days.size, 100), '1142295'),
-      A('streak3', 'Bounty Rookie', 'Reach a 3 day streak.', (s) => upTo(s.streak, 3), '1142747'),
-      A('streak7', 'Bounty Hunter', 'Reach a 7 day streak.', (s) => upTo(s.streak, 7), '1142748'),
-      A('streak30', 'Bounty Veteran', 'Reach a 30 day streak.', (s) => upTo(s.streak, 30), '1142749'),
-      A('streak100', 'Bounty Legend', 'Reach a 100 day streak.', (s) => upTo(s.streak, 100), '1142751'),
+      ...steps('days', ['Just Getting Started', 'Dedicated', 'Tryhard', 'Obsession', 'Addiction'],
+        (n) => times(n, 'Play for the first time.', 'Play on # days.'), (s) => s.days.size, [1, 7, 30, 100, 365]),
+      ...steps('streak', ['Rookie', 'Pro', 'Elite', 'Legend', 'Transcendent'], (n) => `Reach a ${n} win streak.`, (s) => s.streak, [3, 10, 50, 100, 365]),
     ]],
     ['Mesos & Shop', [
-      A('meso1k', 'Gold Meso', 'Earn 1,000 mesos.', (s) => upTo(s.mesos, 1000), 'images/fx/meso-gold.png'),
-      A('meso10k', 'Meso Bundle', 'Earn 10,000 mesos.', (s) => upTo(s.mesos, 10000), 'images/fx/meso-bundle.png'),
-      A('meso50k', 'Honorary Meso Ranger', 'Earn 50,000 mesos.', (s) => upTo(s.mesos, 50000), '1142076'),
-      A('buy1', 'Shopping Bag', 'Buy an item in the shop.', (s) => upTo(s.buys, 1), '4009370'),
-      A('buy5', "Gigatoad's Coin Wallet", 'Buy 5 items in the shop.', (s) => upTo(s.buys, 5), '4000346'),
-      A('buy10', 'Richie Rich', 'Buy 10 items in the shop.', (s) => upTo(s.buys, 10), '1142161'),
+      ...steps('meso', ['First Paycheck', 'Making Ends Meet', 'Middle-Class', 'Upper-Class', 'Millionaire'],
+        (n) => `Earn ${fmt(n)} mesos.`, (s) => s.mesos, [100, 1000, 10000, 100000, 1000000]),
+      ...steps('buy', ['First Purchase', 'Impulse Buyer', 'Regular Customer', 'VIP Customer', 'The Collector'],
+        (n) => times(n, 'Buy an item in the shop.', 'Buy # items in the shop.'), (s) => s.buys, [1, 5, 10, 50, 100]),
+    ]],
+    ['Collections', [
+      A('col:bgm', 'BGM Master', 'Win BGM Clip with every boss.', (s, L) => [count(s.won.bgm, L?.bgm), L?.bgm.length || 1], '', { ap: 100 }),
+      A('col:boss', 'Boss Master', 'Win Boss Wordle with every boss.', (s, L) => [count(s.won.boss, L?.bosses), L?.bosses.length || 1], '', { ap: 100 }),
+      A('col:class', 'Class Master', 'Win Class Wordle with every class.', (s, L) => [count(s.won.class, L?.classes), L?.classes.length || 1], '', { ap: 100 }),
+      A('col:anim', 'Skill Master', 'Win Attack Animation with every class.', (s, L) => [count(s.won.anim, L?.anim), L?.anim.length || 1], '', { ap: 100 }),
     ]],
     ['Hidden', [
       kill('Malefic Star', "Siren's Song", "Siren's Song", '../achv/siren-song', 'sirenSong'),
@@ -145,12 +135,12 @@
   const ALL = SECTIONS.flatMap(([, list]) => list);
   // Tiers, like MapleStory's achievements: each gives its achievement points (AP) when done. (Ranking up by AP: later.)
   const TIERS = { common: ['Common', 10], rare: ['Rare', 20], epic: ['Epic', 30], unique: ['Unique', 40], legendary: ['Legendary', 100] };
-  const TIER_OF = {"col:bgm": "legendary", "col:boss": "legendary", "col:class": "unique", "col:anim": "unique", "win1": "common", "wins10": "common", "wins50": "rare", "wins100": "epic", "wins500": "unique", "first1": "common", "first10": "rare", "first50": "epic", "diamond": "rare", "rainbow": "rare", "allgames": "rare", "days7": "common", "days30": "rare", "days100": "epic", "streak3": "common", "streak7": "rare", "streak30": "epic", "streak100": "unique", "meso1k": "common", "meso10k": "rare", "meso50k": "epic", "buy1": "common", "buy5": "rare", "buy10": "epic", "kill:Jupiter": "epic", "limbo": "epic"};
-  for (const a of ALL) a.tier = TIER_OF[a.id] || (a.id.startsWith('kill:') ? 'epic' : 'common');
+  const TIER_BY_AP = { 10: 'common', 20: 'rare', 30: 'epic', 40: 'unique', 100: 'legendary' };
+  for (const a of ALL) a.tier = TIER_BY_AP[a.ap] || 'legendary';   // (the hidden ones: Legendary, 100)
   const apOf = (got) => ALL.reduce((t, a) => t + (got[a.id] != null ? TIERS[a.tier][1] : 0), 0);
-  // Ranks by AP, with MapleStory's emblems (images/achv/rank). Master (500+ and the site's top 10) needs a site-wide
+  // Ranks by AP, with MapleStory's emblems (images/achv/rank). Master (1,000+ and the site's top 10) needs a site-wide
   // ranking, which isn't there yet.
-  const RANKS = [['bronze', 'Bronze', 0], ['silver', 'Silver', 100], ['gold', 'Gold', 200], ['platinum', 'Platinum', 300], ['diamond', 'Diamond', 500]];
+  const RANKS = [['bronze', 'Bronze', 0], ['silver', 'Silver', 200], ['gold', 'Gold', 500], ['platinum', 'Platinum', 1000], ['diamond', 'Diamond', 2000]];
   const rankOf = (ap) => RANKS.filter((r) => ap >= r[2]).pop();
   // Ranked up (more AP than the rank saved last time): GradeUp plays, after the achievement banners. Saved in _rank.
   function rankCheck(got, announce) {
@@ -180,8 +170,8 @@
       const [have, need] = a.prog(s, L);
       if (have >= need && got[a.id] == null) { got[a.id] = today(); unlocked.push(a); }
     }
-    const changed = unlocked.length || s.streak > (got._bestStreak || 0);
-    got._bestStreak = Math.max(s.streak, got._bestStreak || 0);
+    const changed = unlocked.length || s.streak > (got._bestWinStreak || 0);
+    got._bestWinStreak = Math.max(s.streak, got._bestWinStreak || 0);
     if (changed || first) { try { localStorage.setItem(ACHV_KEY, JSON.stringify(got)); } catch {} }
     if (announce && !first) unlocked.forEach((a) => banner(a, 2500));
     rankCheck(got, announce && !first);
@@ -308,7 +298,7 @@
     const done = ALL.filter((a) => got[a.id] != null).length;
     const tiles = [['Days played', s.days.size], ['Games played', s.played], ['Wins', s.wins],
       ['Win rate', s.played ? Math.round((s.wins / s.played) * 100) + '%' : '-'], ['First-guess wins', s.firstTry],
-      ['Best streak', s.streak], ['Mesos earned', fmt(s.mesos)], ['Achievements', `${done} / ${ALL.length}`]];
+      ['Best win streak', s.streak], ['Mesos earned', fmt(s.mesos)], ['Achievements', `${done} / ${ALL.length}`]];
     const ap = apOf(got), rk = rankOf(ap), next = RANKS[RANKS.indexOf(rk) + 1];
     // Like the game's achievement window: your rank's emblem with your points under it
     body.innerHTML = '<div class="achvside"></div><div class="achvmain"></div>';
