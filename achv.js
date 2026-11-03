@@ -317,7 +317,7 @@
           `<div class="achvgauge"><i style="width:${on ? 100 : Math.min(1, have / need) * 100}%"></i></div>` +
           (need > 1 && !on ? `<small class="achvnum">${fmt(have)} / ${fmt(need)}</small>` : '') +
           (on ? `<img class="achvseal" src="images/achv/ui/completeSeal.png" alt=""><span class="achvdate">${dayText(got[a.id])}</span>` : '') +
-          (rw ? `<div class="achvrwicon"><img src="${a.mesos ? 'images/fx/meso-bundle.png' : a.fx ? `images/fx/hecate/${a.fx}.webp?v=6` : 'images/fx/seething-balance.webp?v=2'}" alt=""></div>` +
+          (rw ? `<div class="achvrwicon"><img src="${a.mesos ? 'images/fx/meso-bag.png' : a.fx ? `images/fx/hecate/${a.fx}.webp?v=6` : 'images/fx/seething-balance.webp?v=2'}" alt=""></div>` +
             '<small class="achvreward"></small>' + (claimed ? '<span class="achvclaimed">Claimed</span>' : '<button class="achvclaim" aria-label="Claim Reward"></button>') : '');
         row.title = `${TIERS[a.tier][0]} · ${TIERS[a.tier][1]} AP`;
         row.querySelector('.achvtitle').textContent = on ? a.full || a.name : a.name;
