@@ -11,6 +11,7 @@
   const gameOf = (mode) => Object.keys(GAMES).find((g) => GAMES[g].includes(mode));
   const read = (k) => { try { return localStorage.getItem(k); } catch { return null; } };
   const json = (k, d) => { try { return JSON.parse(read(k)) ?? d; } catch { return d; } };
+  const rowDate = (d) => new Date(d * DAY_MS).toISOString().slice(0, 10).replace(/-/g, '.');   // like the game: 2026.11.01
   const dayText = (d) => new Date(d * DAY_MS).toLocaleDateString(undefined, { timeZone: 'UTC', month: 'short', day: 'numeric' });
   const loggedIn = () => typeof acct === 'function' && !!acct();
   const fmt = (n) => Math.round(n).toLocaleString('en-US');
@@ -316,7 +317,7 @@
           '<b class="achvtitle"></b><small class="achvhow"></small>' +
           `<div class="achvgauge"><i style="width:${on ? 100 : Math.min(1, have / need) * 100}%"></i></div>` +
           (need > 1 && !on ? `<small class="achvnum">${fmt(have)} / ${fmt(need)}</small>` : '') +
-          (on ? `<img class="achvseal" src="images/achv/ui/completeSeal.png" alt=""><span class="achvdate">${dayText(got[a.id])}</span>` : '') +
+          (on ? `<img class="achvseal" src="images/achv/ui/completeSeal.png" alt=""><span class="achvdate">${rowDate(got[a.id])}</span>` : '') +
           (rw ? `<div class="achvrwicon"><img src="${a.mesos ? 'images/fx/meso-bag.png' : a.fx ? `images/fx/hecate/${a.fx}.webp?v=6` : 'images/fx/seething-balance.webp?v=2'}" alt=""></div>` +
             '<small class="achvreward"></small>' + (claimed ? '<span class="achvclaimed">Claimed</span>' : '<button class="achvclaim" aria-label="Claim Reward"></button>') : '');
         row.title = `${TIERS[a.tier][0]} · ${TIERS[a.tier][1]} AP`;

@@ -1039,7 +1039,7 @@ h1.tglitch .gtext::after { animation: glitchb 1.6s steps(1) -1.088s 1; }
 /* Rows: MapleStory's own achievement form (images/achv/ui), 545 x 100 (155 with the reward strip). --p is one of its
    pixels at the list's width, so everything sits where the game puts it. */
 .achvlist { display: flex; flex-direction: column; gap: 4px; width: min(545px, 100%); min-width: min(420px, 78vw); margin: 0 auto; container-type: inline-size; }
-.achv { --p: calc(100cqw / 545); position: relative; width: 100%; height: calc(100 * var(--p)); flex: none; text-align: left; color: #fff;
+.achv { --p: calc(100cqw / 545); font-family: Arial, 'Liberation Sans', Helvetica, sans-serif; position: relative; width: 100%; height: calc(100 * var(--p)); flex: none; text-align: left; color: #fff;
   background: url(images/achv/ui/incomplete-base.png) 0 0 / 100% 100% no-repeat; font-size: calc(12 * var(--p)); }
 .achv.on { background-image: url(images/achv/ui/complete-base.png); }
 .achv.rw { height: calc(155 * var(--p)); background-image: url(images/achv/ui/reward-complete-max.png); }
@@ -1049,26 +1049,26 @@ h1.tglitch .gtext::after { animation: glitchb 1.6s steps(1) -1.088s 1; }
 .achv:hover::after { opacity: 1; }
 .achv > * { position: absolute; }
 .achvicon { left: calc(13 * var(--p)); top: calc(11 * var(--p)); width: calc(59 * var(--p)); height: calc(65 * var(--p));
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: calc(2 * var(--p)); }
+  display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: calc(4 * var(--p)); box-sizing: border-box; }
 .achvicon img { max-width: calc(44 * var(--p)); max-height: calc(44 * var(--p)); image-rendering: pixelated; }
 .achvicon img.cup { width: calc(41 * var(--p)); height: calc(32 * var(--p)); max-height: none; max-width: none; }
 .achvicon img.c-normal { width: calc(29 * var(--p)); height: calc(29 * var(--p)); }
-.achvicon i { font: normal 800 calc(11 * var(--p)) / 1 Arial, 'Liberation Sans', sans-serif; color: #e8e8e8; text-shadow: 0 1px 1px #000; }
+.achvicon i { margin-top: calc(2.5 * var(--p)); font: normal 700 calc(19.5 * var(--p)) / 1 Arial, 'Liberation Sans', sans-serif; color: #fff; text-shadow: 0 1px 2px #000; }
 .achv:not(.on) .achvicon img { filter: grayscale(1) brightness(0.7); }
 .achv:not(.on) .achvicon i { color: #9a9a9a; }
 .achv.secret .achvicon img { filter: none; }
-.achvtitle { left: calc(86 * var(--p)); top: calc(14 * var(--p)); right: calc(130 * var(--p)); font-size: calc(15 * var(--p)); font-weight: 700;
+.achvtitle { left: calc(83 * var(--p)); top: calc(13 * var(--p)); right: calc(20 * var(--p)); font-size: calc(16.2 * var(--p)); font-weight: 400; letter-spacing: 0.015em; -webkit-text-stroke: calc(0.35 * var(--p)) currentColor;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #f2f2f2; }
-.achvhow { left: calc(86 * var(--p)); top: calc(38 * var(--p)); right: calc(80 * var(--p)); color: #b4b4b4; line-height: 1.3; }
+.achvhow { left: calc(83 * var(--p)); top: calc(40 * var(--p)); right: calc(120 * var(--p)); color: #a9a9a9; font-size: calc(11.5 * var(--p)); line-height: 1.3; letter-spacing: 0.04em; }
 .achv:not(.on) .achvtitle { color: #a8a8a8; }
 .achv.secret .achvtitle { color: #c9a2ff; }
 .achvq { opacity: 0.45; letter-spacing: 0.15em; }
 .achvgauge { left: calc(16 * var(--p)); top: calc(82 * var(--p)); width: calc(513 * var(--p)); height: calc(4 * var(--p)); }
 .achvgauge i { display: block; height: 100%; background: url(images/achv/ui/gauge.png) 0 0 / calc(513 * var(--p)) 100% no-repeat; }
 .achvnum { right: calc(16 * var(--p)); top: calc(62 * var(--p)); color: #cfcfcf; font-variant-numeric: tabular-nums; }
-.achvdate { left: calc(468 * var(--p)); top: calc(35 * var(--p)); width: calc(64 * var(--p)); height: calc(19 * var(--p));
-  font: 700 calc(10.5 * var(--p)) / calc(19 * var(--p)) Arial, 'Liberation Sans', sans-serif; text-align: center; color: #e9d7a6; white-space: nowrap; }
-.achvseal { z-index: 1; left: calc(479 * var(--p)); top: calc(50 * var(--p)); width: calc(44 * var(--p)); height: calc(41 * var(--p)); }
+.achvdate { right: calc(6 * var(--p)); top: calc(36 * var(--p)); height: calc(19 * var(--p));
+  font: 400 calc(12 * var(--p)) / calc(19 * var(--p)) Arial, 'Liberation Sans', sans-serif; color: #e6dcc6; letter-spacing: 0.02em; white-space: nowrap; }
+.achvseal { z-index: 1; left: calc(497 * var(--p)); top: calc(53 * var(--p)); width: calc(44 * var(--p)); height: calc(41 * var(--p)); }
 .achvrwicon { left: calc(15 * var(--p)); top: calc(99 * var(--p)); width: calc(38 * var(--p)); height: calc(38 * var(--p)); display: flex; align-items: center; justify-content: center; }
 .achvrwicon img { max-width: calc(34 * var(--p)); max-height: calc(34 * var(--p)); }
 .achvreward { left: calc(112 * var(--p)); top: calc(113 * var(--p)); right: calc(110 * var(--p)); line-height: calc(16 * var(--p));
