@@ -215,8 +215,11 @@
       el.setAttribute('aria-label', `Achievement complete: ${a.full || a.name}`);
       const front = el.querySelector('.front');
       if (safari) setTimeout(() => front.remove(), 340); else front.addEventListener('ended', () => front.remove());
-      // Full screen, like the game: its 1366-wide art across the whole width (phones: big enough to read, its sides cut off)
-      el.style.setProperty('--s', Math.max(innerWidth / 1366, Math.min(0.75, (innerWidth - 8) / 640)));
+      // Like the game: the name bar about half the screen wide, a little above the middle (its middle at 44% down; in the
+      // art it's at y 181). Phones: big enough to read, its sides cut off.
+      const sc = Math.max(Math.min(innerWidth / 1240, innerHeight / 780), Math.min(0.75, (innerWidth - 8) / 640));
+      el.style.setProperty('--s', sc);
+      el.style.top = `${Math.max(6, innerHeight * 0.44 - 181 * sc)}px`;
       document.body.appendChild(el);
       if (typeof resultSound === 'function') resultSound(true, 0, 'achvComplete');
       setTimeout(() => el.classList.add('out'), BANNER_MS - 500);
