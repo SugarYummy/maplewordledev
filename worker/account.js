@@ -173,7 +173,7 @@ export default {
       const cache = caches.default, key = new Request(url.origin + '/top');
       const hit = await cache.match(key);
       if (hit) return hit;
-      const { results } = await db.prepare("SELECT id, name, CAST(COALESCE(json_extract(data, '$."mapleWordle:ap"'), '0') AS INTEGER) AS ap FROM users " +
+      const { results } = await db.prepare(`SELECT id, name, CAST(COALESCE(json_extract(data, '$."mapleWordle:ap"'), '0') AS INTEGER) AS ap FROM users ` +
         'WHERE ap >= 1000 ORDER BY ap DESC, id ASC LIMIT 10').all();
       const res = json({ top: results });
       res.headers.set('Cache-Control', 'public, max-age=300');
