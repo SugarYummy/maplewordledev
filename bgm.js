@@ -588,8 +588,8 @@ function guess(name) {
   // BGM Clip Extreme on Kai's, Malefic Star's, Mayrin's or Bellona's BGM: that boss's finishing attack plays when the
   // game ends, won (any guess) or lost; a first-guess win plays it in place of your win effect (fx.js bossKill).
   const kill = MODE === 'bgm' && typeof bossKillFor === 'function' ? bossKillFor(answer.name) : null;
-  // ...and on Jupiter's: your character's entrance under Share (account.js), the BGM quiet until it peaks; then the BGM
-  // plays (from 0:00) along with the mesos. It takes the place of a first-guess win effect and the win / lose music, so it's
+  // ...and on Jupiter's: your character's entrance under Share (account.js), the BGM quiet until it peaks; then the mesos,
+  // with the first-guess music on a first-guess win, or the BGM (from 0:00) otherwise. It takes the place of a first-guess win effect and the win / lose music, so it's
   // seen and heard. No character: the usual.
   if (MODE === 'bgm' && answer.name === 'Jupiter' && typeof acctJupiterEntrance === 'function' && acct() && acctMapleImg()) {
     const game = answer;
@@ -597,7 +597,8 @@ function guess(name) {
     setTimeout(() => {
       const ms = acctJupiterEntrance();
       setTimeout(() => {
-        if (won()) guesses.length === 1 ? mesoShow() : confetti(false);
+        if (won() && guesses.length === 1) { mesoShow(); if (live && answer === game) resultSound(true, 0, 'firstTry'); return; }   // a first-guess win: its music (not the BGM) with the meso fountain
+        if (won()) confetti(false);
         bgmAfter(game);
       }, ms);
     }, flipMs);
