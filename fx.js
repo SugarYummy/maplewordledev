@@ -437,8 +437,7 @@ const SOUNDS = { win: 'sounds/star-force-success.mp3', lose: 'sounds/star-force-
   failBlackPre: 'sounds/limbo-fail-black-pre.mp3', failBlackEnd: 'sounds/limbo-fail-black-end.mp3',
   failWhitePre: 'sounds/limbo-fail-white-pre.mp3', failWhiteEnd: 'sounds/limbo-fail-white-end.mp3' };   // Limbo's skill sound (5.4 s) with Limbo's cutscene, 0.15 s in: its big hit lands on the burst
 // Tracks that play longer than SOUND_SECONDS: seconds before the fade-out starts (fade-out is SOUND_FADE).
-const SOUND_SKIP = { firstTry: 1, extremeWin: 1 };   // seconds into the clip to start: past the 1 s fade-in cut into these files, so the music is at full volume from the first frame
-const SOUND_LENGTH = { achvComplete: 3, gradeUp: 3, appear: 4, animWin: 19, classLose: 16, firstTry: 32, extremeWin: 9.5, classWin: 22, failBlackPre: 3, failBlackEnd: 4, failWhitePre: 3, failWhiteEnd: 4 };
+const SOUND_LENGTH = { achvComplete: 3, gradeUp: 3, appear: 4, animWin: 19, classLose: 16, firstTry: 33, classWin: 22, failBlackPre: 3, failBlackEnd: 4, failWhitePre: 3, failWhiteEnd: 4 };
 // Tracks louder than SOUND_VOLUME.
 const SOUND_LOUDER = { firstTry: 0.30, purchase: 0.6, achvComplete: 0.3, gradeUp: 0.25, appear: 0.3, limboCut: 0.5, sirenSong: 0.45, iaidoAlpha: 0.73, mayrinKill: 0.63, failBlackPre: 0.5, failBlackEnd: 0.5, failWhitePre: 0.5, failWhiteEnd: 0.5 };   // limboCut and the boss finishing effects: as loud as the first-guess music they play with (a touch louder; set by loudness)
 // Phone and tablet speakers are much quieter, so they play everything twice as loud (12%, and 60% for a first-guess win).
@@ -492,7 +491,9 @@ function soundFile(src) {
   return soundBytes[src];
 }
 let loseAfterFail = 0;   // (limboOver: a loss with Limbo's fail screen coming: when it's over, in ms from now)
-function resultSound(won, delay, file) {
+// skip: seconds into the clip to start. The special win effects (finishing attacks, Jupiter, Limbo) pass 1 to start Descend and
+// Four Auspicious Beasts past the 1 s fade-in cut into those files, so the music is at full volume on the burst.
+function resultSound(won, delay, file, skip = 0) {
   if (loseAfterFail && !won && !file?.startsWith('fail')) delay = Math.max(delay ?? 0, loseAfterFail);
   if (muted()) return;
   const ctx = soundCtx();
@@ -512,13 +513,13 @@ function resultSound(won, delay, file) {
     const gain = ctx.createGain();
     const volume = (SOUND_LOUDER[file] ?? SOUND_VOLUME) * (PHONE ? 2 : 1);
     gain.gain.setValueAtTime(volume, start);
-    const len = SOUND_LENGTH[file] ?? SOUND_SECONDS;
+    const len = (SOUND_LENGTH[file] ?? SOUND_SECONDS) - skip;
     gain.gain.setValueAtTime(volume, start + len);
     gain.gain.linearRampToValueAtTime(0, start + len + SOUND_FADE);
     const src = ctx.createBufferSource();
     src.buffer = buffer;
     src.connect(gain).connect(master);
-    src.start(start, SOUND_SKIP[file] ?? 0);
+    src.start(start, skip);
     src.stop(start + len + SOUND_FADE);
     resultPlaying.add(src);
     src.onended = () => { resultPlaying.delete(src); done(); };

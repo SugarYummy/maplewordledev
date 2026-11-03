@@ -621,8 +621,8 @@ function guess(name) {
 // brings its own meso fountain). Nothing if another game opened meanwhile.
 function bigWinAt(was, ok, n, mesos) {
   if (answer !== was) return;
-  if (ok && n === 1) { if (mesos) mesoShow(); if (live) resultSound(true, 0, 'firstTry'); }   // Mayrin's Descend
-  else if (ok) { if (mesos) confetti(false); if (live) resultSound(true, 0, 'extremeWin'); }   // Kaling's Four Auspicious Beasts
+  if (ok && n === 1) { if (mesos) mesoShow(); if (live) resultSound(true, 0, 'firstTry', 1); }   // Mayrin's Descend
+  else if (ok) { if (mesos) confetti(false); if (live) resultSound(true, 0, 'extremeWin', 1); }   // Kaling's Four Auspicious Beasts
   else if (live) resultSound(false, 0, 'extremeLose');   // Seren's Burning City
 }
 // ---- After the game: the whole track and the bonus guess ----
