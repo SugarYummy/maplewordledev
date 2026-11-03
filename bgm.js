@@ -588,34 +588,22 @@ function guess(name) {
   // BGM Clip Extreme on Kai's, Malefic Star's, Mayrin's or Bellona's BGM: that boss's finishing attack plays when the
   // game ends, won (any guess) or lost; a first-guess win plays it in place of your win effect (fx.js bossKill).
   const kill = MODE === 'bgm' && typeof bossKillFor === 'function' ? bossKillFor(answer.name) : null;
-  // ...and on Jupiter's: your character's entrance under Share (account.js), the BGM quiet until it peaks; then the mesos,
-  // with the first-guess music on a first-guess win, or the BGM (from 0:00) otherwise. It takes the place of a first-guess win effect and the win / lose music, so it's
-  // seen and heard. No character: the usual.
+  // ...and on Jupiter's: your character's entrance under Share (account.js), in place of a first-guess win effect (no
+  // character: the usual). Each of these keeps the BGM quiet until its burst, then (bigWinAt):
+  //   won in 1: the meso fountain + the first-guess music · won in 2+: the meso rain + this BGM (from 0:00) · lost: the fail music
+  const game = answer, n = guesses.length, ok = won();
   if (MODE === 'bgm' && answer.name === 'Jupiter' && typeof acctJupiterEntrance === 'function' && acct() && acctMapleImg()) {
-    const game = answer;
     pause();
-    setTimeout(() => {
-      const ms = acctJupiterEntrance();
-      setTimeout(() => {
-        if (won() && guesses.length === 1) { mesoShow(); if (live && answer === game) resultSound(true, 0, 'firstTry'); return; }   // a first-guess win: its music (not the BGM) with the meso fountain
-        if (won()) confetti(false);
-        bgmAfter(game);
-      }, ms);
-    }, flipMs);
-  } else if (kill) {   // the BGM quiet until its burst (its own sound in place of the win / lose music), then in from 0:00 with the mesos
-    const game = answer;
+    setTimeout(() => { const ms = acctJupiterEntrance(); setTimeout(() => bigWinAt(game, ok, n, true), ms); }, flipMs);
+  } else if (kill) {
     pause();
-    setTimeout(async () => {
-      const ms = await bossKill(kill, !won() ? null : guesses.length === 1 ? 'show' : 'rain');
-      setTimeout(() => bgmAfter(game), ms);
-    }, flipMs);
-  } else if (won() && guesses.length === 1 && typeof hecate !== 'undefined' && (limboAllOn() || hecate?.id === 'limboCut' || HECATE[hecate?.id]?.achv)) {
+    setTimeout(async () => { const ms = await bossKill(kill); setTimeout(() => bigWinAt(game, ok, n, true), ms); }, flipMs);
+  } else if (ok && n === 1 && typeof hecate !== 'undefined' && (limboAllOn() || hecate?.id === 'limboCut' || HECATE[hecate?.id]?.achv)) {
     // A first-guess win whose win effect is Limbo Transition (Limbo mode, or ticked on its own in Customize) or a boss
-    // finishing attack you unlocked and ticked (any day, either mode): like the boss's own BGM Clip Extreme day, the
-    // BGM is quiet until its burst (its own sound in place of the first-guess music), then in from 0:00 with the mesos.
-    const game = answer, fx = limboAllOn() ? 'limboCut' : hecate.id;
+    // finishing attack you unlocked and ticked (any day, either mode): the same, its meso fountain from the win effect itself.
+    const fx = limboAllOn() ? 'limboCut' : hecate.id;
     pause();
-    setTimeout(() => { confetti(true); setTimeout(() => bgmAfter(game), HECATE[fx].burst); }, flipMs);
+    setTimeout(() => { confetti(true); setTimeout(() => bigWinAt(game, ok, n, false), HECATE[fx].burst); }, flipMs);
   } else if (won()) {
     setTimeout(() => confetti(guesses.length === 1), flipMs);
     // First-guess win: Mayrin's Descend plays (the BGM pauses for it). Other wins: no music, the BGM is already playing.
@@ -630,7 +618,15 @@ function guess(name) {
   noteResult();
 }
 
-// With the mesos of a boss's finishing attack, Limbo Transition or Jupiter's entrance: the whole BGM plays from 0:00 by itself (unless it's already
+// At the burst of a boss's finishing attack, Limbo Transition or Jupiter's entrance (mesos: false when the win effect
+// brings its own meso fountain). Nothing if another game opened meanwhile.
+function bigWinAt(was, ok, n, mesos) {
+  if (answer !== was) return;
+  if (ok && n === 1) { if (mesos) mesoShow(); if (live) resultSound(true, 0, 'firstTry'); }
+  else if (ok) { if (mesos) confetti(false); bgmAfter(was); }
+  else if (live) resultSound(false, 0);   // Star Force Destroy
+}
+// With the mesos of a won-in-2+ game's finishing attack or Jupiter's entrance: the whole BGM plays from 0:00 by itself (unless it's already
 // playing or you've moved on), leaving the attack's / achievement sounds to finish.
 function bgmAfter(was) {
   if (audio.playing || !over || answer !== was) return;   // (a different game opened meanwhile: leave it)
