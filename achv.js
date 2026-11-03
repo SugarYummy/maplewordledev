@@ -166,16 +166,22 @@
   // its bar and the points under the trophy, with its sound. Several: one after another (each waits for the last).
   // Every tier uses the Common banner until the others' are added (images/achv/fx/<tier>-back/-front).
   const BANNER_MS = 4200;
+  // Each tier's banner files (images/achv/fx/<tier>-back, -front, num-<tier>/0-9.png) and where its front sits over the
+  // back (x, y, w, h), the back's height and how far its art sits lower than Common's (all from the files themselves).
+  // A tier without its own yet uses Common's.
+  const BANNER_ART = { common: [336, 31, 693, 194, 231, 0], rare: [314, -11, 737, 244, 231, 0], epic: [314, 27, 737, 244, 269, 38],
+    unique: [283, 76, 799, 271, 425, 113], legendary: [283, 76, 799, 271, 425, 113] };
   let bannerFree = 0;
   function banner(a, wait = 0) {
     const at = Math.max(Date.now() + wait, bannerFree);
     bannerFree = at + BANNER_MS;
     setTimeout(() => {
-      const safari = typeof SAFARI !== 'undefined' && SAFARI, ext = safari ? 'webp' : 'webm', art = 'common';
+      const safari = typeof SAFARI !== 'undefined' && SAFARI, art = BANNER_ART[a.tier] ? a.tier : 'common', [fx, fy, fw, fh, bh, dy] = BANNER_ART[art];
       const el = Object.assign(document.createElement('div'), { className: `achvbanner t-${a.tier}` });
-      const media = (part) => safari ? `<img class="${part}" src="images/achv/fx/${art}-${part}.webp" alt="">`
-        : `<video class="${part}" src="images/achv/fx/${art}-${part}.webm" muted autoplay playsinline disablepictureinpicture></video>`;
-      el.innerHTML = `<div class="achvbannerin">${media('back')}<b class="achvap" aria-hidden="true">${[...String(TIERS[a.tier][1])].map((n) => `<img src="images/achv/fx/num/${n}.png" alt="">`).join('')}</b><span class="achvname"></span>${media('front')}</div>`;
+      const media = (part) => safari ? `<img class="${part}" src="images/achv/fx/${art}-${part}.webp" alt="" ${pos[part]}>`
+        : `<video class="${part}" src="images/achv/fx/${art}-${part}.webm" muted autoplay playsinline disablepictureinpicture ${pos[part]}></video>`;
+      const pos = { front: `style="left:${fx}px;top:${fy - dy}px;width:${fw}px;height:${fh}px"`, back: `style="top:${-dy}px;height:${bh}px"` };
+      el.innerHTML = `<div class="achvbannerin">${media('back')}<b class="achvap" aria-hidden="true">${[...String(TIERS[a.tier][1])].map((n) => `<img src="images/achv/fx/num-${art}/${n}.png" alt="">`).join('')}</b><span class="achvname"></span>${media('front')}</div>`;
       el.querySelector('.achvname').textContent = a.full || a.name;
       el.setAttribute('role', 'status');
       el.setAttribute('aria-label', `Achievement complete: ${a.full || a.name}`);
