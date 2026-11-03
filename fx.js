@@ -1099,7 +1099,7 @@ function drawThemeButton() {
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => { el.classList.remove('show'); setTimeout(() => el.remove(), 300); }, 2000);
   };
-  const fill = () => {
+  let fill = () => {
     list.innerHTML = '';
     for (const b of win.querySelectorAll('.themetabs button')) b.classList.toggle('on', b.dataset.tab === customTab);
     tags();
@@ -1262,6 +1262,17 @@ function drawThemeButton() {
         }
       }
     }
+  };
+  // Each tab: the default ones first (Default background, Sol Hecate, Remove all effects), then the rest A to Z (a bundle by its name).
+  const FIRST = ['Remove all effects', THEMES.default, HECATE.default.name];
+  const fillSorted = fill;
+  const labelOf = (el) => (el.querySelector('.themename')?.firstChild?.textContent || '').trim();
+  const rank = (el) => (el.classList.contains('fxvoid') ? -1 : FIRST.includes(labelOf(el)) ? FIRST.indexOf(labelOf(el)) : 9);
+  fill = () => {
+    fillSorted();
+    const kids = [...list.children];
+    kids.sort((a, b) => rank(a) - rank(b) || (rank(a) === 9 ? labelOf(a).localeCompare(labelOf(b)) : 0));
+    list.append(...kids);
   };
   for (const b of win.querySelectorAll('.themetabs button')) b.addEventListener('click', () => { customTab = b.dataset.tab; fill(); });
   btn.addEventListener('click', () => {
