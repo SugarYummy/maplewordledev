@@ -608,8 +608,8 @@ function guess(name) {
       const ms = await bossKill(kill, !won() ? null : guesses.length === 1 ? 'show' : 'rain');
       setTimeout(() => bgmAfter(game), ms);
     }, flipMs);
-  } else if (won() && guesses.length === 1 && typeof limboAllOn === 'function' && limboAllOn()) {
-    // A first-guess win in Limbo mode (its win effect: Limbo Transition): like the finishing
+  } else if (won() && guesses.length === 1 && typeof hecate !== 'undefined' && (limboAllOn() || hecate?.id === 'limboCut')) {
+    // A first-guess win whose win effect is Limbo Transition (Limbo mode, or ticked on its own in Customize): like the finishing
     // attacks, the BGM is quiet while it plays (its own sound in place of the first-guess music), then in from 0:00.
     const game = answer;
     pause();

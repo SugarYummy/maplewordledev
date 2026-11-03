@@ -282,7 +282,9 @@ function loadHecate() {
 setTimeout(loadHecate, 3000);
 document.addEventListener('click', (e) => { if (e.target.closest?.('#modes button') && hecateLast) loadHecate(); });
 function playHecate(special = false) {   // special: Limbo's mashup win (plays whatever was put in, Limbo mode or not)
-  if (!special && hecate && limboAllOn() !== (hecate.id === 'limboCut')) { hecate = null; loadHecate(); }   // Limbo mode turned on / off since
+  // Limbo mode turned on / off since it was loaded (Limbo Transition ticked on its own in Customize stays: it's a win
+  // effect of its own too)
+  if (!special && hecate && (limboAllOn() ? hecate.id !== 'limboCut' : hecate.id === 'limboCut' && !pickedSkins().includes('limboCut'))) { hecate = null; loadHecate(); }
   if (!hecate) return 0;
   const { id, skin, blob } = hecate;
   hecate = null;
