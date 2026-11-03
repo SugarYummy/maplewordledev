@@ -74,14 +74,6 @@ html:has(:is(#archive, #changelog, #info, #themes, .popup):not([hidden])), html:
   #changelogBody { max-width: min(780px, 70vw); width: min(780px, 70vw); }
   #changelog { align-items: center; }   /* in the middle, the same gap above and below */
   #changelog .panel { margin: 0; box-sizing: border-box; max-height: calc(100vh - 48px); }
-  /* Mesos, Shop and Customize too: wide and in the middle, in two columns */
-  :is(#meso, #shop, #themes) { align-items: center; }
-  :is(#meso, #shop, #themes) > .panel { margin: 0; box-sizing: border-box; max-height: calc(100vh - 48px); }
-  :is(#meso, #shop) .popupbody { width: min(780px, 70vw); }
-  #meso .popupbody { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; align-items: start; }
-  #meso .mesocol > h3:first-child { margin-top: 0; }
-  #shop .shoplist { display: grid; grid-template-columns: 1fr 1fr; }
-  #themeList { display: grid; grid-template-columns: 1fr 1fr; width: min(720px, 64vw); }
 }
 /* While one of these windows is open, scrolling only moves the window, never the page behind it. */
 #archive .panel, #changelog .panel, #info .panel, #themes .panel { overscroll-behavior: contain; }
@@ -1213,4 +1205,23 @@ html.dark .achvstats div { border-color: rgba(255, 255, 255, 0.12); }
   #achv.maplewin .achvgo { position: absolute; left: 94px; top: 635px; }   /* the game's spots (UIAchievement.img): the button at 112, 697, the text at 19, 702 */
   #achv.maplewin .achvsearch { position: absolute; left: 0; top: 637px; width: 89px; height: 16px; margin: 0; padding: 0 0 0 1px; border: 0; border-radius: 2px; background: transparent;
     font: 12px/16px 'Morris9', Arial, sans-serif; color: #555; outline: none; -webkit-font-smoothing: none; }
+}
+/* Computers and landscape screens: the other windows wide and in the middle too (after their own rules, so these win) */
+@media (min-width: 900px) and (orientation: landscape) {
+  /* Mesos, Shop and Customize too: wide and in the middle, in two columns */
+  :is(#meso, #shop, #themes) { align-items: center; }
+  :is(#meso, #shop, #themes) > .panel { margin: 0; box-sizing: border-box; max-height: calc(100vh - 48px); }
+  :is(#meso, #shop) .popupbody { width: min(780px, 70vw); }
+  #meso .popupbody { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; align-items: start; }
+  #meso .mesocol > h3:first-child { margin-top: 0; }
+  #shop .shoplist { display: grid; grid-template-columns: 1fr 1fr; }
+  #themeList { display: grid; grid-template-columns: 1fr 1fr; width: min(720px, 64vw); }
+  /* How to play (two columns of text), the Archive (three columns of days) and Settings: the same */
+  :is(#info, #archive, #settings) { align-items: center; }
+  :is(#info, #archive, #settings) > .panel { margin: 0; box-sizing: border-box; max-height: calc(100vh - 48px); }
+  #infoBody { max-width: none; width: min(780px, 70vw); columns: 2; column-gap: 32px; }
+  #infoBody > * { break-inside: avoid; }
+  #infoBody h3 { break-after: avoid; }
+  #archive > .panel { width: min(780px, 70vw); }
+  #archiveList { display: grid; grid-template-columns: repeat(3, 1fr); column-gap: 8px; }
 }
