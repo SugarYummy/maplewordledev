@@ -592,19 +592,21 @@ function guess(name) {
   // (from 0:00) along with the mesos. It takes the place of a first-guess win effect and the win / lose music, so it's
   // seen and heard. No character: the usual.
   if (MODE === 'bgm' && answer.name === 'Jupiter' && typeof acctJupiterEntrance === 'function' && acct() && acctMapleImg()) {
+    const game = answer;
     pause();
     setTimeout(() => {
       const ms = acctJupiterEntrance();
       setTimeout(() => {
         if (won()) guesses.length === 1 ? mesoShow() : confetti(false);
-        bgmAfter();
+        bgmAfter(game);
       }, ms);
     }, flipMs);
   } else if (kill) {   // the BGM quiet while it plays (its own sound in place of the win / lose music), then in from 0:00
+    const game = answer;
     pause();
     setTimeout(async () => {
       const ms = await bossKill(kill, !won() ? null : guesses.length === 1 ? 'show' : 'rain');
-      setTimeout(bgmAfter, ms);
+      setTimeout(() => bgmAfter(game), ms);
     }, flipMs);
   } else if (won()) {
     setTimeout(() => confetti(guesses.length === 1), flipMs);
@@ -622,8 +624,8 @@ function guess(name) {
 
 // After a boss's finishing attack or Jupiter's entrance: the whole BGM plays from 0:00 by itself (unless it's already
 // playing or you've moved on), leaving the attack's / achievement sounds to finish.
-function bgmAfter() {
-  if (audio.playing || !over) return;
+function bgmAfter(was) {
+  if (audio.playing || !over || answer !== was) return;   // (a different game opened meanwhile: leave it)
   audio.pos = 0;
   audio.ended = false;
   play.keep = true;
