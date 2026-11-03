@@ -1889,7 +1889,7 @@ function popup(id, title) {
   return win.querySelector('.popupbody');
 }
 const mesoDate = (d) => new Date(d * 86400000).toLocaleDateString(undefined, { timeZone: 'UTC', month: 'short', day: 'numeric' });
-const MESO_PER_PAGE = 5;
+const MESO_PER_PAGE = 10;
 // Page buttons: < 1 … 4 5 6 … 10 >  (first and last page always there, so no separate << / >>).
 // Always the same number of slots (« ‹ 7 slots › »), so the arrows never move: 1 2 3 4 5 … 24 / 1 … 8 9 10 … 24 /
 // 1 … 20 21 22 23 24. « and » jump 10 pages.
@@ -1926,12 +1926,24 @@ function openMeso(page = 1) {
   body.innerHTML =
     `<p class="mesototal"><img src="images/fx/meso-gold.png" alt=""> ${fmt(mesoTotal())}</p>` + ev +
     '<p>Finish puzzles to earn mesos. The fewer guesses, the more you get! Archive days pay 10% (rounded up). Spend them in the 🛍️ Shop.</p>' +
-    (all.length ? '<h3>Recent</h3><ul class="mesorecent">' + recent.map((e) =>
-      `<li><span>${mesoDate(e.day)} · ${MESO_NAMES[e.mode] ?? e.mode} · ${e.what}${(e.times ?? 1) > 1 ? ` (${e.times}x)` : ''}</span><b>${e.amount < 0 ? '−' + fmt(-e.amount) : '+' + fmt(e.amount)}</b></li>`).join('') + '</ul>' + pager(page, last) : '') +
+    (all.length ? '<h3>Recent</h3><ul class="mesorecent">' + recent.map(mesoRow).join('') + '</ul>' + pager(page, last) : '') +
     '<h3 class="mesohow">How to earn</h3><p class="mesobonus">Boss Wordle and BGM Clip: only your best mode each day pays (do better on another mode and you get the difference), and the bonus pays once a day.</p>' +
     Object.keys(MESO_TABLE).map(rows).join('');
+  // The list is as tall as its tallest page (some rows take 2 lines), so the arrows under it never move and can be spammed.
+  const ul = body.querySelector('.mesorecent');
+  if (ul && last > 1) {
+    const probe = ul.cloneNode(false);
+    probe.style.cssText = `position:absolute;visibility:hidden;width:${ul.offsetWidth}px`;
+    ul.parentNode.appendChild(probe);
+    let tall = 0;
+    for (let i = 0; i < all.length; i += MESO_PER_PAGE) { probe.innerHTML = all.slice(i, i + MESO_PER_PAGE).map(mesoRow).join(''); tall = Math.max(tall, probe.offsetHeight); }
+    probe.remove();
+    ul.style.minHeight = tall + 'px';
+  }
   for (const b of body.querySelectorAll('[data-page]')) b.addEventListener('click', () => openMeso(+b.dataset.page));
 }
+const mesoRow = (e) => `<li><span>${mesoDate(e.day)} · ${MESO_NAMES[e.mode] ?? e.mode} · ${e.what}${(e.times ?? 1) > 1 ? ` (${e.times}x)` : ''}</span>` +
+  `<b>${e.amount < 0 ? '−' + fmt(-e.amount) : '+' + fmt(e.amount)}</b></li>`;
 
 // ---- Shop: most items only show up once you've found them (e.g. Lucid's Garden of Eternal Dream: hear it in BGM Clip on
 // its day and get the bonus right, not from the Archive); "always" ones are there from the start. Buying a background
