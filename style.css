@@ -1181,9 +1181,16 @@ html.dark .achvstats div { border-color: rgba(255, 255, 255, 0.12); }
   #achv.maplewin .achvlocked, #achv.maplewin .achvcount { position: absolute; left: 170px; right: 12px; top: 300px; }
 }
 .achv[hidden], .achvlist[hidden], .achvhead[hidden] { display: none; }
-.achvsearch { display: block; width: 100%; margin: 10px 0 0; box-sizing: border-box; font: 12px Arial, 'Liberation Sans', sans-serif; padding: 3px 6px;
+.achvfind { display: flex; gap: 4px; align-items: center; margin: 10px 0 0; }
+.achvgo { flex: none; width: 45px; height: 22px; padding: 0; margin: 0; border: 0; cursor: pointer; background: url(images/achv/ui/search-normal.png) 0 0 / 100% 100%; }
+.achvgo:hover { background-image: url(images/achv/ui/search-mouseOver.png); }
+.achvgo:active { background-image: url(images/achv/ui/search-pressed.png); }
+.achvsearch { display: block; flex: 1; min-width: 0; width: 100%; margin: 0; box-sizing: border-box; font: 12px Arial, 'Liberation Sans', sans-serif; padding: 3px 6px;
   border: 1px solid #111; border-radius: 3px; background: #fff; color: #111; }
 .achvnone { margin: 120px 0; text-align: center; font: 700 18px Arial, 'Liberation Sans', sans-serif; color: #eee; }
 @media (min-width: 470px) and (min-height: 460px) {
-  #achv.maplewin .achvsearch { position: absolute; left: -2px; top: 637px; width: 91px; height: 16px; margin: 0; padding: 0 4px; border: 0; border-radius: 2px; background: transparent; font-size: 11px; }
+  #achv.maplewin .achvfind { margin: 0; }
+  #achv.maplewin .achvgo { position: absolute; left: 94px; top: 635px; }   /* the game's spots (UIAchievement.img): the button at 112, 697, the text at 19, 702 */
+  #achv.maplewin .achvsearch { position: absolute; left: 0; top: 637px; width: 89px; height: 16px; margin: 0; padding: 0 0 0 1px; border: 0; border-radius: 2px; background: transparent;
+    font-size: 11px; line-height: 16px; color: #555; outline: none; }
 }

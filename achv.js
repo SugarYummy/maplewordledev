@@ -350,8 +350,13 @@
       }
     }
     // The window's search box (the game's, bottom left): shows only the achievements whose name or description match
-    const q = side.appendChild(Object.assign(document.createElement('input'), { className: 'achvsearch', type: 'search', placeholder: 'Search', spellcheck: false }));
+    const find = side.appendChild(Object.assign(document.createElement('div'), { className: 'achvfind' }));
+    const q = find.appendChild(Object.assign(document.createElement('input'), { className: 'achvsearch', type: 'search', placeholder: 'Search', spellcheck: false, maxLength: 20 }));
+    const go = find.appendChild(Object.assign(document.createElement('button'), { className: 'achvgo', title: 'Search' }));   // the game's search button
     q.setAttribute('aria-label', 'Search achievements');
+    go.setAttribute('aria-label', 'Search');
+    go.addEventListener('click', () => { q.dispatchEvent(new Event('input')); main.scrollTop = 0; });
+    q.addEventListener('keydown', (e) => { if (e.key === 'Enter') go.click(); });
     q.addEventListener('input', () => {
       const t = q.value.trim().toLowerCase();
       for (const list of main.querySelectorAll('.achvlist')) {
