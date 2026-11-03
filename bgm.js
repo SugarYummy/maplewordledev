@@ -248,7 +248,8 @@ async function decode(id, raw) {
   return buf;
 }
 async function play() {
-  stopResultSounds();   // the win / lose music stops so you can listen again
+  if (play.keep) play.keep = false;   // started by itself (after Jupiter's entrance): leave the entrance / achievement sounds playing
+  else stopResultSounds();   // the win / lose music stops so you can listen again
   if (mashupAudio) { mashupAudio.pause(); $('mashupPlay').textContent = '▶\uFE0E Play the mashup'; mashupStopped(); }
   ensureCtx();
   audio.ctx.resume();
@@ -587,15 +588,18 @@ function guess(name) {
   // BGM Clip Extreme on Kai's, Malefic Star's, Mayrin's or Bellona's BGM: that boss's finishing attack plays when the
   // game ends, won (any guess) or lost; a first-guess win plays it in place of your win effect (fx.js bossKill).
   const kill = MODE === 'bgm' && typeof bossKillFor === 'function' ? bossKillFor(answer.name) : null;
-  // ...and on Jupiter's: your character's entrance under Share (account.js), before the meso show; it takes the place of
-  // a first-guess win effect, so it's seen. No character: the usual.
+  // ...and on Jupiter's: your character's entrance under Share (account.js), the BGM quiet meanwhile; then the BGM plays
+  // (from 0:00) along with the mesos. It takes the place of a first-guess win effect and the win / lose music, so it's
+  // seen and heard. No character: the usual.
   if (MODE === 'bgm' && answer.name === 'Jupiter' && typeof acctJupiterEntrance === 'function' && acct() && acctMapleImg()) {
+    pause();
     setTimeout(() => {
       const ms = acctJupiterEntrance();
-      if (won()) setTimeout(() => (guesses.length === 1 ? mesoShow() : confetti(false)), ms);
+      setTimeout(() => {
+        if (won()) guesses.length === 1 ? mesoShow() : confetti(false);
+        if (!audio.playing && over) { audio.pos = 0; audio.ended = false; play.keep = true; play(); }
+      }, ms);
     }, flipMs);
-    if (won() && guesses.length === 1 && live) { pause(); resultSound(true, flipMs, 'firstTry'); }
-    else if (!won() && live) pause();
   } else if (won()) {
     setTimeout(() => (kill ? bossKill(kill, guesses.length === 1 ? 'show' : 'rain') : confetti(guesses.length === 1)), flipMs);
     // First-guess win: Mayrin's Descend plays (the BGM pauses for it). Other wins: no music, the BGM is already playing.
