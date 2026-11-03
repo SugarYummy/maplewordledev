@@ -2068,7 +2068,7 @@ function openShop() {
   const mine = Object.keys(SHOP).filter((t) => shopOwned(t)).sort(byName);
   const locked = Object.keys(SHOP).filter((t) => SHOP[t].hidden && !found.includes(t) && !shopOwned(t)).sort((a, b) => SHOP[b].price - SHOP[a].price || byName(a, b)).map((t) =>
     `<div class="shopitem lockeditem"><span class="themepic hiddenpic">?</span>` +
-    `<span class="shopinfo"><b>Hidden</b><small>A secret ${/Bundle/.test(SHOP[t].kind) ? 'bundle' : 'item'}. Keep playing, it shows up here on a special day 👀</small>` +
+    `<span class="shopinfo"><b>Hidden</b><small>???</small>` +
     `<span class="price"><img src="images/fx/meso-gold.png" alt=""> <span>${fmt(SHOP[t].price)}</span></span></span><span class="locked">🔒 Locked</span></div>`).join('');
   body.innerHTML = `<p class="mesototal"><img src="images/fx/meso-gold.png" alt=""> ${fmt(have)}</p>` +
     (buyable.length || locked || mine.length ? '<div class="shoplist">' + buyable.map(card).join('') + locked + mine.map(card).join('') + '</div>' : '<p class="shopempty">Nothing here yet... 👀</p>') +

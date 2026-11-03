@@ -498,7 +498,7 @@ body.glitch :is(button, input, select) { text-shadow: inherit; }   /* the browse
               -webkit-text-stroke: 1.5px #6b3f00; paint-order: stroke fill; text-shadow: 0 2px 0 #6b3f00; letter-spacing: 0.5px; }
 .mesototal img { width: 32px; height: 32px; image-rendering: pixelated; }
 .mesoevent { padding: 6px 10px; border-radius: 8px; background: rgba(255, 220, 120, 0.6); border: 1px solid rgba(180, 120, 0, 0.4); }
-.mesoshop { font-size: 14px; }
+.mesoshop { font-size: 14px; text-align: center; }
 .mesorecent { margin: 0; padding: 0; list-style: none; font-size: 14px; }
 .mesorecent li { display: flex; justify-content: space-between; gap: 12px; padding: 2px 0; border-bottom: 1px solid rgba(0, 0, 0, 0.08); }
 .mesorecent b { color: #8a6000; white-space: nowrap; }
