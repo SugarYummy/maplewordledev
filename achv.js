@@ -145,6 +145,28 @@
   const TIER_OF = {"col:bgm": "legendary", "col:boss": "legendary", "col:class": "unique", "col:anim": "unique", "win1": "common", "wins10": "common", "wins50": "rare", "wins100": "epic", "wins500": "unique", "first1": "common", "first10": "rare", "first50": "epic", "diamond": "rare", "rainbow": "rare", "allgames": "rare", "days7": "common", "days30": "rare", "days100": "epic", "streak3": "common", "streak7": "rare", "streak30": "epic", "streak100": "unique", "meso1k": "common", "meso10k": "rare", "meso50k": "epic", "buy1": "common", "buy5": "rare", "buy10": "epic", "kill:Jupiter": "epic", "limbo": "epic"};
   for (const a of ALL) a.tier = TIER_OF[a.id] || (a.id.startsWith('kill:') ? 'epic' : 'common');
   const apOf = (got) => ALL.reduce((t, a) => t + (got[a.id] != null ? TIERS[a.tier][1] : 0), 0);
+  // Ranks by AP, with MapleStory's emblems (images/achv/rank). Master (501+ and the site's top 10) needs a site-wide
+  // ranking, which isn't there yet.
+  const RANKS = [['bronze', 'Bronze', 0], ['silver', 'Silver', 101], ['gold', 'Gold', 201], ['platinum', 'Platinum', 301], ['diamond', 'Diamond', 501]];
+  const rankOf = (ap) => RANKS.filter((r) => ap >= r[2]).pop();
+  // Ranked up (more AP than the rank saved last time): GradeUp plays, after the achievement banners. Saved in _rank.
+  function rankCheck(got, announce) {
+    const r = rankOf(apOf(got)), i = RANKS.indexOf(r), was = got._rank == null ? -1 : RANKS.findIndex((x) => x[0] === got._rank);
+    if (i === was) return;
+    got._rank = r[0];
+    try { localStorage.setItem(ACHV_KEY, JSON.stringify(got)); } catch {}
+    if (!announce || was < 0 || i < was) return;   // (the first look just notes your rank)
+    const at = Math.max(Date.now() + 2500, bannerFree);
+    bannerFree = at + 2600;
+    setTimeout(() => {
+      if (typeof resultSound === 'function') resultSound(true, 0, 'gradeUp');
+      const t = Object.assign(document.createElement('div'), { className: 'achvtoast achvrankup' });
+      t.innerHTML = `<img src="images/achv/rank/${r[0]}.png" alt=""><div><b>Rank up</b><span>${r[1]}</span></div>`;
+      document.body.appendChild(t);
+      setTimeout(() => t.classList.add('out'), 2200);
+      setTimeout(() => t.remove(), 2700);
+    }, at - Date.now());
+  }
 
   // Newly unlocked ones get saved (with the day) and announced. Only signed in.
   async function check(announce = true) {
@@ -160,6 +182,7 @@
     got._bestStreak = Math.max(s.streak, got._bestStreak || 0);
     if (changed || first) { try { localStorage.setItem(ACHV_KEY, JSON.stringify(got)); } catch {} }
     if (announce && !first) unlocked.forEach((a) => banner(a, 2500));
+    rankCheck(got, announce && !first);
     noteClaims();
   }
   // Achievement complete: MapleStory's own banner (its back and front played together, the front over it), the name in
@@ -272,8 +295,10 @@
     const done = ALL.filter((a) => got[a.id] != null).length;
     const tiles = [['Days played', s.days.size], ['Games played', s.played], ['Wins', s.wins],
       ['Win rate', s.played ? Math.round((s.wins / s.played) * 100) + '%' : '-'], ['First-guess wins', s.firstTry],
-      ['Best streak', s.streak], ['Mesos earned', fmt(s.mesos)], ['Achievements', `${done} / ${ALL.length}`], ['Achievement Points', fmt(apOf(got))]];
-    body.innerHTML = '<div class="achvstats">' + tiles.map(([k, v]) => `<div><small>${k}</small><b>${typeof v === 'number' ? fmt(v) : v}</b></div>`).join('') + '</div>';
+      ['Best streak', s.streak], ['Mesos earned', fmt(s.mesos)], ['Achievements', `${done} / ${ALL.length}`]];
+    const ap = apOf(got), rk = rankOf(ap), next = RANKS[RANKS.indexOf(rk) + 1];
+    // Like the game's achievement window: your rank's emblem with your points under it
+    body.innerHTML = `<div class="achvrank" title="${rk[1]}${next ? ` · ${fmt(next[2] - ap)} AP to ${next[1]}` : ''}"><img src="images/achv/rank/${rk[0]}.png" alt="${rk[1]}"><b>${ap}</b></div>` + '<div class="achvstats">' + tiles.map(([k, v]) => `<div><small>${k}</small><b>${typeof v === 'number' ? fmt(v) : v}</b></div>`).join('') + '</div>';
     for (const [title, list, hidden] of SECTIONS) {
       const n = list.filter((a) => got[a.id] != null).length;
       body.insertAdjacentHTML('beforeend', `<h3 class="achvhead">${title} <small>${n} / ${list.length}</small></h3>`);
@@ -315,6 +340,7 @@
       for (const a of locked) got[a.id] = today();
       try { localStorage.setItem(ACHV_KEY, JSON.stringify(got)); } catch {}
       banner({ name: `All ${ALL.length} achievements`, tier: 'legendary' });
+      rankCheck(got, true);
       noteClaims();
       return locked.length;
     }
@@ -322,6 +348,7 @@
     if (!a) return null;
     if (got[a.id] == null) { got[a.id] = today(); try { localStorage.setItem(ACHV_KEY, JSON.stringify(got)); } catch {} }
     banner(a);
+    rankCheck(got, true);
     noteClaims();
     return a.full || a.name;
   };

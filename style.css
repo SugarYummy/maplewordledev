@@ -1120,3 +1120,8 @@ html.dark .achvtier.t-unique { color: #ffcc33; } html.dark .achvtier.t-legendary
 .achvbanner.t-unique .achvname { color: #f3ee9e; }
 .achvbanner.t-legendary .achvname { color: #e6ef95; }
 @keyframes achvtext { from { opacity: 0; } to { opacity: 1; } }
+.achvrank { display: flex; flex-direction: column; align-items: center; margin: 0 0 12px; }
+.achvrank img { width: 96px; height: auto; margin-bottom: -10px; }
+.achvrank b { font-size: 30px; font-weight: 900; line-height: 1; color: #fff; letter-spacing: 1px;
+              -webkit-text-stroke: 4px #2b2b33; paint-order: stroke fill; text-shadow: 0 2px 3px rgba(0, 0, 0, 0.35); }
+.achvtoast.achvrankup img { width: 40px; height: auto; image-rendering: auto; }
