@@ -38,7 +38,7 @@
   // Everything the achievements look at, from this browser's (= the account's) saves.
   function stats(L) {
     const s = { played: 0, wins: 0, firstTry: 0, firstReg: 0, diamond: 0, rainbow: 0, days: new Set(), games: new Set(), streak: 0, mesos: 0,
-      won: { bgm: new Set(), boss: new Set(), class: new Set(), anim: new Set() }, limbo: false,
+      won: { bgm: new Set(), boss: new Set(), class: new Set(), anim: new Set() }, winsBy: { boss: 0, bgm: 0, class: 0, anim: 0 }, limbo: false,
       tracks: new Set(json('mapleWordle:bgmTracks', [])), buys: 0,
       limboMash: read('mapleWordle:limboMash') === '1' };
     const byMode = {};   // each mode's days played: [day, won]
@@ -53,6 +53,7 @@
       const w = /^Won (?:in )?(\d+)/.exec(r);
       if (!w) continue;
       s.wins++;
+      s.winsBy[game]++;
       s.games.add(game);
       if (+w[1] === 1) { s.firstTry++; if (game === 'boss' || game === 'class') s.firstReg++; }   // (a star; regular Wordle: Boss and Class)
       if (r.endsWith('💎')) s.diamond++;
@@ -102,6 +103,15 @@
       ...steps('rainbow', ['Born to Be Rainbow', 'Pot of Gold', 'What a Wonderful World', 'Prismatic', 'Eternal Spectrum'],
         (n) => times(n, 'Get a rainbow by guessing in 1.', 'Get # rainbows by guessing in 1.'), (s) => s.rainbow, [1, 5, 10, 20, 50]),
       A('allgames', 'Exploring the Sea', 'Win every game once.', (s) => [s.games.size, 4], '', { ap: 10 }),
+    ]],
+    // Wins in each game: Boss Wordle (Story, Normal, Hard, Extreme), BGM Clip (Normal, Extreme), Class (Class Wordle, Attack Animation)
+    ['Games', [
+      ...steps('bosswins', ['Boss Rookie', 'Boss Expert', 'Boss Elite', 'Boss Legend', 'Boss Transcendent'],
+        (n) => times(n, 'Win a game of Boss Wordle.', 'Win # games of Boss Wordle.'), (s) => s.winsBy.boss, [1, 10, 25, 100, 500]),
+      ...steps('bgmwins', ['BGM Rookie', 'BGM Expert', 'BGM Elite', 'BGM Legend', 'BGM Transcendent'],
+        (n) => times(n, 'Win a game of BGM Clip.', 'Win # games of BGM Clip.'), (s) => s.winsBy.bgm, [1, 10, 25, 100, 500]),
+      ...steps('classwins', ['Class Rookie', 'Class Expert', 'Class Elite', 'Class Legend', 'Class Transcendent'],
+        (n) => times(n, 'Win a game of Class Wordle or Attack Animation.', 'Win # games of Class Wordle or Attack Animation.'), (s) => s.winsBy.class + s.winsBy.anim, [1, 10, 25, 100, 500]),
     ]],
     ['Dedication', [
       ...steps('days', ['Just Getting Started', 'Dedicated', 'Tryhard', 'Obsession', 'Addiction'],
