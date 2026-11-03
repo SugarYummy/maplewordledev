@@ -601,7 +601,7 @@ function guess(name) {
         bgmAfter(game);
       }, ms);
     }, flipMs);
-  } else if (kill) {   // the BGM quiet while it plays (its own sound in place of the win / lose music), then in from 0:00
+  } else if (kill) {   // the BGM quiet until its burst (its own sound in place of the win / lose music), then in from 0:00 with the mesos
     const game = answer;
     pause();
     setTimeout(async () => {
@@ -610,10 +610,10 @@ function guess(name) {
     }, flipMs);
   } else if (won() && guesses.length === 1 && typeof hecate !== 'undefined' && (limboAllOn() || hecate?.id === 'limboCut')) {
     // A first-guess win whose win effect is Limbo Transition (Limbo mode, or ticked on its own in Customize): like the finishing
-    // attacks, the BGM is quiet while it plays (its own sound in place of the first-guess music), then in from 0:00.
+    // attacks, the BGM is quiet until its burst (its own sound in place of the first-guess music), then in from 0:00 with the mesos.
     const game = answer;
     pause();
-    setTimeout(() => { confetti(true); setTimeout(() => bgmAfter(game), HECATE.limboCut.ms); }, flipMs);
+    setTimeout(() => { confetti(true); setTimeout(() => bgmAfter(game), HECATE.limboCut.burst); }, flipMs);
   } else if (won()) {
     setTimeout(() => confetti(guesses.length === 1), flipMs);
     // First-guess win: Mayrin's Descend plays (the BGM pauses for it). Other wins: no music, the BGM is already playing.
@@ -628,7 +628,7 @@ function guess(name) {
   noteResult();
 }
 
-// After a boss's finishing attack or Jupiter's entrance: the whole BGM plays from 0:00 by itself (unless it's already
+// With the mesos of a boss's finishing attack, Limbo Transition or Jupiter's entrance: the whole BGM plays from 0:00 by itself (unless it's already
 // playing or you've moved on), leaving the attack's / achievement sounds to finish.
 function bgmAfter(was) {
   if (audio.playing || !over || answer !== was) return;   // (a different game opened meanwhile: leave it)
