@@ -608,6 +608,12 @@ function guess(name) {
       const ms = await bossKill(kill, !won() ? null : guesses.length === 1 ? 'show' : 'rain');
       setTimeout(() => bgmAfter(game), ms);
     }, flipMs);
+  } else if (won() && guesses.length === 1 && typeof hecate !== 'undefined' && (hecate?.id === 'limboCut' || (!hecate && limboAllOn()))) {
+    // A first-guess win whose win effect is Limbo Transition (Limbo mode, or picked in Customize): like the finishing
+    // attacks, the BGM is quiet while it plays (its own sound in place of the first-guess music), then in from 0:00.
+    const game = answer;
+    pause();
+    setTimeout(() => { confetti(true); setTimeout(() => bgmAfter(game), HECATE.limboCut.ms); }, flipMs);
   } else if (won()) {
     setTimeout(() => confetti(guesses.length === 1), flipMs);
     // First-guess win: Mayrin's Descend plays (the BGM pauses for it). Other wins: no music, the BGM is already playing.
