@@ -301,9 +301,10 @@ td.flip { animation: flip 0.5s ease both; }
 #games button, #subgames button { position: relative; }
 .newtag { position: absolute; top: -6px; left: -6px; padding: 0 3px; border-radius: 3px; background: #e33; color: #fff;
           font-size: 8px; font-weight: bold; line-height: 12px; letter-spacing: 0.3px; pointer-events: none; }
-/* The Archive's today: a green tag after the date */
-.todaytag { display: inline-block; margin-left: 6px; padding: 0 5px; border-radius: 3px; background: #2e9e44; color: #fff; font-size: 10px;
-            font-weight: bold; line-height: 15px; letter-spacing: 0.3px; vertical-align: 1px; }
+/* The Archive's today: a green tag on the button's top-left corner, like the NEW one */
+.todaywrap { position: relative; }
+.todaytag { position: absolute; top: -3px; left: -6px; z-index: 1; padding: 0 4px; border-radius: 3px; background: #2e9e44; color: #fff; font-size: 9px;
+            font-weight: bold; line-height: 13px; letter-spacing: 0.3px; pointer-events: none; }
 .pickrow[hidden] { display: none; }
 /* BGM Clip: the bonus row under Everyone's results (% who got the bonus right), set a little apart. */
 .statrow.bonusrow { margin-top: 10px; }
