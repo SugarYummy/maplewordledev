@@ -267,7 +267,7 @@
       }
     }
     if (typeof resultSound === 'function') resultSound(true, 0, 'purchase');   // (for now: the shop's purchase sound)
-    btn?.replaceWith(Object.assign(document.createElement('span'), { className: 'achvclaimed', textContent: 'Claimed' }));
+    btn?.replaceWith(Object.assign(document.createElement('img'), { className: 'achvclaimed', src: 'images/achv/ui/claim-disabled.png', alt: 'Claimed' }));   // the game's greyed "Claimed" button
     fresh.delete(a.id);
     newTag();
     if (a.mesos) toast(a.full || a.name, `+${fmt(a.mesos)} mesos`);
@@ -319,7 +319,7 @@
           (need > 1 && !on ? `<small class="achvnum">${fmt(have)} / ${fmt(need)}</small>` : '') +
           (on ? `<img class="achvseal" src="images/achv/ui/completeSeal.png" alt=""><span class="achvdate">${rowDate(got[a.id])}</span>` : '') +
           (rw ? `<div class="achvrwicon"><img src="${a.mesos ? 'images/fx/meso-bag.png' : a.fx ? `images/fx/hecate/${a.fx}.webp?v=6` : 'images/fx/seething-balance.webp?v=2'}" alt=""></div>` +
-            '<small class="achvreward"></small>' + (claimed ? '<span class="achvclaimed">Claimed</span>' : '<button class="achvclaim" aria-label="Claim Reward"></button>') : '');
+            '<small class="achvreward"></small>' + (claimed ? '<img class="achvclaimed" src="images/achv/ui/claim-disabled.png" alt="Claimed">' : '<button class="achvclaim" aria-label="Claim Reward"></button>') : '');
         row.title = `${TIERS[a.tier][0]} · ${TIERS[a.tier][1]} AP`;
         row.querySelector('.achvtitle').textContent = on ? a.full || a.name : a.name;
         row.querySelector('.achvhow').textContent = hide ? '???' : a.how;
