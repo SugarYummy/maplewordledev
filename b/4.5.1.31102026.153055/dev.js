@@ -173,9 +173,12 @@
       // today's Extreme game starts over (a save from another clip would be in the way)
       const day = Math.floor(Date.now() / 86400000);
       for (const k of [`mapleWordle:bgm:${day}`, `mapleWordle:result:bgm:${day}`, `mapleWordle:style:bgm:${day}`]) ss.removeItem(k);
+      // ...and its mesos, so the new game pays like a fresh day (otherwise it shows what the last test game already got)
+      const log = JSON.parse(ss.getItem('mapleWordle:mesoLog') || '[]');
+      ss.setItem('mapleWordle:mesoLog', JSON.stringify(log.filter((e) => ![`bgm:${day}`, `bgm+bonus:${day}`, `bgm+title:${day}`].includes(e.key))));
       const page = /\/bgm(\.html)?$/.test(location.pathname);
       if (page) setTimeout(() => location.reload(), 900);
-      return (name ? `Today's BGM Clip Extreme is now one of ${name}'s BGMs (a random phase), started over.` : 'Back to the real BGM Clip, started over.') + (page ? ' Reloading…' : ' Open BGM Clip (Extreme).');
+      return (name ? `Today's BGM Clip Extreme is now one of ${name}'s BGMs (a random phase), started over (its mesos too).` : 'Back to the real BGM Clip, started over.') + (page ? ' Reloading…' : ' Open BGM Clip (Extreme).');
     }
     if (cmd === '/master') {   // pretend to be in the site's top 10 (achv.js: Master needs 1,000+ AP too)
       window.achvMaster = !window.achvMaster;
