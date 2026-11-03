@@ -458,6 +458,7 @@ function start(d) {
   $('rows').innerHTML = '';
   $('stats').hidden = true;
   $('share').hidden = true;
+  $('jupiterChar')?.remove();   // Jupiter's entrance character (account.js) belongs to the game that ended
   $('guess').value = '';
   closeList();
   const saved = load(day);
@@ -586,7 +587,16 @@ function guess(name) {
   // BGM Clip Extreme on Kai's, Malefic Star's, Mayrin's or Bellona's BGM: that boss's finishing attack plays when the
   // game ends, won (any guess) or lost; a first-guess win plays it in place of your win effect (fx.js bossKill).
   const kill = MODE === 'bgm' && typeof bossKillFor === 'function' ? bossKillFor(answer.name) : null;
-  if (won()) {
+  // ...and on Jupiter's: your character's entrance under Share (account.js), before the meso show; it takes the place of
+  // a first-guess win effect, so it's seen. No character: the usual.
+  if (MODE === 'bgm' && answer.name === 'Jupiter' && typeof acctJupiterEntrance === 'function' && acct() && acctMapleImg()) {
+    setTimeout(() => {
+      const ms = acctJupiterEntrance();
+      if (won()) setTimeout(() => (guesses.length === 1 ? mesoShow() : confetti(false)), ms);
+    }, flipMs);
+    if (won() && guesses.length === 1 && live) { pause(); resultSound(true, flipMs, 'firstTry'); }
+    else if (!won() && live) pause();
+  } else if (won()) {
     setTimeout(() => (kill ? (guesses.length > 1 && confetti(false), bossKill(kill, guesses.length === 1)) : confetti(guesses.length === 1)), flipMs);
     // First-guess win: Mayrin's Descend plays (the BGM pauses for it). Other wins: no music, the BGM is already playing.
     if (guesses.length === 1 && live) { pause(); resultSound(true, flipMs, 'firstTry'); }

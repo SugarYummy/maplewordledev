@@ -21,7 +21,7 @@
     constructor(...a) { if (a.length) super(...a); else super(RealDate.now() - BEHIND); }
     static now() { return RealDate.now() - BEHIND; }
   };
-  const BUILD = 'alphaTest v6.2.02112026.235547', STAMP = BUILD.split(' v')[1];
+  const BUILD = 'alphaTest v6.2.02112026.235924', STAMP = BUILD.split(' v')[1];
   const ROOT = location.pathname.match(/^(.*?\/maplewordledev\/)/)?.[1] ?? '/';
   const kept = window.localStorage;   // the browser's own storage: only the test login ('mwdev:login') goes here
   Object.defineProperty(window, 'localStorage', { value: window.sessionStorage, configurable: true });
@@ -142,7 +142,7 @@
   window.mwDevHolidays = !!ss.getItem('mwdev:holidays');   // /unlock all found the holiday items too (fx.js shopFound)
   window.devEgg = ss.getItem('mwdev:egg');   // read by bgm.js (bonusFor)
   try { window.devBgm = JSON.parse(ss.getItem('mwdev:bgm') || 'null'); } catch {}   // read by bgm.js (answerFor): /bgm kai
-  const DEV_HELP = '/meso 5000 — add mesos (minus works too)\n/egg limbo — Limbo\'s mashup as today\'s BGM Clip Extreme bonus\n/egg lucid — today\'s BGM Clip Extreme clip is Lucid\'s Garden of Eternal Dream\n/egg off — back to the real one\n/unlock all — own every shop item, boss finishing effect, appearance effect and Memory\n/unlock achievement — unlock the next achievement (or one by name: /unlock achievement siren)\n/unlock allachievement — unlock every achievement at once\n/bgm kai — today\'s BGM Clip Extreme is one of Kai\'s BGMs, picked at random (also: /bgm star, /bgm mayrin, /bgm bellona; /bgm off)\n/master — count as one of the site\'s top 10 (Master rank at 1,000+ AP; again to stop)\n/reset — wipe this tab\'s test saves (like opening a new tab) and reload\n/help — this list';
+  const DEV_HELP = '/meso 5000 — add mesos (minus works too)\n/egg limbo — Limbo\'s mashup as today\'s BGM Clip Extreme bonus\n/egg lucid — today\'s BGM Clip Extreme clip is Lucid\'s Garden of Eternal Dream\n/egg off — back to the real one\n/unlock all — own every shop item, boss finishing effect, appearance effect and Memory\n/unlock achievement — unlock the next achievement (or one by name: /unlock achievement siren)\n/unlock allachievement — unlock every achievement at once\n/bgm kai — today\'s BGM Clip Extreme is one of Kai\'s BGMs, picked at random (also: /bgm star, /bgm mayrin, /bgm bellona, /bgm jupiter; /bgm off)\n/master — count as one of the site\'s top 10 (Master rank at 1,000+ AP; again to stop)\n/reset — wipe this tab\'s test saves (like opening a new tab) and reload\n/help — this list';
   function devRun(line) {
     const [cmd, a] = line.trim().split(/\s+/);
     if (cmd === '/help') return DEV_HELP;
@@ -165,9 +165,9 @@
       return what ? `${what}${page ? ' Reloading…' : ' Open BGM Clip (Extreme).'}` : `Back to the real BGM Clip.${page ? ' Reloading…' : ''}`;
     }
     if (cmd === '/bgm') {   // today's BGM Clip Extreme: one of that boss's BGMs (a random phase each time), to test its finishing attack
-      const BOSS = { kai: 'Kai', star: 'Malefic Star', malefic: 'Malefic Star', mayrin: 'Mayrin', bellona: 'Bellona' };
+      const BOSS = { kai: 'Kai', star: 'Malefic Star', malefic: 'Malefic Star', mayrin: 'Mayrin', bellona: 'Bellona', jupiter: 'Jupiter' };
       const name = BOSS[String(a).toLowerCase()];
-      if (!name && a !== 'off') return 'Try: /bgm kai, /bgm star, /bgm mayrin, /bgm bellona or /bgm off';
+      if (!name && a !== 'off') return 'Try: /bgm kai, /bgm star, /bgm mayrin, /bgm bellona, /bgm jupiter or /bgm off';
       if (name) ss.setItem('mwdev:bgm', JSON.stringify({ boss: name, r: Math.random() }));
       else ss.removeItem('mwdev:bgm');
       // today's Extreme game starts over (a save from another clip would be in the way)
