@@ -586,8 +586,10 @@ applyBox();
       t.closest('.setrow').appendChild(box);
       t.addEventListener('mouseenter', () => { if (!PHONE) box.classList.add('show'); });
       t.addEventListener('mouseleave', () => { if (!PHONE && !t.classList.contains('open')) box.classList.remove('show'); });
+      if (!PHONE) { t.classList.add('hoveronly'); t.tabIndex = -1; }   // computers: hover shows it, a click does nothing
       t.addEventListener('click', (e) => {
         e.stopPropagation();
+        if (!PHONE) return;
         const open = !t.classList.contains('open');
         closeTips();
         t.classList.toggle('open', open);
