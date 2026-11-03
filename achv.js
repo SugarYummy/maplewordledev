@@ -156,16 +156,15 @@
     got._rank = r[0];
     try { localStorage.setItem(ACHV_KEY, JSON.stringify(got)); } catch {}
     if (!announce || was < 0 || i < was) return;   // (the first look just notes your rank)
-    const at = Math.max(Date.now() + 2500, bannerFree);
-    bannerFree = at + 2600;
-    setTimeout(() => {
+    // (a moment later, so every achievement unlocked in the same go is queued first: the rank up comes after them all)
+    setTimeout(() => { const at = Math.max(Date.now() + 2500, bannerFree); bannerFree = at + 2600; setTimeout(() => {
       if (typeof resultSound === 'function') resultSound(true, 0, 'gradeUp');
       const t = Object.assign(document.createElement('div'), { className: 'achvtoast achvrankup' });
       t.innerHTML = `<img src="images/achv/rank/${r[0]}.png" alt=""><div><b>Rank up</b><span>${r[1]}</span></div>`;
       document.body.appendChild(t);
       setTimeout(() => t.classList.add('out'), 2200);
       setTimeout(() => t.remove(), 2700);
-    }, at - Date.now());
+    }, at - Date.now()); }, 0);
   }
 
   // Newly unlocked ones get saved (with the day) and announced. Only signed in.
@@ -267,7 +266,7 @@
       }
     }
     if (typeof resultSound === 'function') resultSound(true, 0, 'purchase');   // (for now: the shop's purchase sound)
-    btn?.replaceWith(Object.assign(document.createElement('span'), { className: 'achvdate', textContent: 'Claimed' }));
+    btn?.replaceWith(Object.assign(document.createElement('span'), { className: 'achvclaimed', textContent: 'Claimed' }));
     fresh.delete(a.id);
     newTag();
     if (a.mesos) toast(a.full || a.name, `+${fmt(a.mesos)} mesos`);
@@ -299,32 +298,38 @@
     const ap = apOf(got), rk = rankOf(ap), next = RANKS[RANKS.indexOf(rk) + 1];
     // Like the game's achievement window: your rank's emblem with your points under it
     body.innerHTML = `<div class="achvrank" title="${rk[1]}${next ? ` · ${fmt(next[2] - ap)} AP to ${next[1]}` : ''}"><img src="images/achv/rank/${rk[0]}.png" alt="${rk[1]}"><b>${ap}</b></div>` + '<div class="achvstats">' + tiles.map(([k, v]) => `<div><small>${k}</small><b>${typeof v === 'number' ? fmt(v) : v}</b></div>`).join('') + '</div>';
+    // Rows like the game's achievement window (images/achv/ui, MapleStory's own form pieces): the tier's cup with its AP
+    // (hidden ones keep their own picture), name, description, the gauge, the seal and date when done. Unlocked hidden
+    // ones get the reward strip with the Claim Reward button.
     for (const [title, list, hidden] of SECTIONS) {
       const n = list.filter((a) => got[a.id] != null).length;
       body.insertAdjacentHTML('beforeend', `<h3 class="achvhead">${title} <small>${n} / ${list.length}</small></h3>`);
       const box = body.appendChild(Object.assign(document.createElement('div'), { className: 'achvlist' }));
       for (const a of list) {
-        const [have, need] = a.prog(s, L), on = got[a.id] != null, hide = hidden && !on;
-        // Hidden: always purple. Locked: the Secret Spell Scroll, its short name, a faint ??? and how far you are (N / M)
-        const row = box.appendChild(Object.assign(document.createElement('div'), { className: 'achv' + (on ? ' on' : '') + (hidden ? ' secret' : '') }));
-        row.innerHTML = `<div class="achvicon"><img src="${hide ? 'images/achv/4031348.png' : a.icon}" alt=""></div><div class="achvtext"><b></b><small></small>` +
-          ((need > 1 || hide) && !(hidden && on) ? `<div class="achvbar"><i style="width:${(have / need) * 100}%"></i></div><small class="achvnum">${fmt(have)} / ${fmt(need)}</small>` : '') +
-          (a.reward && !hide ? '<small class="achvreward"></small>' : '') + '</div>' +
-          (on && a.reward && hidden ? (got._claimed?.[a.id] ? '<span class="achvdate">Claimed</span>' : '<button class="achvclaim">Claim</button>') :
-          on ? `<span class="achvdate">${dayText(got[a.id])}</span>` : '');
-        row.querySelector('b').textContent = on ? a.full || a.name : a.name;
-        row.querySelector('b').insertAdjacentHTML('afterend', `<span class="achvtier t-${a.tier}">${TIERS[a.tier][0]} · ${TIERS[a.tier][1]} AP</span>`);
-        row.querySelector('small').textContent = hide ? '???' : a.how;
-        if (hide) row.querySelector('small').classList.add('achvq');
-        if (a.reward && !hide) {   // the reward itself coloured: a win effect by its full name in purple, mesos in meso gold
-          const r = row.querySelector('.achvreward');
-          r.textContent = 'Reward: ';
-          r.appendChild(Object.assign(document.createElement('span'), a.mesos ? { className: 'rwmeso', textContent: `${fmt(a.mesos)} mesos` }
+        const [have, need] = a.prog(s, L), on = got[a.id] != null, hide = hidden && !on, rw = on && hidden && a.reward;
+        const claimed = rw && got._claimed?.[a.id];
+        const row = box.appendChild(Object.assign(document.createElement('div'), {
+          className: 'achv' + (on ? ' on' : '') + (hidden ? ' secret' : '') + (rw ? ' rw' : '') }));
+        const cup = a.tier === 'common' ? 'normal' : a.tier;
+        row.innerHTML = `<div class="achvicon">` + (hidden ? `<img src="${hide ? 'images/achv/4031348.png' : a.icon}" alt="">`
+            : `<img class="cup c-${cup}" src="images/achv/ui/cup-${cup}.png" alt="${TIERS[a.tier][0]}"><i>${TIERS[a.tier][1]}</i>`) + '</div>' +
+          '<b class="achvtitle"></b><small class="achvhow"></small>' +
+          `<div class="achvgauge"><i style="width:${on ? 100 : Math.min(1, have / need) * 100}%"></i></div>` +
+          (need > 1 && !on ? `<small class="achvnum">${fmt(have)} / ${fmt(need)}</small>` : '') +
+          (on ? `<img class="achvseal" src="images/achv/ui/completeSeal.png" alt=""><span class="achvdate">${dayText(got[a.id])}</span>` : '') +
+          (rw ? `<div class="achvrwicon"><img src="${a.mesos ? 'images/fx/meso-bundle.png' : a.fx ? `images/fx/hecate/${a.fx}.webp?v=6` : 'images/fx/seething-balance.webp?v=2'}" alt=""></div>` +
+            '<small class="achvreward"></small>' + (claimed ? '<span class="achvclaimed">Claimed</span>' : '<button class="achvclaim" aria-label="Claim Reward"></button>') : '');
+        row.title = `${TIERS[a.tier][0]} · ${TIERS[a.tier][1]} AP`;
+        row.querySelector('.achvtitle').textContent = on ? a.full || a.name : a.name;
+        row.querySelector('.achvhow').textContent = hide ? '???' : a.how;
+        if (hide) row.querySelector('.achvhow').classList.add('achvq');
+        if (rw) {   // the reward itself coloured: a win effect by its full name in purple, mesos in meso gold
+          row.querySelector('.achvreward').appendChild(Object.assign(document.createElement('span'), a.mesos ? { className: 'rwmeso', textContent: `${fmt(a.mesos)} mesos` }
             : a.fx ? { className: 'rwfx', textContent: a.full || a.name }
             : a.appear ? { className: 'rwfx', textContent: `${a.full || a.name} (appearance effect)` } : { textContent: a.reward }));
         }
         const cb = row.querySelector('.achvclaim');
-        if (cb) { cb.addEventListener('click', () => claim(a, cb)); if (typeof hoverSound === 'function') hoverSound(cb); }   // (the shop's hover sound, for now)
+        if (cb) { cb.addEventListener('click', () => claim(a, cb)); if (typeof hoverSound === 'function') hoverSound(cb); }
       }
     }
   }
