@@ -597,14 +597,14 @@ function guess(name) {
     if (won() && guesses.length === 1 && live) { pause(); resultSound(true, flipMs, 'firstTry'); }
     else if (!won() && live) pause();
   } else if (won()) {
-    setTimeout(() => (kill ? (guesses.length > 1 && confetti(false), bossKill(kill, guesses.length === 1)) : confetti(guesses.length === 1)), flipMs);
+    setTimeout(() => (kill ? bossKill(kill, guesses.length === 1 ? 'show' : 'rain') : confetti(guesses.length === 1)), flipMs);
     // First-guess win: Mayrin's Descend plays (the BGM pauses for it). Other wins: no music, the BGM is already playing.
     if (guesses.length === 1 && live) { pause(); resultSound(true, flipMs, 'firstTry'); }
   } else if (live) {
     pause();
-    if (kill) setTimeout(() => bossKill(kill, false), flipMs);   // its own sound, in place of Star Force Destroy
+    if (kill) setTimeout(() => bossKill(kill), flipMs);   // its own sound, in place of Star Force Destroy
     else resultSound(false, flipMs);   // Star Force Destroy
-  } else if (kill) setTimeout(() => bossKill(kill, false), flipMs);
+  } else if (kill) setTimeout(() => bossKill(kill), flipMs);
   if (!audio.playing) { audio.pos = 0; audio.ended = false; drawBar(); }   // not playing: the full track starts from 0:00
   updateStreak();
   loadStats();

@@ -241,11 +241,13 @@ const HECATE = {   // ms: clip length, burst: ms into the clip when it bursts (f
   // Limbo's glitch mashup right plays for everyone. The mesos come as it fades out (frame 54 of 65).
   limboCut: { name: 'Limbo Transition', ms: 4200, burst: 3480, pack: 'limboSub', wide: true, solo: true, v: 2 },   // solo: its own card, no box
   // Boss finishing effects (60 ms frames; Siren's Song's End starts 1 s before its Pre ends, Bellona's three parts play at once):
+  // burst (the mesos come out): Siren's Song as the ball booms into its sky, Iaido Alpha as the laser ends and booms, Guide of
+  // Destiny as the last card explodes, Fanatic's Execution as her axe lands
   // yours once you claim that boss's Hidden achievement (achv.js)
-  sirenSong: { name: "Siren's Song", ms: 4500, burst: 2220, v: 2, achv: 'kill:Malefic Star' },
-  iaidoAlpha: { name: 'Kai-ryu Sword: Iaido Alpha', ms: 2640, burst: 1920, achv: 'kill:Kai' },
-  mayrinKill: { name: 'Guide of Destiny', ms: 3600, burst: 1800, v: 2, achv: 'kill:Mayrin' },
-  bellonaKill: { name: "Fanatic's Execution", ms: 2820, burst: 1740, v: 2, achv: 'kill:Bellona' },
+  sirenSong: { name: "Siren's Song", ms: 4500, burst: 2280, v: 2, achv: 'kill:Malefic Star' },
+  iaidoAlpha: { name: 'Kai-ryu Sword: Iaido Alpha', ms: 2640, burst: 1740, achv: 'kill:Kai' },
+  mayrinKill: { name: 'Guide of Destiny', ms: 3600, burst: 2640, v: 2, achv: 'kill:Mayrin' },
+  bellonaKill: { name: "Fanatic's Execution", ms: 2820, burst: 1620, v: 2, achv: 'kill:Bellona' },
 };
 const achvGot = (id) => { try { return JSON.parse(lsGet('mapleWordle:achv') || '{}')._claimed?.[id] != null; } catch { return false; } };   // claimed (achv.js)
 const EFFECTS_KEY = 'mapleWordle:effects', WINFX_KEY = 'mapleWordle:winFx';   // packs bought; win effects picked
@@ -321,16 +323,18 @@ function bossKillLoad(id) {
   bossKillBlob[id] ??= fetch(`video/hecate/${id}.${SAFARI ? 'webp' : 'webm'}${HECATE[id].v ? '?v=' + HECATE[id].v : ''}`).then((r) => (r.ok ? r.blob() : null)).catch(() => null);
   return bossKillBlob[id];
 }
-async function bossKill(id, firstTry) {
-  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+// mesos: 'show' (a first-guess win: the meso fountain), 'rain' (a win in 2+), or none (lost); they come out at its burst.
+async function bossKill(id, mesos) {
+  const fallback = () => (mesos === 'show' ? bigWin() : mesos === 'rain' ? confetti(false) : undefined);
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return fallback();
   const blob = await bossKillLoad(id);
-  if (!blob) return firstTry ? bigWin() : undefined;
+  if (!blob) return fallback();
   const keep = hecate, was = hecateLast;
   hecate = { id, skin: HECATE[id], blob };
   const burst = playHecate(true);
   hecate = keep;
   hecateLast = was;
-  if (firstTry) setTimeout(mesoShow, burst);
+  if (mesos) setTimeout(() => (mesos === 'show' ? mesoShow() : confetti(false)), burst);
 }
 // Limbo's glitch mashup answered right (BGM Clip): Limbo's cutscene for everyone (only that: no meso show or glow).
 let limboCutBlob = null;
