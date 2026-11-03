@@ -11,6 +11,8 @@
   const gameOf = (mode) => Object.keys(GAMES).find((g) => GAMES[g].includes(mode));
   const read = (k) => { try { return localStorage.getItem(k); } catch { return null; } };
   const json = (k, d) => { try { return JSON.parse(read(k)) ?? d; } catch { return d; } };
+  // Numbers in the game's own digits (images/achv/num-score: the emblem's points, num-scoreSmall: under the cups)
+  const digits = (n, set) => [...String(n)].map((d) => `<img src="images/achv/num-${set}/${d}.png" alt="">`).join('');
   const rowDate = (d) => new Date(d * DAY_MS).toISOString().slice(0, 10).replace(/-/g, '.');   // like the game: 2026.11.01
   const dayText = (d) => new Date(d * DAY_MS).toLocaleDateString(undefined, { timeZone: 'UTC', month: 'short', day: 'numeric' });
   const loggedIn = () => typeof acct === 'function' && !!acct();
@@ -311,7 +313,7 @@
     // Like the game's achievement window: your rank's emblem with your points under it
     body.innerHTML = '<div class="achvside"></div><div class="achvmain"></div>';
     const side = body.firstChild, main = body.lastChild;
-    side.innerHTML = `<div class="achvrank" title="${rk[1]}${next ? ` · ${fmt(next[2] - ap)} AP to ${next[1]}` : ''}"><img class="r-${rk[0]}" src="images/achv/rank/${rk[0]}.png" alt="${rk[1]}"><b>${ap}</b></div>` + '<div class="achvstats">' + tiles.map(([k, v]) => `<div><small>${k}</small><b>${typeof v === 'number' ? fmt(v) : v}</b></div>`).join('') + '</div>';
+    side.innerHTML = `<div class="achvrank" title="${rk[1]}${next ? ` · ${fmt(next[2] - ap)} AP to ${next[1]}` : ''}"><img class="r-${rk[0]}" src="images/achv/rank/${rk[0]}.png" alt="${rk[1]}"><b aria-label="${ap} AP">${digits(ap, 'score')}</b></div>` + '<div class="achvstats">' + tiles.map(([k, v]) => `<div><small>${k}</small><b>${typeof v === 'number' ? fmt(v) : v}</b></div>`).join('') + '</div>';
     // Rows like the game's achievement window (images/achv/ui, MapleStory's own form pieces): the tier's cup with its AP
     // (hidden ones keep their own picture), name, description, the gauge, the seal and date when done. Unlocked hidden
     // ones get the reward strip with the Claim Reward button.
@@ -326,7 +328,7 @@
           className: 'achv' + (on ? ' on' : '') + (hidden ? ' secret' : '') + (rw ? ' rw' : '') }));
         const cup = a.tier === 'common' ? 'normal' : a.tier;
         row.innerHTML = `<div class="achvicon">` + (hidden ? `<img src="${hide ? 'images/achv/4031348.png' : a.icon}" alt="">`
-            : `<img class="cup c-${cup}" src="images/achv/ui/cup-${cup}.png" alt="${TIERS[a.tier][0]}"><i>${TIERS[a.tier][1]}</i>`) + '</div>' +
+            : `<img class="cup c-${cup}" src="images/achv/ui/cup-${cup}.png" alt="${TIERS[a.tier][0]}"><i aria-label="${TIERS[a.tier][1]} AP">${digits(TIERS[a.tier][1], 'scoreSmall')}</i>`) + '</div>' +
           '<b class="achvtitle"></b><small class="achvhow"></small>' +
           `<div class="achvgauge"><i style="width:${on ? 100 : Math.min(1, have / need) * 100}%"></i></div>` +
           (need > 1 && !on ? `<small class="achvnum">${fmt(have)} / ${fmt(need)}</small>` : '') +

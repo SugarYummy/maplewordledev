@@ -1054,7 +1054,8 @@ h1.tglitch .gtext::after { animation: glitchb 1.6s steps(1) -1.088s 1; }
 .achvicon img { max-width: calc(44 * var(--p)); max-height: calc(44 * var(--p)); image-rendering: pixelated; }
 .achvicon img.cup { width: calc(41 * var(--p)); height: calc(32 * var(--p)); max-height: none; max-width: none; }
 .achvicon img.c-normal { width: calc(29 * var(--p)); height: calc(29 * var(--p)); }
-.achvicon i { margin-top: calc(1 * var(--p)); font: normal 700 calc(19.5 * var(--p)) / 1 Arial, 'Liberation Sans', sans-serif; color: #fff; text-shadow: 0 1px 2px #000; }
+.achvicon i { display: flex; margin-top: calc(2 * var(--p)); }
+.achvicon i img { width: calc(11 * var(--p)); height: calc(16 * var(--p)); max-width: none; max-height: none; image-rendering: auto; }
 .achv.secret .achvicon img { filter: none; }
 .achvtitle { left: calc(83 * var(--p)); top: calc(13 * var(--p)); right: calc(20 * var(--p)); font-size: calc(16.2 * var(--p)); font-weight: 400; letter-spacing: 0.015em; -webkit-text-stroke: calc(0.35 * var(--p)) currentColor;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #f2f2f2; }
@@ -1127,9 +1128,9 @@ html.dark .achvstats div { border-color: rgba(255, 255, 255, 0.12); }
 .achvbanner.t-legendary .achvname { color: #e6ef95; }
 @keyframes achvtext { from { opacity: 0; } to { opacity: 1; } }
 .achvrank { display: flex; flex-direction: column; align-items: center; margin: 0 0 12px; }
-.achvrank img { width: 96px; height: auto; margin-bottom: -10px; }
-.achvrank b { font-size: 30px; font-weight: 900; line-height: 1; color: #fff; letter-spacing: 1px;
-              -webkit-text-stroke: 4px #2b2b33; paint-order: stroke fill; text-shadow: 0 2px 3px rgba(0, 0, 0, 0.35); }
+.achvrank > img { width: 96px; height: auto; margin-bottom: -10px; }
+.achvrank b { display: flex; justify-content: center; line-height: 1; }
+.achvrank b img { width: 21px; height: 29px; margin: 0 -1px; }
 .achvtoast.achvrankup img { width: 48px; height: auto; image-rendering: auto; }
 .achvtoast.achvrankup b { font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: #ffe9a6; text-shadow: 0 1px 0 #6b4a12; }
 .achvtoast.achvrankup span { font-size: 17px; font-weight: 800; color: #f2f2f2; }
@@ -1167,10 +1168,9 @@ html.dark .achvstats div { border-color: rgba(255, 255, 255, 0.12); }
   /* As big as the game shows it: the emblem a bit over its own size (Master 170 px, the others 153 px), rising out of the top of
      its box, the points big along the box's bottom */
   #achv.maplewin .achvrank { position: relative; height: 135px; margin: 0 0 12px; }
-  #achv.maplewin .achvrank img { position: absolute; left: 50%; top: -22px; width: 153px; margin: 0; transform: translateX(-50%); }
-  #achv.maplewin .achvrank img.r-master { width: 170px; top: -30px; }
-  #achv.maplewin .achvrank b { position: absolute; left: -10px; right: -10px; top: 100px; text-align: center; font-size: 29px; letter-spacing: 0;
-    -webkit-text-stroke: 3px #3a3a3a; text-shadow: 0 0 6px rgba(255, 255, 255, 0.55), 0 0 2px rgba(255, 255, 255, 0.6); }
+  #achv.maplewin .achvrank > img { position: absolute; left: 50%; top: -22px; width: 153px; margin: 0; transform: translateX(-50%); }
+  #achv.maplewin .achvrank > img.r-master { width: 170px; top: -30px; }
+  #achv.maplewin .achvrank b { position: absolute; left: -10px; right: -10px; top: 99px; }
   #achv.maplewin .achvstats { grid-template-columns: 1fr; gap: 4px; margin: 0; }
   #achv.maplewin .achvstats div { padding: 4px 8px; flex-direction: row; justify-content: space-between; align-items: baseline; height: 52px; box-sizing: border-box;
     flex-direction: column; justify-content: center; align-items: flex-start; border-radius: 5px; }
