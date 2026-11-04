@@ -842,6 +842,7 @@ input[type="search"]::-webkit-search-cancel-button, input[type="search"]::-webki
 .acctwelcome { font-size: 15px; }
 .acctform { display: flex; flex-direction: column; gap: 6px; }
 .acctwin .panel { width: 320px; align-items: stretch; }
+.acctwin .panel.acctpickwin { width: 400px; max-width: calc(100vw - 32px); position: relative; }   /* MapleStory Character (relative: for its On / Off message) */
 .acctwin h2 { text-align: center; }
 .acctfield { display: flex; flex-direction: column; gap: 3px; font-size: 13px; font-weight: 700; }
 .acctfield input { font-family: inherit; font-size: 15px; padding: 6px 9px; border: 1px solid #999; border-radius: 6px; background: rgba(var(--wb), 0.9); }
@@ -1123,13 +1124,13 @@ html.dark .achvstats div { border-color: rgba(255, 255, 255, 0.12); }
 /* An appearance effect (Seething Balance): plays once over the account's avatar when Settings opens */
 .acctside { position: relative; }
 /* 312 x 260 (the effect's 1322 x 1100 at 0.236): its middle (the eye, at 636, 534 in the effect) lands on your character's middle */
-.acctappear { position: fixed; width: 312px; height: 260px; transform: translate(calc(-50% + 5.9px), calc(-50% + 3.8px)); pointer-events: none; z-index: 20; object-fit: contain; }
+.acctappear { position: fixed; width: 312px; height: 260px; transform: translate(calc(-50% + 5.9px), calc(-50% + 3.8px)); pointer-events: none; z-index: 6; object-fit: contain; }   /* (over Settings, as it comes after it, but under any window opened over Settings) */
 .acctpickhead { margin: 12px 0 4px; font-size: 15px; text-align: left; }
 .acctpickrow .acctfxpic { width: 72px; height: 72px; object-fit: contain; }
 .acctpickrow.acctfxrow { padding-right: 104px; }
 .acctpick:empty { display: none; }
 #jupiterChar { display: flex; justify-content: center; margin: 4px 0 0; }   /* BGM Clip Extreme, Jupiter's BGM: your character under Share (account.js) */
-.acctappeartop { position: fixed; margin: 0; z-index: 21; pointer-events: none; }   /* your character, over its appearance effect */
+.acctappeartop { position: fixed; margin: 0; z-index: 6; pointer-events: none; }   /* your character, over its appearance effect */
 /* Achievement tiers: MapleStory's grade colours */
 /* Achievement complete banner (MapleStory's, 1366 x 231; the front is 693 x 194 at 336, 31 over it): scaled to fit */
 .achvbanner { position: fixed; top: calc(6px + 75px * var(--s)); left: 50%; z-index: 23; width: 1366px; height: 231px; pointer-events: none;

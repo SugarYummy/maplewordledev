@@ -139,12 +139,12 @@
     ]],
     ['Hidden', [
       kill('Malefic Star', "Siren's Song", "Siren's Song", '../achv/siren-song', 'sirenSong'),
-      kill('Kai', 'Iaido Alpha', 'Kai-ryu Sword: Iaido Alpha', '../achv/iaido-alpha', 'iaidoAlpha'),
+      kill('Kai', 'Iaido Alpha', 'Iaido Alpha', '../achv/iaido-alpha', 'iaidoAlpha'),   // (its win effect keeps its full name in Customize: fx.js HECATE)
       kill('Mayrin', 'Guide of Destiny', 'Guide of Destiny', 'mayrin', 'mayrinKill'),
       kill('Bellona', "Fanatic's Execution", "Fanatic's Execution", 'bellona', 'bellonaKill'),
       A('kill:Jupiter', 'Seething Balance', "Played all versions of Jupiter's BGM in Extreme mode.",
         (s, L) => { const t = L?.tracksOf.Jupiter || []; return [t.filter((x) => s.tracks.has(x)).length, t.length || 1]; },
-        'images/achv/seething-balance.png?v=2', { appear: 'seethingBalance', reward: 'Seething Balance appearance effect' }),
+        'images/achv/seething-balance.png?v=2', { appear: 'seethingBalance', reward: 'Seething Balance Appearance Effect' }),
       A('limbo', 'Subconscious', 'Something stirred in the abyss.', (s) => [s.limboMash ? 1 : 0, 1], 'images/fx/limbo-bundle.webp',
         { full: "Limbo's Subconscious", mesos: 1000, reward: '1,000 mesos' }),
     ], true],
@@ -422,8 +422,8 @@
         if (hide) row.querySelector('.achvhow').classList.add('achvq');
         if (rw) {   // the reward itself coloured: a win effect by its full name in purple, mesos in meso gold
           row.querySelector('.achvreward').appendChild(Object.assign(document.createElement('span'), a.mesos ? { className: 'rwmeso', textContent: `${fmt(a.mesos)} mesos` }
-            : a.fx ? { className: 'rwfx', textContent: a.full || a.name }
-            : a.appear ? { className: 'rwfx', textContent: `${a.full || a.name} (appearance effect)` } : { textContent: a.reward }));
+            : a.fx ? { className: 'rwfx', textContent: `${a.full || a.name} Win Effect` }
+            : a.appear ? { className: 'rwfx', textContent: `${a.full || a.name} Appearance Effect` } : { textContent: a.reward }));
         }
         rateTip(row.querySelector('.achvicon'), a.id);
         const cb = row.querySelector('.achvclaim');
