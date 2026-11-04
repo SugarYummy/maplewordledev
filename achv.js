@@ -91,9 +91,10 @@
   // Icons: the skill's icon (Kai, Malefic Star); Mayrin and Bellona use their boss picture until GMS has theirs.
   // Hidden: win every BGM of the boss (waiting room, each phase, loot room) in BGM Clip Extreme. Locked: its short name,
   // ??? and N / M; unlocked: its full name (the boss's finishing attack) and what you did.
-  const kill = (boss, name, full, img, fx) => A(`kill:${boss}`, name, `Played all versions of ${boss}'s BGM in Extreme mode.`,
+  // A Hidden boss one: the boss's picture as its icon, and its reward's: rwIcon (a MapleStory icon), or a picture (rwPic)
+  const kill = (boss, name, full, img, fx, rw) => A(`kill:${boss}`, name, `Played all versions of ${boss}'s BGM in Extreme mode.`,
     (s, L) => { const t = L?.tracksOf[boss] || []; return [t.filter((x) => s.tracks.has(x)).length, t.length || 1]; },
-    `images/bosses/${img}.png`, { full, fx, reward: 'Guess in 1 win effect' });
+    `images/bosses/${img}.png`, { full, fx, reward: 'Guess in 1 win effect', ...rw });
   // Five steps per kind: 10 / 20 / 30 / 40 / 100 AP (Common / Rare / Epic / Unique / Legendary). Cups as icons (hidden: their own).
   const steps = (id, names, how, val, needs) => names.map((n, i) => A(`${id}${needs[i]}`, n, how(needs[i]), (s) => upTo(val(s), needs[i]), '', { ap: [10, 20, 30, 40, 100][i] }));
   const times = (n, one, many) => n === 1 ? one : many.replace('#', fmt(n));
@@ -139,13 +140,13 @@
       A('col:anim', 'Skill Master', 'Win Attack Animation with every class.', (s, L) => [count(s.won.anim, L?.anim), L?.anim.length || 1], '', { ap: 100 }),
     ]],
     ['Hidden', [
-      kill('Malefic Star', "Siren's Song", "Siren's Song", '../achv/siren-song', 'sirenSong'),
-      kill('Kai', 'Iaido Alpha', 'Iaido Alpha', '../achv/iaido-alpha', 'iaidoAlpha'),   // (its win effect, the reward, keeps its full name: fx.js HECATE)
-      kill('Mayrin', 'Guide of Destiny', 'Guide of Destiny', 'mayrin', 'mayrinKill'),
-      kill('Bellona', "Fanatic's Execution", "Fanatic's Execution", 'bellona', 'bellonaKill'),
+      kill('Malefic Star', "Siren's Song", "Siren's Song", 'malefic-star', 'sirenSong', { rwIcon: 'images/achv/siren-song.png' }),
+      kill('Kai', 'Iaido Alpha', 'Iaido Alpha', 'kai', 'iaidoAlpha', { rwIcon: 'images/achv/iaido-alpha.png' }),   // (its win effect, the reward, keeps its full name: fx.js HECATE)
+      kill('Mayrin', 'Guide of Destiny', 'Guide of Destiny', 'mayrin', 'mayrinKill', { rwPic: 'images/fx/hecate/mayrinKill-reward.webp?v=1' }),   // (no icons of their own yet)
+      kill('Bellona', "Fanatic's Execution", "Fanatic's Execution", 'bellona', 'bellonaKill', { rwPic: 'images/fx/hecate/bellonaKill-reward.webp?v=1' }),
       A('kill:Jupiter', 'Seething Balance', "Played all versions of Jupiter's BGM in Extreme mode.",
         (s, L) => { const t = L?.tracksOf.Jupiter || []; return [t.filter((x) => s.tracks.has(x)).length, t.length || 1]; },
-        'images/achv/seething-balance.png?v=3', { appear: 'seethingBalance', reward: 'Seething Balance Appearance Effect' }),
+        'images/bosses/jupiter.png', { appear: 'seethingBalance', reward: 'Seething Balance Appearance Effect', rwIcon: 'images/achv/seething-balance-icon.png' }),
       A('limbo', 'Subconscious', 'Something stirred in the abyss.', (s) => [s.limboMash ? 1 : 0, 1], 'images/fx/limbo-bundle.webp',
         { full: "Limbo's Subconscious", mesos: 1000, reward: '1,000 mesos' }),
     ], true],
@@ -412,7 +413,7 @@
           `<div class="achvgauge"><i style="width:${on ? 100 : Math.min(1, have / need) * 100}%"></i></div>` +
           (need > 1 && !on ? `<small class="achvnum">${fmt(have)} / ${fmt(need)}</small>` : '') +
           (on ? `<img class="achvseal" src="images/achv/ui/completeSeal.png" alt=""><span class="achvdate"><span>${rowDate(got[a.id])}</span></span>` : '') +
-          (rw ? `<div class="achvrwicon"><img${a.mesos ? '' : ' class="pic"'} src="${a.mesos ? 'images/fx/meso-bag.png' : a.fx ? `images/fx/hecate/${a.fx}-reward.webp?v=1` : 'images/achv/seething-balance.png?v=3'}" alt=""></div>` +
+          (rw ? `<div class="achvrwicon"><img${a.rwPic ? ' class="pic"' : ''} src="${a.mesos ? 'images/fx/meso-bag.png' : a.rwPic || a.rwIcon}" alt=""></div>` +
             '<small class="achvreward"></small>' + (claimed ? '<img class="achvclaimed" src="images/achv/ui/claim-disabled.png" alt="Claimed">' : '<button class="achvclaim" aria-label="Claim Reward"></button>') : '');
         row.title = `${TIERS[a.tier][0]} · ${TIERS[a.tier][1]} AP`;
         row.dataset.q = `${on ? a.full || a.name : a.name} ${hide ? '' : a.how}`.toLowerCase();
