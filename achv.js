@@ -144,7 +144,7 @@
       kill('Bellona', "Fanatic's Execution", "Fanatic's Execution", 'bellona', 'bellonaKill'),
       A('kill:Jupiter', 'Seething Balance', "Played all versions of Jupiter's BGM in Extreme mode.",
         (s, L) => { const t = L?.tracksOf.Jupiter || []; return [t.filter((x) => s.tracks.has(x)).length, t.length || 1]; },
-        'images/achv/seething-balance.png?v=2', { appear: 'seethingBalance', reward: 'Seething Balance Appearance Effect' }),
+        'images/achv/seething-balance.png?v=3', { appear: 'seethingBalance', reward: 'Seething Balance Appearance Effect' }),
       A('limbo', 'Subconscious', 'Something stirred in the abyss.', (s) => [s.limboMash ? 1 : 0, 1], 'images/fx/limbo-bundle.webp',
         { full: "Limbo's Subconscious", mesos: 1000, reward: '1,000 mesos' }),
     ], true],

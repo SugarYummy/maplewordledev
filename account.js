@@ -310,7 +310,7 @@ const acctClaimed = (id) => { try { return JSON.parse(localStorage.getItem('mapl
 const ACCT_EFFECTS = {
   // apex: ms into it when it peaks (the white flash before it bursts open); BGM Clip's mesos and BGM come in then
   seethingBalance: { name: 'Seething Balance', from: 'Seething Balance (achievement)', src: 'images/avatars/seething-balance', apex: 2460,
-    pic: 'images/achv/seething-balance.png?v=2', owned: () => acctClaimed('kill:Jupiter') },
+    pic: 'images/achv/seething-balance.png?v=3', owned: () => acctClaimed('kill:Jupiter') },
 };
 const acctAppearOn = () => { const id = acct() && localStorage.getItem(ACCT_APPEAR); return id && ACCT_EFFECTS[id]?.owned() ? id : null; };
 let acctAppearStop = null;   // the one playing now: cuts it short, its sound too
