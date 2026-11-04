@@ -1248,6 +1248,6 @@ html.dark .achvstats div { border-color: rgba(255, 255, 255, 0.12); }
    with the text where the game puts it: capitals 23 / baseline 41 of the box's 59 rows, 13 in from the left, 10 from the right. */
 .achvtip { position: fixed; z-index: 10000; pointer-events: none; white-space: nowrap; box-sizing: border-box;
   height: 28.25px; padding: 9.25px 4.5px 0 6.2px; border: 0 solid transparent;
-  border-image: url(images/achv/ui/tooltip.png) 29 20 29 20 fill / 13.9px 9.6px 13.9px 9.6px;
+  border-image: url(images/achv/ui/tooltip.png?v=2) 29 20 29 20 fill / 13.9px 9.6px 13.9px 9.6px;
   color: #fff; font-size: 13.5px; line-height: 13px; }
 .achvtip[hidden] { display: none; }
