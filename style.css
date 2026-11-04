@@ -1076,7 +1076,7 @@ h1.tglitch .gtext::after { animation: glitchb 1.6s steps(1) -1.088s 1; }
 .achv.memory .achvicon img { width: calc(56 * var(--p)); height: calc(56 * var(--p)); max-width: none; max-height: none; object-fit: cover; border-radius: calc(4 * var(--p)); image-rendering: auto; }   /* (its picture fills the box) */
 .achvtitle { left: calc(83 * var(--p)); top: calc(13 * var(--p)); right: calc(20 * var(--p)); font-size: calc(16.2 * var(--p)); font-weight: 400; letter-spacing: 0.015em; -webkit-text-stroke: calc(0.35 * var(--p)) currentColor;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #f2f2f2; }
-.achvhow { left: calc(83 * var(--p)); top: calc(40 * var(--p)); right: calc(120 * var(--p)); color: #a9a9a9; font-size: calc(11.5 * var(--p)); line-height: 1.3; letter-spacing: 0.04em; }
+.achvhow { left: calc(84 * var(--p)); top: calc(40 * var(--p)); right: calc(120 * var(--p)); color: #aaaaaa; font-family: Gyeokdong, Arial, sans-serif; font-size: calc(11.7 * var(--p)); line-height: 1.3; letter-spacing: 0; }
 .achv.secret .achvtitle { color: #c9a2ff; }
 .achvq { opacity: 0.45; letter-spacing: 0.15em; }
 .achvgauge { left: calc(16 * var(--p)); top: calc(82 * var(--p)); width: calc(513 * var(--p)); height: calc(4 * var(--p)); }
@@ -1084,8 +1084,8 @@ h1.tglitch .gtext::after { animation: glitchb 1.6s steps(1) -1.088s 1; }
 .achvnum { right: calc(16 * var(--p)); top: calc(62 * var(--p)); color: #cfcfcf; font-variant-numeric: tabular-nums; }
 /* The date: a box the size of the art's dark pill, centred in it (so it never runs past it), in MapleStory's date colour */
 .achvdate { left: calc(468 * var(--p)); width: calc(65 * var(--p)); top: calc(35 * var(--p)); height: calc(20 * var(--p)); display: flex; align-items: center; justify-content: center;
-  font: 400 calc(11 * var(--p)) / 1 Arial, 'Liberation Sans', sans-serif; color: #c7b396; letter-spacing: 0; white-space: nowrap; }
-.achvdate > span { display: block; text-box: trim-both cap alphabetic; }   /* centred by the digits themselves (top of the numbers to their baseline), not the font's spacing, so every font sits in the middle */
+  font: 400 calc(10 * var(--p)) / 1 Gyeokdong, Arial, 'Liberation Sans', sans-serif; color: #c7b396; letter-spacing: 0.12em; white-space: nowrap; }
+.achvdate > span { display: block; text-box: trim-both cap alphabetic; margin-right: -0.12em; }   /* (the letter spacing leaves a gap after the last digit: taken back so it stays centred) */   /* centred by the digits themselves (top of the numbers to their baseline), not the font's spacing, so every font sits in the middle */
 .achv.rw .achvdate { top: calc(35.45 * var(--p)); }   /* the reward row's art: its pill is a row taller (35 to 55), so its middle is a little lower */
 .achvseal { z-index: 1; left: calc(497 * var(--p)); top: calc(53 * var(--p)); width: calc(44 * var(--p)); height: calc(41 * var(--p)); }
 .achvrwicon { left: calc(15 * var(--p)); top: calc(100 * var(--p)); width: calc(38 * var(--p)); height: calc(38 * var(--p)); display: flex; align-items: center; justify-content: center; }
@@ -1160,6 +1160,9 @@ html.dark .achvstats div { border-color: rgba(255, 255, 255, 0.12); }
 
 /* morris9 (MD모리스9): the font the game's achievement search box uses (Latin letters only, fonts/morris9.woff2) */
 @font-face { font-family: 'Morris9'; src: url(fonts/morris9.woff2) format('woff2'); font-display: swap; }
+/* MapleStory's own small UI font (Sandoll Gyeokdong G2, from the game's files; English letters only): the achievement
+   descriptions, dates and the completion-rate tip use it in the game (the titles are Arial). */
+@font-face { font-family: 'Gyeokdong'; src: url(fonts/gyeokdong-latin.woff2) format('woff2'); font-display: swap; }
 /* The Achievements window, like MapleStory's: dark frame, its yellow title top left, an X top right (no Close bar) */
 #achv.maplewin > .panel { position: relative; padding: 0 14px 14px; border-radius: 6px; color: #ddd; background: linear-gradient(#3c3c3c, #2a2a2a 120px, #262626);
   border: 1px solid #141414; box-shadow: inset 0 0 0 1px #5a5a5a, 0 10px 34px rgba(0, 0, 0, 0.55); }
@@ -1249,5 +1252,5 @@ html.dark .achvstats div { border-color: rgba(255, 255, 255, 0.12); }
 .achvtip { position: fixed; z-index: 10000; pointer-events: none; white-space: nowrap; box-sizing: border-box;
   height: 28.25px; padding: 9.25px 4.5px 0 6.2px; border: 0 solid transparent;
   border-image: url(images/achv/ui/tooltip.png?v=2) 29 20 29 20 fill / 13.9px 9.6px 13.9px 9.6px;
-  color: #fff; font-size: 13.5px; line-height: 13px; }
+  color: #fff; font-family: Gyeokdong, Rubik, sans-serif; font-size: 12.3px; line-height: 13px; }
 .achvtip[hidden] { display: none; }
