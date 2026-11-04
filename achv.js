@@ -192,7 +192,7 @@
   const rateText = (id) => {
     if (!rates?.total) return null;
     const pct = ((rates.have?.[id] || 0) / rates.total) * 100;
-    return `Global Completion Rate: ${pct >= 100 ? 100 : pct.toFixed(2)}%`;
+    return `Global Completion Rate: ${pct < 0.01 ? 'less than 0.01' : pct >= 100 ? 100 : pct.toFixed(2)}%`;   // (the game's wording for 0 too)
   };
   // The tip itself, like the game's: a small dark box by the pointer (a tap shows it on phones)
   let tip = null;

@@ -1243,8 +1243,10 @@ html.dark .achvstats div { border-color: rgba(255, 255, 255, 0.12); }
   #archiveList { display: grid; grid-template-columns: repeat(3, 1fr); column-gap: 8px; }
 }
 
-/* Achievements: the Global Completion Rate tip over a cup, like the game's (a dark rounded box by the pointer) */
-.achvtip { position: fixed; z-index: 10000; pointer-events: none; padding: 5px 10px; border-radius: 7px; white-space: nowrap;
-  background: rgba(30, 34, 42, 0.94); border: 1px solid #6c7383; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.6), 0 2px 6px rgba(0, 0, 0, 0.45);
-  color: #e9e9e9; font-size: 13px; line-height: 1.3; letter-spacing: 0.2px; }
+/* Achievements: the Global Completion Rate tip over a cup, in the game's tooltip colours (sampled from MapleStory): solid
+   blue-grey shading down from the top, a soft lighter rim inside a thin dark outline, white text */
+.achvtip { position: fixed; z-index: 10000; pointer-events: none; padding: 4px 9px 5px; border-radius: 6px; white-space: nowrap;
+  background: linear-gradient(#414a53, #343a41 40%, #32373d); border: 1px solid #2b3036;
+  box-shadow: inset 0 0 0 1px #4f5c66, inset 0 1px 0 1px #566470;
+  color: #fff; font-size: 13px; line-height: 1.3; letter-spacing: 0.2px; }
 .achvtip[hidden] { display: none; }
