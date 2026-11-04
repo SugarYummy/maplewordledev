@@ -6,6 +6,7 @@
 (() => {
   const ACHV_KEY = 'mapleWordle:achv';   // { <id>: <day unlocked>, _bestWinStreak }
   const DAY_MS = 86400000, today = () => Math.floor(Date.now() / DAY_MS);
+  const fxName = (a) => (typeof HECATE !== 'undefined' && HECATE[a.fx]?.name) || a.full || a.name;   // a win effect reward's name: the same as in Customize (fx.js HECATE)
   const GAMES = { boss: ['story', 'normal', 'hard', 'extreme'], bgm: ['bgmnormal', 'bgm'], class: ['class'], anim: ['anim'] };
   const ALL_MODES = Object.values(GAMES).flat();
   const gameOf = (mode) => Object.keys(GAMES).find((g) => GAMES[g].includes(mode));
@@ -139,7 +140,7 @@
     ]],
     ['Hidden', [
       kill('Malefic Star', "Siren's Song", "Siren's Song", '../achv/siren-song', 'sirenSong'),
-      kill('Kai', 'Iaido Alpha', 'Iaido Alpha', '../achv/iaido-alpha', 'iaidoAlpha'),   // (its win effect keeps its full name in Customize: fx.js HECATE)
+      kill('Kai', 'Iaido Alpha', 'Iaido Alpha', '../achv/iaido-alpha', 'iaidoAlpha'),   // (its win effect, the reward, keeps its full name: fx.js HECATE)
       kill('Mayrin', 'Guide of Destiny', 'Guide of Destiny', 'mayrin', 'mayrinKill'),
       kill('Bellona', "Fanatic's Execution", "Fanatic's Execution", 'bellona', 'bellonaKill'),
       A('kill:Jupiter', 'Seething Balance', "Played all versions of Jupiter's BGM in Extreme mode.",
@@ -350,13 +351,13 @@
     newTag();
     if (a.appear) {   // an appearance effect: Settings > Account Settings > MapleStory Character
       if (typeof acctAvatarCall === 'function') acctAvatarCall();
-      itemPopup({ name: a.full || a.name, img: 'images/fx/seething-balance.webp?v=2' }, 'Successfully Claimed!', false, ['Settings', 'yes'], ['Close', 'plain'])
+      itemPopup({ name: a.full || a.name, img: 'images/achv/seething-balance.png?v=3' }, 'Successfully Claimed!', false, ['Settings', 'yes'], ['Close', 'plain'])
         .then((go) => { if (go) { document.getElementById('achv').hidden = true; document.getElementById('settingsBtn')?.click(); } });
     }
     if (a.fx && typeof drawThemeButton === 'function') {
       customFresh.add(a.fx); customTab = 'win'; drawThemeButton();
       // Like a shop purchase: its picture, and Customize takes you there
-      itemPopup({ name: a.full || a.name, img: `images/fx/hecate/${a.fx}.webp?v=6` }, 'Successfully Claimed!', false, ['Customize', 'yes'], ['Close', 'plain'])
+      itemPopup({ name: fxName(a), img: `images/fx/hecate/${a.fx}.webp?v=6` }, 'Successfully Claimed!', false, ['Customize', 'yes'], ['Close', 'plain'])
         .then((go) => { if (go) { document.getElementById('achv').hidden = true; document.getElementById('themeBtn')?.click(); } });
     }
   }
@@ -411,7 +412,7 @@
           `<div class="achvgauge"><i style="width:${on ? 100 : Math.min(1, have / need) * 100}%"></i></div>` +
           (need > 1 && !on ? `<small class="achvnum">${fmt(have)} / ${fmt(need)}</small>` : '') +
           (on ? `<img class="achvseal" src="images/achv/ui/completeSeal.png" alt=""><span class="achvdate"><span>${rowDate(got[a.id])}</span></span>` : '') +
-          (rw ? `<div class="achvrwicon"><img src="${a.mesos ? 'images/fx/meso-bag.png' : a.fx ? `images/fx/hecate/${a.fx}.webp?v=6` : 'images/fx/seething-balance.webp?v=2'}" alt=""></div>` +
+          (rw ? `<div class="achvrwicon"><img src="${a.mesos ? 'images/fx/meso-bag.png' : a.fx ? `images/fx/hecate/${a.fx}.webp?v=6` : 'images/achv/seething-balance.png?v=3'}" alt=""></div>` +
             '<small class="achvreward"></small>' + (claimed ? '<img class="achvclaimed" src="images/achv/ui/claim-disabled.png" alt="Claimed">' : '<button class="achvclaim" aria-label="Claim Reward"></button>') : '');
         row.title = `${TIERS[a.tier][0]} · ${TIERS[a.tier][1]} AP`;
         row.dataset.q = `${on ? a.full || a.name : a.name} ${hide ? '' : a.how}`.toLowerCase();
@@ -422,7 +423,7 @@
         if (hide) row.querySelector('.achvhow').classList.add('achvq');
         if (rw) {   // the reward itself coloured: a win effect by its full name in purple, mesos in meso gold
           row.querySelector('.achvreward').appendChild(Object.assign(document.createElement('span'), a.mesos ? { className: 'rwmeso', textContent: `${fmt(a.mesos)} mesos` }
-            : a.fx ? { className: 'rwfx', textContent: `${a.full || a.name} Win Effect` }
+            : a.fx ? { className: 'rwfx', textContent: `${fxName(a)} Win Effect` }
             : a.appear ? { className: 'rwfx', textContent: `${a.full || a.name} Appearance Effect` } : { textContent: a.reward }));
         }
         rateTip(row.querySelector('.achvicon'), a.id);
