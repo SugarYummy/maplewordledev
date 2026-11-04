@@ -197,7 +197,7 @@
   // The tip itself, like the game's: a small dark box by the pointer (a tap shows it on phones)
   let tip = null;
   const tipHide = () => { if (tip) tip.hidden = true; };
-  const tipAt = (e, text) => {
+  const tipAt = (e, text, sc = 1) => {
     tip ??= document.body.appendChild(Object.assign(document.createElement('div'), { className: 'achvtip', hidden: true }));
     // the text stretched sideways like the game draws it (--sx): the box is made as wide as the stretched text
     const span = Object.assign(document.createElement('span'), { textContent: text });
@@ -206,10 +206,11 @@
     tip.hidden = false;
     const cs = getComputedStyle(tip), sx = parseFloat(cs.getPropertyValue('--sx')) || 1;
     tip.style.width = `${span.offsetWidth * sx + parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight)}px`;
-    const w = tip.offsetWidth, h = tip.offsetHeight;
-    let x = e.clientX + 14, y = e.clientY + 20;
-    if (x + w > innerWidth - 6) x = Math.max(6, e.clientX - w - 10);
-    if (y + h > innerHeight - 6) y = Math.max(6, e.clientY - h - 12);
+    tip.style.transform = `scale(${sc})`;   // (as big as the window is drawn: see rateTip)
+    const w = tip.offsetWidth * sc, h = tip.offsetHeight * sc;
+    let x = e.clientX + 14 * sc, y = e.clientY + 20 * sc;
+    if (x + w > innerWidth - 6) x = Math.max(6, e.clientX - w - 10 * sc);
+    if (y + h > innerHeight - 6) y = Math.max(6, e.clientY - h - 12 * sc);
     tip.style.left = x + 'px'; tip.style.top = y + 'px';
   };
   addEventListener('scroll', tipHide, true);
@@ -217,7 +218,10 @@
   addEventListener('pointerdown', (e) => { if (!e.target.closest?.('.achvicon')) tipHide(); });
   function rateTip(el, id) {
     el.title = '';   // (no row tooltip over the cup)
-    const show = (e) => { const t = rateText(id); if (t) tipAt(e, t); else tipHide(); };
+    // The game's tip is 27.8% of a row's height (rows are 545 x 100): sized to the row as the window is drawn now (it's
+    // scaled to fit the screen), the tip's own size being 28.25 px tall.
+    const scale = () => (el.closest('.achv')?.getBoundingClientRect().width || 545) / 545 * 27.8 / 28.25;
+    const show = (e) => { const t = rateText(id); if (t) tipAt(e, t, scale()); else tipHide(); };
     el.addEventListener('pointerenter', show);
     el.addEventListener('pointermove', (e) => { if (e.pointerType === 'mouse') show(e); });
     el.addEventListener('pointerleave', tipHide);

@@ -1251,7 +1251,7 @@ html.dark .achvstats div { border-color: rgba(255, 255, 255, 0.12); }
    2x screenshot of it with the text taken out), stretched sideways, drawn at 0.479x. The text: the game's font (Gyeokdong)
    at the game's height, stretched sideways (--sx) like the game draws it (blocky: wider letters; achv.js sizes the box to
    it), where the game puts it: 23 to 42 of the box's 59 rows, 13 in from the left, 10 from the right. */
-.achvtip { position: fixed; z-index: 10000; pointer-events: none; white-space: nowrap; text-align: left; box-sizing: border-box;
+.achvtip { position: fixed; z-index: 10000; pointer-events: none; white-space: nowrap; text-align: left; transform-origin: 0 0; box-sizing: border-box;
   height: 28.25px; padding: 9.25px 4.5px 0 6.2px; border: 0 solid transparent;
   border-image: url(images/achv/ui/tooltip.png?v=2) 29 20 29 20 fill / 13.9px 9.6px 13.9px 9.6px;
   color: #fff; font-family: Gyeokdong, Rubik, sans-serif; font-size: 10.45px; line-height: 13px; letter-spacing: 0; --sx: 1.182; }
