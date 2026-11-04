@@ -404,7 +404,7 @@
         const [have, need] = a.prog(s, L), on = got[a.id] != null, hide = hidden && !on, rw = on && hidden && a.reward;
         const claimed = rw && got._claimed?.[a.id];
         const row = box.appendChild(Object.assign(document.createElement('div'), {
-          className: 'achv' + (on ? ' on' : '') + (hidden ? ' secret' : '') + (a.memory ? ' memory' : '') + (rw ? ' rw' : '') }));
+          className: 'achv' + (on ? ' on' : '') + (hidden ? ' secret' : '') + (a.memory ? ' memory' : '') + (hidden && on ? ' fill' : '') + (rw ? ' rw' : '') }));
         const cup = a.tier === 'common' ? 'normal' : a.tier;
         row.innerHTML = `<div class="achvicon">` + (hidden ? `<img src="${hide ? 'images/achv/4031348.png' : a.icon}" alt="">`
             : `<img class="cup c-${cup}" src="images/achv/ui/cup-${cup}.png" alt="${TIERS[a.tier][0]}"><i aria-label="${TIERS[a.tier][1]} AP">${digits(TIERS[a.tier][1], 'scoreSmall')}</i>`) + '</div>' +
