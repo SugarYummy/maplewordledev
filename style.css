@@ -1076,7 +1076,7 @@ h1.tglitch .gtext::after { animation: glitchb 1.6s steps(1) -1.088s 1; }
 .achv.memory .achvicon img { width: calc(56 * var(--p)); height: calc(56 * var(--p)); max-width: none; max-height: none; object-fit: cover; border-radius: calc(4 * var(--p)); image-rendering: auto; }   /* (its picture fills the box) */
 .achvtitle { left: calc(82 * var(--p)); top: calc(15 * var(--p)); right: calc(20 * var(--p)); font-size: calc(16.2 * var(--p)); font-weight: 400; letter-spacing: 0.039em; -webkit-text-stroke: calc(0.6 * var(--p)) currentColor;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #f2f2f2; }
-.achvhow { left: calc(82 * var(--p)); top: calc(40 * var(--p)); right: calc(120 * var(--p)); color: #aaaaaa; font-family: Gyeokdong, Arial, sans-serif; font-size: calc(11.7 * var(--p)); line-height: 1.3; letter-spacing: 0; }
+.achvhow { left: calc(82 * var(--p)); top: calc(42 * var(--p)); right: calc(120 * var(--p)); color: #aaaaaa; font-family: Gyeokdong, Arial, sans-serif; font-size: calc(9.75 * var(--p)); line-height: 1.3; letter-spacing: 0.105em; }   /* the game's font, colour, size and spacing (it draws it blocky: wider letters, so a size smaller with more spacing here) */
 .achv.secret .achvtitle { color: #c9a2ff; }
 .achvq { opacity: 0.45; letter-spacing: 0.15em; }
 .achvgauge { left: calc(16 * var(--p)); top: calc(82 * var(--p)); width: calc(513 * var(--p)); height: calc(4 * var(--p)); }
@@ -1247,10 +1247,11 @@ html.dark .achvstats div { border-color: rgba(255, 255, 255, 0.12); }
 }
 
 /* Achievements: the Global Completion Rate tip over a cup: the game's own tooltip box (images/achv/ui/tooltip.png, from a
-   2x screenshot of it with the text taken out), stretched sideways. Drawn at 0.479x (its capitals = Rubik's at 13.5px),
-   with the text where the game puts it: capitals 23 / baseline 41 of the box's 59 rows, 13 in from the left, 10 from the right. */
+   2x screenshot of it with the text taken out), stretched sideways, drawn at 0.479x. The text: the game's font (Gyeokdong),
+   sized and spaced to the game's (it draws it blocky, which makes each letter wider than a browser does: so a size smaller
+   with more spacing), where the game puts it: 23 to 42 of the box's 59 rows, 13 in from the left, 10 from the right. */
 .achvtip { position: fixed; z-index: 10000; pointer-events: none; white-space: nowrap; box-sizing: border-box;
-  height: 28.25px; padding: 9.25px 4.5px 0 6.2px; border: 0 solid transparent;
+  height: 28.25px; padding: 9.25px 3.4px 0 6.2px; border: 0 solid transparent;
   border-image: url(images/achv/ui/tooltip.png?v=2) 29 20 29 20 fill / 13.9px 9.6px 13.9px 9.6px;
-  color: #fff; font-family: Gyeokdong, Rubik, sans-serif; font-size: 12.3px; line-height: 13px; }
+  color: #fff; font-family: Gyeokdong, Rubik, sans-serif; font-size: 10.45px; line-height: 13px; letter-spacing: 0.09em; }
 .achvtip[hidden] { display: none; }
