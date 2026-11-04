@@ -58,7 +58,8 @@
       if (mode === 'extreme' || mode === 'bgm') s.extremeWins++;   // Extreme: Boss Wordle Extreme and BGM Clip Extreme
       s.games.add(game);
       if (+w[1] === 1) { s.firstTry++; if (game === 'boss' || game === 'class') s.firstReg++; }   // (a star; regular Wordle: Boss and Class)
-      if (r.endsWith('💎')) s.diamond++;
+      // Each badge counts for the ones under it too: a 🌈 is also a 💎 and a ⭐, a 💎 also a ⭐ (⭐: firstTry, above)
+      if (r.endsWith('💎') || r.endsWith('🌈')) s.diamond++;
       if (r.endsWith('🌈')) s.rainbow++;
       if (read(`mapleWordle:style:${mode}:${d}`) === 'limborb') s.limbo = true;
       // The answer of a won day is its last guess.
