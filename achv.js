@@ -179,6 +179,46 @@
       if (r.ok) { top = (await r.json()).top || []; topAt = Date.now(); }
     } catch {}
   }
+  // Global Completion Rate (hover a cup): how many of the site's accounts have each achievement, from the account
+  // server's GET /rates (out of the accounts that have opened Achievements). Looked up when the window opens, kept 5 min.
+  let rates = null, ratesAt = 0;
+  async function loadRates() {
+    if ((rates && Date.now() - ratesAt < 300000) || typeof ACCOUNT_URL !== 'string') return;
+    try {
+      const r = await fetch(ACCOUNT_URL + 'rates', { signal: AbortSignal.timeout(4000) });
+      if (r.ok) { rates = await r.json(); ratesAt = Date.now(); }
+    } catch {}
+  }
+  const rateText = (id) => {
+    if (!rates?.total) return null;
+    const pct = ((rates.have?.[id] || 0) / rates.total) * 100;
+    return `Global Completion Rate: ${pct >= 100 ? 100 : pct.toFixed(2)}%`;
+  };
+  // The tip itself, like the game's: a small dark box by the pointer (a tap shows it on phones)
+  let tip = null;
+  const tipHide = () => { if (tip) tip.hidden = true; };
+  const tipAt = (e, text) => {
+    tip ??= document.body.appendChild(Object.assign(document.createElement('div'), { className: 'achvtip', hidden: true }));
+    tip.textContent = text;
+    tip.hidden = false;
+    const w = tip.offsetWidth, h = tip.offsetHeight;
+    let x = e.clientX + 14, y = e.clientY + 20;
+    if (x + w > innerWidth - 6) x = Math.max(6, e.clientX - w - 10);
+    if (y + h > innerHeight - 6) y = Math.max(6, e.clientY - h - 12);
+    tip.style.left = x + 'px'; tip.style.top = y + 'px';
+  };
+  addEventListener('scroll', tipHide, true);
+  addEventListener('keydown', tipHide);
+  addEventListener('pointerdown', (e) => { if (!e.target.closest?.('.achvicon')) tipHide(); });
+  function rateTip(el, id) {
+    el.title = '';   // (no row tooltip over the cup)
+    const show = (e) => { const t = rateText(id); if (t) tipAt(e, t); else tipHide(); };
+    el.addEventListener('pointerenter', show);
+    el.addEventListener('pointermove', (e) => { if (e.pointerType === 'mouse') show(e); });
+    el.addEventListener('pointerleave', tipHide);
+    el.addEventListener('click', show);
+  }
+
   // Ranked up (more AP than the rank saved last time): GradeUp plays, after the achievement banners. Saved in _rank.
   function rankCheck(got, announce) {
     const ap = apOf(got);
@@ -214,7 +254,7 @@
     got._bestWinStreak = Math.max(s.streak, got._bestWinStreak || 0);
     if (changed || first) { try { localStorage.setItem(ACHV_KEY, JSON.stringify(got)); } catch {} }
     if (announce && !first) unlocked.forEach((a) => banner(a, 2500));
-    await loadTop(apOf(got));
+    await Promise.all([loadTop(apOf(got)), loadRates()]);
     rankCheck(got, announce && !first);
     noteClaims();
   }
@@ -374,6 +414,7 @@
             : a.fx ? { className: 'rwfx', textContent: a.full || a.name }
             : a.appear ? { className: 'rwfx', textContent: `${a.full || a.name} (appearance effect)` } : { textContent: a.reward }));
         }
+        rateTip(row.querySelector('.achvicon'), a.id);
         const cb = row.querySelector('.achvclaim');
         if (cb) { cb.addEventListener('click', () => claim(a, cb)); if (typeof hoverSound === 'function') hoverSound(cb); }
       }

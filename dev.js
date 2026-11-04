@@ -21,7 +21,7 @@
     constructor(...a) { if (a.length) super(...a); else super(RealDate.now() - BEHIND); }
     static now() { return RealDate.now() - BEHIND; }
   };
-  const BUILD = 'alphaTest v6.2.03112026.014335', STAMP = BUILD.split(' v')[1];
+  const BUILD = 'alphaTest v6.2.04112026.020308', STAMP = BUILD.split(' v')[1];
   const ROOT = location.pathname.match(/^(.*?\/maplewordledev\/)/)?.[1] ?? '/';
   const kept = window.localStorage;   // the browser's own storage: only the test login ('mwdev:login') goes here
   Object.defineProperty(window, 'localStorage', { value: window.sessionStorage, configurable: true });
@@ -85,6 +85,14 @@
     const path = new URL(url).pathname.replace(/^\//, '');
     if (path === 'maple') return realFetch(input, init);   // character search: read-only, from Nexon
     const s = load();
+    if (path === 'rates') {   // completion rates: the real site's (read-only), or the pretend accounts' until that's up
+      const real = await realFetch(input, init).catch(() => null);
+      if (real?.ok) return real;
+      const saves = Object.values(s.users).map((u) => { try { return JSON.parse(u.data['mapleWordle:achv']); } catch { return null; } }).filter(Boolean);
+      const have = {};
+      for (const g of saves) for (const [k, v] of Object.entries(g)) if (!k.startsWith('_') && v != null) have[k] = (have[k] || 0) + 1;
+      return reply({ total: saves.length, have });
+    }
     const body = init.body ? JSON.parse(init.body) : {};
     const byName = (n) => Object.values(s.users).find((u) => u.name.toLowerCase() === String(n).toLowerCase());
     if (path === 'signup') return reply({ error: 'devonly' }, 403);
