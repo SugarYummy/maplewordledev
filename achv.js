@@ -412,7 +412,9 @@
         row.title = `${TIERS[a.tier][0]} · ${TIERS[a.tier][1]} AP`;
         row.dataset.q = `${on ? a.full || a.name : a.name} ${hide ? '' : a.how}`.toLowerCase();
         row.querySelector('.achvtitle').textContent = on ? a.full || a.name : a.name;
-        row.querySelector('.achvhow').textContent = hide ? '???' : a.how;
+        // (a capital O a little wider, like the game's: each one in its own span, the text as text)
+        row.querySelector('.achvhow').replaceChildren(...(hide ? '???' : a.how).split(/(O)/).filter(Boolean)
+          .map((t) => t === 'O' ? Object.assign(document.createElement('span'), { className: 'bigO', textContent: 'O' }) : document.createTextNode(t)));
         if (hide) row.querySelector('.achvhow').classList.add('achvq');
         if (rw) {   // the reward itself coloured: a win effect by its full name in purple, mesos in meso gold
           row.querySelector('.achvreward').appendChild(Object.assign(document.createElement('span'), a.mesos ? { className: 'rwmeso', textContent: `${fmt(a.mesos)} mesos` }
