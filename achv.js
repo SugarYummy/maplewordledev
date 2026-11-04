@@ -199,8 +199,13 @@
   const tipHide = () => { if (tip) tip.hidden = true; };
   const tipAt = (e, text) => {
     tip ??= document.body.appendChild(Object.assign(document.createElement('div'), { className: 'achvtip', hidden: true }));
-    tip.textContent = text;
+    // the text stretched sideways like the game draws it (--sx): the box is made as wide as the stretched text
+    const span = Object.assign(document.createElement('span'), { textContent: text });
+    tip.replaceChildren(span);
+    tip.style.width = '';
     tip.hidden = false;
+    const cs = getComputedStyle(tip), sx = parseFloat(cs.getPropertyValue('--sx')) || 1;
+    tip.style.width = `${span.offsetWidth * sx + parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight)}px`;
     const w = tip.offsetWidth, h = tip.offsetHeight;
     let x = e.clientX + 14, y = e.clientY + 20;
     if (x + w > innerWidth - 6) x = Math.max(6, e.clientX - w - 10);

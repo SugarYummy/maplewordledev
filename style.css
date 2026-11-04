@@ -1076,7 +1076,7 @@ h1.tglitch .gtext::after { animation: glitchb 1.6s steps(1) -1.088s 1; }
 .achv.memory .achvicon img { width: calc(56 * var(--p)); height: calc(56 * var(--p)); max-width: none; max-height: none; object-fit: cover; border-radius: calc(4 * var(--p)); image-rendering: auto; }   /* (its picture fills the box) */
 .achvtitle { left: calc(82 * var(--p)); top: calc(15 * var(--p)); right: calc(20 * var(--p)); font-size: calc(16.2 * var(--p)); font-weight: 400; letter-spacing: 0.039em; -webkit-text-stroke: calc(0.6 * var(--p)) currentColor;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #f2f2f2; }
-.achvhow { left: calc(82 * var(--p)); top: calc(42 * var(--p)); right: calc(120 * var(--p)); color: #aaaaaa; font-family: Gyeokdong, Arial, sans-serif; font-size: calc(9.75 * var(--p)); line-height: 1.3; letter-spacing: 0.105em; }   /* the game's font, colour, size and spacing (it draws it blocky: wider letters, so a size smaller with more spacing here) */
+.achvhow { left: calc(82 * var(--p)); top: calc(42 * var(--p)); width: calc(343 / 1.204 * var(--p)); color: #aaaaaa; font-family: Gyeokdong, Arial, sans-serif; font-size: calc(9.75 * var(--p)); line-height: 1.3; letter-spacing: 0; transform: scaleX(1.204); transform-origin: 0 0; }   /* the game's font, colour and size, stretched sideways like the game draws it (blocky: wider letters); its width is the space to the date (343) before the stretch */
 .achv.secret .achvtitle { color: #c9a2ff; }
 .achvq { opacity: 0.45; letter-spacing: 0.15em; }
 .achvgauge { left: calc(16 * var(--p)); top: calc(82 * var(--p)); width: calc(513 * var(--p)); height: calc(4 * var(--p)); }
@@ -1084,8 +1084,8 @@ h1.tglitch .gtext::after { animation: glitchb 1.6s steps(1) -1.088s 1; }
 .achvnum { right: calc(16 * var(--p)); top: calc(62 * var(--p)); color: #cfcfcf; font-variant-numeric: tabular-nums; }
 /* The date: a box the size of the art's dark pill, centred in it (so it never runs past it), in MapleStory's date colour */
 .achvdate { left: calc(468 * var(--p)); width: calc(65 * var(--p)); top: calc(35 * var(--p)); height: calc(20 * var(--p)); display: flex; align-items: center; justify-content: center;
-  font: 400 calc(10 * var(--p)) / 1 Gyeokdong, Arial, 'Liberation Sans', sans-serif; color: #c7b396; letter-spacing: 0.12em; white-space: nowrap; }
-.achvdate > span { display: block; text-box: trim-both cap alphabetic; margin-right: -0.12em; }   /* (the letter spacing leaves a gap after the last digit: taken back so it stays centred) */   /* centred by the digits themselves (top of the numbers to their baseline), not the font's spacing, so every font sits in the middle */
+  font: 400 calc(10 * var(--p)) / 1 Gyeokdong, Arial, 'Liberation Sans', sans-serif; color: #c7b396; letter-spacing: 0; white-space: nowrap; }
+.achvdate > span { display: block; text-box: trim-both cap alphabetic; transform: scaleX(1.15); }   /* stretched sideways like the game draws it (from its middle, so it stays centred), a touch less than the game so even the widest date keeps clear of the pill's ends */   /* centred by the digits themselves (top of the numbers to their baseline), not the font's spacing, so every font sits in the middle */
 .achv.rw .achvdate { top: calc(35.45 * var(--p)); }   /* the reward row's art: its pill is a row taller (35 to 55), so its middle is a little lower */
 .achvseal { z-index: 1; left: calc(497 * var(--p)); top: calc(53 * var(--p)); width: calc(44 * var(--p)); height: calc(41 * var(--p)); }
 .achvrwicon { left: calc(15 * var(--p)); top: calc(100 * var(--p)); width: calc(38 * var(--p)); height: calc(38 * var(--p)); display: flex; align-items: center; justify-content: center; }
@@ -1247,11 +1247,12 @@ html.dark .achvstats div { border-color: rgba(255, 255, 255, 0.12); }
 }
 
 /* Achievements: the Global Completion Rate tip over a cup: the game's own tooltip box (images/achv/ui/tooltip.png, from a
-   2x screenshot of it with the text taken out), stretched sideways, drawn at 0.479x. The text: the game's font (Gyeokdong),
-   sized and spaced to the game's (it draws it blocky, which makes each letter wider than a browser does: so a size smaller
-   with more spacing), where the game puts it: 23 to 42 of the box's 59 rows, 13 in from the left, 10 from the right. */
-.achvtip { position: fixed; z-index: 10000; pointer-events: none; white-space: nowrap; box-sizing: border-box;
-  height: 28.25px; padding: 9.25px 3.4px 0 6.2px; border: 0 solid transparent;
+   2x screenshot of it with the text taken out), stretched sideways, drawn at 0.479x. The text: the game's font (Gyeokdong)
+   at the game's height, stretched sideways (--sx) like the game draws it (blocky: wider letters; achv.js sizes the box to
+   it), where the game puts it: 23 to 42 of the box's 59 rows, 13 in from the left, 10 from the right. */
+.achvtip { position: fixed; z-index: 10000; pointer-events: none; white-space: nowrap; text-align: left; box-sizing: border-box;
+  height: 28.25px; padding: 9.25px 4.5px 0 6.2px; border: 0 solid transparent;
   border-image: url(images/achv/ui/tooltip.png?v=2) 29 20 29 20 fill / 13.9px 9.6px 13.9px 9.6px;
-  color: #fff; font-family: Gyeokdong, Rubik, sans-serif; font-size: 10.45px; line-height: 13px; letter-spacing: 0.09em; }
+  color: #fff; font-family: Gyeokdong, Rubik, sans-serif; font-size: 10.45px; line-height: 13px; letter-spacing: 0; --sx: 1.182; }
+.achvtip > span { display: inline-block; transform: scaleX(var(--sx)); transform-origin: 0 0; }
 .achvtip[hidden] { display: none; }
