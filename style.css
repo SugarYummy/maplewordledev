@@ -1243,10 +1243,11 @@ html.dark .achvstats div { border-color: rgba(255, 255, 255, 0.12); }
   #archiveList { display: grid; grid-template-columns: repeat(3, 1fr); column-gap: 8px; }
 }
 
-/* Achievements: the Global Completion Rate tip over a cup, in the game's tooltip colours (sampled from MapleStory): solid
-   blue-grey shading down from the top, a soft lighter rim inside a thin dark outline, white text */
-.achvtip { position: fixed; z-index: 10000; pointer-events: none; padding: 4px 9px 5px; border-radius: 6px; white-space: nowrap;
-  background: linear-gradient(#414a53, #343a41 40%, #32373d); border: 1px solid #2b3036;
-  box-shadow: inset 0 0 0 1px #4f5c66, inset 0 1px 0 1px #566470;
-  color: #fff; font-size: 13px; line-height: 1.3; letter-spacing: 0.2px; }
+/* Achievements: the Global Completion Rate tip over a cup: the game's own tooltip box (images/achv/ui/tooltip.png, from a
+   2x screenshot of it with the text taken out), stretched sideways. Drawn at 0.479x (its capitals = Rubik's at 13.5px),
+   with the text where the game puts it: capitals 23 / baseline 41 of the box's 59 rows, 13 in from the left, 10 from the right. */
+.achvtip { position: fixed; z-index: 10000; pointer-events: none; white-space: nowrap; box-sizing: border-box;
+  height: 28.25px; padding: 9.25px 4.5px 0 6.2px; border: 0 solid transparent;
+  border-image: url(images/achv/ui/tooltip.png) 29 20 29 20 fill / 13.9px 9.6px 13.9px 9.6px;
+  color: #fff; font-size: 13.5px; line-height: 13px; }
 .achvtip[hidden] { display: none; }
