@@ -716,7 +716,7 @@ function creditsWin() {
     '<p><b>Game data</b><br>MapleStory Wiki (maplestorywiki.net), Namu Wiki, Bahamut (TMS boss HP)</p>' +
     "<p><b>Fonts</b><br>Rubik (Google Fonts), and MapleStory's own fonts in Achievements</p></section>" +
     '<section><h3>Special thanks</h3>' +
-    '<p><img class="dcicon" src="images/icons/discord.svg" alt="Discord"><b>@mr_pigoo</b> for helping with Attack Animation clips</p>' +
+    '<p><b>Pigoo</b> for helping with Attack Animation clips</p>' +
     '<p><img class="dcicon" src="images/icons/discord.svg" alt="Discord"><b>@lax.lax</b> for reporting bugs and suggestions</p>' +
     '<p><img class="dcicon" src="images/icons/discord.svg" alt="Discord"><b>@ichiyam</b> for helping with initial development of the website and suggestions</p>' +
     '<p>... and many more (anonymous or small contributions) for helping out!</p></section>' +
