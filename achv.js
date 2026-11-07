@@ -150,7 +150,7 @@
         'images/bosses/jupiter.png', { appear: 'seethingBalance', reward: 'Seething Balance Appearance Effect', rwIcon: 'images/achv/seething-balance-icon.png' }),
       A('limbo', 'Subconscious', 'Something stirred in the abyss.', (s) => [s.limboMash ? 1 : 0, 1], 'images/fx/limbo-bundle.webp',
         { full: "Limbo's Subconscious", mesos: 1000, reward: '1,000 mesos' }),
-      A('egg:lucid', 'Garden of Eternal Dream', 'A dream bloomed in the garden.', (s) => [s.lucidEgg ? 1 : 0, 1], 'images/bosses/lucid.png', { ap: 30 }),   // (Lucid's egg day in BGM Clip Extreme, played on the day: bgm.js saveTracks)
+      A('egg:lucid', 'Garden of Eternal Dream', 'Dream of a blooming garden, lasting for all of eternity', (s) => [s.lucidEgg ? 1 : 0, 1], 'images/bosses/lucid.png', { ap: 30 }),   // (Lucid's egg day in BGM Clip Extreme, played on the day: bgm.js saveTracks)
     ], true],
     // Memories: for having been there on a special day (only on the day itself). The whole section stays out of sight
     // until you have one, and only counts up (no "/ N").
