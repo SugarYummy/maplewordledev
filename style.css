@@ -466,13 +466,14 @@ body.glitch :is(button, input, select) { text-shadow: inherit; }   /* the browse
 .buyask .themepic { width: 224px; height: 126px; border: 1px solid rgba(0, 0, 0, 0.2); }
 .buyask .buyname { font-size: 17px; }
 /* Settings > Credits & Info */
-.creditwin .panel { max-width: min(460px, calc(100vw - 32px)); align-items: stretch; max-height: calc(100vh - 48px); box-sizing: border-box; }
+.creditwin .panel { max-width: min(560px, calc(100vw - 32px)); align-items: stretch; max-height: calc(100vh - 48px); box-sizing: border-box; }
 .creditwin h2 { text-align: center; }
 .creditbody { overflow-y: auto; text-align: left; line-height: 1.4; font-size: 14px; padding-right: 4px; }
 .creditbody section + section { border-top: 1px solid rgba(0, 0, 0, 0.12); margin-top: 12px; padding-top: 10px; }
 .creditbody h3 { font-size: 15px; margin: 0 0 6px; }
 .creditbody p { margin: 0 0 6px; }
 .creditbody p:last-child { margin-bottom: 0; }
+.creditbody .dcicon { width: 16px; height: 16px; vertical-align: -3px; margin-right: 4px; }
 .creditwin .buybtns { justify-content: center; }
 .buyask .price { display: flex; align-items: center; gap: 5px; font-weight: 700; font-size: 17px; color: #8a6000; }
 .buyask .price img { width: 20px; height: 20px; image-rendering: pixelated; }
