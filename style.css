@@ -465,6 +465,15 @@ body.glitch :is(button, input, select) { text-shadow: inherit; }   /* the browse
 .buyask h2 { font-size: 20px; margin: 0 0 4px; }
 .buyask .themepic { width: 224px; height: 126px; border: 1px solid rgba(0, 0, 0, 0.2); }
 .buyask .buyname { font-size: 17px; }
+/* Settings > Credits & Info */
+.creditwin .panel { max-width: min(460px, calc(100vw - 32px)); align-items: stretch; max-height: calc(100vh - 48px); box-sizing: border-box; }
+.creditwin h2 { text-align: center; }
+.creditbody { overflow-y: auto; text-align: left; line-height: 1.4; font-size: 14px; padding-right: 4px; }
+.creditbody h3 { font-size: 15px; margin: 10px 0 4px; }
+.creditbody h3:first-child { margin-top: 0; }
+.creditbody ul { margin: 0; padding-left: 18px; }
+.creditbody li { margin: 3px 0; }
+.creditwin .buybtns { justify-content: center; }
 .buyask .price { display: flex; align-items: center; gap: 5px; font-weight: 700; font-size: 17px; color: #8a6000; }
 .buyask .price img { width: 20px; height: 20px; image-rendering: pixelated; }
 .buybtns { display: flex; gap: 12px; margin: 6px 0 2px; }
@@ -635,7 +644,7 @@ body.glitch :is(button, input, select) { text-shadow: inherit; }   /* the browse
 @media (prefers-reduced-motion: reduce) { #bonusCall button, #bonusCall button::after, #bonus.waiting::after { animation: none; } }
 /* VIP player in Settings (secret passcode). */
 #vipCode { font-family: inherit; font-size: 14px; padding: 4px 8px; width: 120px; border: 1px solid #999; border-radius: 6px; }
-#vipGo, .vipctl button { font-family: inherit; font-size: 14px; padding: 4px 12px; border-radius: 8px; cursor: pointer; border: 1px solid rgba(0, 0, 0, 0.2); background: rgba(var(--wb), 0.7); }
+#vipGo, #setCredits, .vipctl button { font-family: inherit; font-size: 14px; padding: 4px 12px; border-radius: 8px; cursor: pointer; border: 1px solid rgba(0, 0, 0, 0.2); background: rgba(var(--wb), 0.7); }
 .vipfield { position: relative; display: inline-block; }
 #vipMsg { position: absolute; left: 2px; top: calc(100% + 2px); font-size: 12px; color: #c22; white-space: nowrap; opacity: 0; transition: opacity 0.4s ease; pointer-events: none; }
 #vipMsg.show { opacity: 1; transition: opacity 0.15s ease; }
@@ -842,8 +851,7 @@ input[type="search"]::-webkit-search-cancel-button, input[type="search"]::-webki
 .acctwelcome { font-size: 15px; }
 .acctform { display: flex; flex-direction: column; gap: 6px; }
 .acctwin .panel { width: 320px; align-items: stretch; }
-.acctwin .panel.acctpickwin { width: 400px; max-width: calc(100vw - 32px); position: relative; }
-.acctpickwin > .fxtoast { bottom: auto; }   /* its On / Off message: at the top (account.js sets top), clear of the buttons */   /* MapleStory Character (relative: for its On / Off message) */
+.acctwin .panel.acctpickwin { width: 400px; max-width: calc(100vw - 32px); position: relative; }   /* MapleStory Character (relative: for its On / Off message) */
 .acctwin h2 { text-align: center; }
 .acctfield { display: flex; flex-direction: column; gap: 3px; font-size: 13px; font-weight: 700; }
 .acctfield input { font-family: inherit; font-size: 15px; padding: 6px 9px; border: 1px solid #999; border-radius: 6px; background: rgba(var(--wb), 0.9); }

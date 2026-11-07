@@ -610,7 +610,9 @@ applyBox();
         : '<span class="vipfield"><input id="vipCode" type="text" placeholder="Passcode" autocomplete="off" spellcheck="false" autocapitalize="off" data-1p-ignore data-lpignore="true" data-form-type="other"><span id="vipMsg"></span></span><button id="vipGo">Enter</button>') + '</div>' +
       '<div id="vipBox" hidden><div class="vipctl"><button id="vipPlay"></button><button id="vipReplay" title="Start this song over">⏮ Replay</button>' +
       '<button id="vipSkip">⏭ Skip</button><button id="vipLoop" title="Loop this song">🔁 Loop</button></div><p id="vipNow"></p>' +
-      '<div id="vipTrack"><span id="vipText">0.0 / 0.0</span><span id="vipArrow">▼</span><div id="vipBar"><div id="vipFill"></div></div></div></div>';
+      '<div id="vipTrack"><span id="vipText">0.0 / 0.0</span><span id="vipArrow">▼</span><div id="vipBar"><div id="vipFill"></div></div></div></div>' +
+      `<div class="setrow"><span class="setlabel">Credits &amp; Info ${tip('Who made what, and what the site saves.')}</span><button id="setCredits">View</button></div>`;
+    body.querySelector('#setCredits').addEventListener('click', creditsWin);
     vipSetup(body);
     if (typeof acctRowSetup === 'function') acctRowSetup(body);
     // Each (i) gets a dark box that fades in over the rows below it (it doesn't push anything down): shown while
@@ -695,6 +697,35 @@ const vip = { on: false, audio: null, list: null, names: {}, titles: {}, cur: nu
 async function vipCheck(code) {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(code.trim()));
   return [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, '0')).join('') === VIP_HASH;
+}
+// Settings > Credits & Info: a window over Settings (Esc, the X or a click outside closes it).
+function creditsWin() {
+  const win = document.createElement('div');
+  win.className = 'popup buyask creditwin';
+  win.innerHTML = '<div class="panel"><h2>Credits &amp; Info</h2><div class="creditbody">' +
+    '<h3>About</h3><ul>' +
+    '<li>Mapledle is a free, fan-made site. It is not affiliated with or endorsed by NEXON.</li>' +
+    '<li><b>No ads, ever.</b> <b>No purchases, ever.</b> The site is non-profit and non-commercial: Meso and everything in the shop are earned only by playing.</li></ul>' +
+    '<h3>Your data</h3><ul>' +
+    '<li>Your progress (Meso, Customize, stats, settings and so on) is saved in this browser only.</li>' +
+    '<li>An account is optional. You only need one for achievements and PvP (coming soon), or to play on another device. It needs no email.</li>' +
+    "<li>The only thing sent without asking: each day's result (how many guesses it took, and whether a bonus was right), " +
+    "added to the anonymous counts in everyone's results. Nothing that identifies you goes with it.</li></ul>" +
+    '<h3>Credits</h3><ul>' +
+    '<li>MapleStory and its art, music, sounds and names: ⓒ NEXON Korea Corporation All Rights Reserved. Used here for fan purposes only.</li>' +
+    '<li>Game data: MapleStory Wiki (maplestorywiki.net), Namu Wiki, Bahamut (TMS boss HP).</li>' +
+    '<li>Fonts: Rubik (Google Fonts), and MapleStory\'s own fonts in Achievements.</li></ul>' +
+    '<h3>Special thanks</h3><ul>' +
+    '<li>Everyone in the Discord who tested, reported bugs and shared ideas!</li></ul>' +
+    '<h3>Contact</h3><ul>' +
+    '<li>Questions, feedback or bugs: <a href="https://discord.gg/f22H4UJ" target="_blank" rel="noopener">Join the Discord!</a></li></ul>' +
+    '</div><p class="buybtns"><button class="plain">Close</button></p></div>';
+  const close = () => { win.remove(); removeEventListener('keydown', esc, true); };
+  const esc = (e) => { if (e.key === 'Escape') { e.stopImmediatePropagation(); close(); } };
+  win.addEventListener('click', (e) => { if (e.target === win) close(); });
+  win.querySelector('.buybtns button').addEventListener('click', close);
+  addEventListener('keydown', esc, true);
+  document.body.appendChild(win);
 }
 function vipSetup(body) {
   const go = body.querySelector('#vipGo'), code = body.querySelector('#vipCode');

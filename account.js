@@ -488,7 +488,6 @@ function acctMapleWin() {
     panel.querySelector('.fxtoast')?.remove();
     const el = Object.assign(document.createElement('div'), { className: 'fxtoast ' + kind, textContent: text });
     el.setAttribute('role', 'status');
-    el.style.top = panel.scrollTop + 10 + 'px';   // at the top of the window as it's scrolled now (not over Add Character)
     panel.appendChild(el);
     requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('show')));
     clearTimeout(toastTimer);
