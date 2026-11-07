@@ -1,0 +1,2559 @@
+// Small effects shared by every game page: flipping in a new guess row, confetti and sound when a game ends.
+// Kept deliberately simple for now (no libraries).
+
+const FLIP_STEP = 250;   // ms between one cell flipping and the next
+const FLIP_TIME = 500;   // ms one cell takes to flip (matches style.css)
+
+// Flip a freshly guessed row's cells in, one after another from left to right.
+// start = ms to wait before the first cell. Returns when the row is done, so the next thing can wait for it.
+function flipRow(tr, start = 0) {
+  if (!tr) return start;
+  const cells = [...tr.children];
+  cells.forEach((td, i) => {
+    td.classList.add('flip');
+    td.style.animationDelay = `${start + i * FLIP_STEP}ms`;
+  });
+  return flipUntil(start + (cells.length - 1) * FLIP_STEP + FLIP_TIME);
+}
+// Out of guesses: the answer row stays out of the table until your last guess has turned over (and, with Limbo's wrong
+// guess effect, been swallowed), then comes in and turns over. Returns when it's done, like flipRow.
+function flipAnswer(tr, start) {
+  if (!tr) return start;
+  const at = start + (limboGuessOn() ? GFX_RUSH : 0);
+  tr.hidden = true;
+  setTimeout(() => { tr.hidden = false; flipRow(tr); }, at);
+  return flipUntil(at + (tr.children.length - 1) * FLIP_STEP + FLIP_TIME);
+}
+// When the rows flipping now are done (Limbo's alert border waits for the guess to turn over first).
+let flipEnd = 0;
+function flipUntil(ms) { flipEnd = Math.max(flipEnd, performance.now() + ms); return ms; }
+
+// Everyone's results: right after a game ends, they come in a moment after your result (once the flip is done), not
+// before it.
+function revealStats(el) {
+  const wait = fxHoldTill + 700 - Date.now();
+  if (wait > 0) revealAfter(el, wait, true);
+}
+// Keep something that would give the result away (status text, Best so far row) hidden until the flip is done.
+// Hidden outright until then (not only by the fade), so it waits even where animations don't run. When the game has just
+// ended (fxHold), it's out of the page altogether (no empty space where it'll be); during the game it keeps its place, so
+// the table doesn't jump with every guess.
+function revealAfter(el, ms, gone = fxHoldTill > Date.now()) {
+  if (!el) return;
+  clearTimeout(el.revealT);
+  el.classList.remove('later');
+  const prop = gone ? 'display' : 'visibility';
+  el.style.display = el.style.visibility = '';
+  el.style[prop] = prop === 'display' ? 'none' : 'hidden';
+  el.revealT = setTimeout(() => {
+    el.style[prop] = '';
+    void el.offsetWidth;   // restart the fade if it already ran
+    el.style.animationDelay = '0ms';
+    el.classList.add('later');
+  }, ms);
+}
+
+// Confetti pieces are the in-game meso drops (sprites from maplestorywiki.net), drawn at their in-game size and kept pixel-sharp.
+// [file, width, height, coin] in sprite pixels; gold coins are the most common, bags the rarest.
+// Coins flip like real coins as they fly; bundles and bags don't turn at all.
+const PIECES = [
+  ['meso-gold', 23, 24, true], ['meso-gold', 23, 24, true], ['meso-gold', 23, 24, true],
+  ['meso-bronze', 23, 24, true], ['meso-bronze', 23, 24, true],
+  ['meso-bundle', 31, 30], ['meso-bundle', 31, 30],
+  ['meso-bag', 32, 31],
+];
+const SPRITES = {};
+for (const [file] of PIECES) SPRITES[file] ??= Object.assign(new Image(), { src: `images/fx/${file}.png` });   // preload, so they're ready on a win
+const rand = (a, b) => a + Math.random() * (b - a);
+
+// All the mesos of one show are drawn on a single canvas, in one loop: thousands of page elements (one per meso)
+// made phones lag and use a lot of memory. A layer: { parts, jobs }. jobs run every frame (they throw new mesos)
+// until they say they're done; parts are the mesos in the air. The canvas goes once both are empty, or after `ms`.
+// Settings: dark mode and 30 FPS (30 is the default, 60 if chosen; each page's <head> sets html.dark / html.fps30 before it draws, from these keys).
+const DARK_KEY = 'mapleWordle:dark', FPS_KEY = 'mapleWordle:fps';
+const darkOn = () => document.documentElement.classList.contains('dark');
+const fps30 = () => document.documentElement.classList.contains('fps30');
+// 30 FPS: every animation on the page (glows, spinning rings, leaves, glitches...) is moved along by hand 30 times a
+// second instead of the browser drawing it at the screen's full refresh rate. Each one is paused and set to where it
+// should be by now; one that reaches its end is finished, so whatever waits for it still happens.
+const fpsHeld = new WeakMap();   // animation -> the timeline time its start lines up with
+let fpsLast = 0;
+function fpsTick(t) {
+  if (!fps30()) {   // back to normal: let them run on their own again
+    for (const a of document.getAnimations()) if (fpsHeld.has(a)) { fpsHeld.delete(a); if (a.playState === 'paused') a.play(); }
+    return;
+  }
+  requestAnimationFrame(fpsTick);
+  if (t - fpsLast < 32) return;
+  fpsLast = t;
+  const now = document.timeline.currentTime;
+  for (const a of document.getAnimations()) {
+    if (!fpsHeld.has(a)) {
+      if (a.playState !== 'running') continue;   // paused by the page itself, or done
+      fpsHeld.set(a, now - (a.currentTime ?? 0) / (a.playbackRate || 1));
+      a.pause();
+    }
+    const at = (now - fpsHeld.get(a)) * (a.playbackRate || 1);
+    const end = a.effect?.getComputedTiming().endTime;
+    if (end != null && end !== Infinity && at >= end) { fpsHeld.delete(a); a.finish(); continue; }
+    a.currentTime = at;
+  }
+}
+if (fps30()) requestAnimationFrame(fpsTick);
+// On Limbo's mashup day (every game, every mode) the "Mapledle" title glitches for half a second now and then (every
+// 25-90 s at random), rare enough to barely notice. Only a hash of that day is kept here (the BGM page works the day
+// out from its schedule; the other pages can't), so the day itself isn't written anywhere. The BGM page also counts
+// that day's mashup opened from the Archive; the test build's /egg limbo counts too.
+const LIMBO_DAY_HASH = '70c79fa9c8384640b353ed924d86de2684741fe9ec37ff1012d3230dc59eb43e';
+let limboDayToday = null;
+async function isLimboDay() {
+  if (window.devEgg === 'limbo' || (typeof isLimboEgg === 'function' && isLimboEgg())) return true;
+  const d = Math.floor(Date.now() / 86400000);
+  if (limboDayToday?.d !== d) {
+    let yes = false;
+    try {
+      const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('mapledle|limbo-day|' + d));
+      yes = [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, '0')).join('') === LIMBO_DAY_HASH;
+    } catch {}
+    limboDayToday = { d, yes };
+  }
+  return limboDayToday.yes;
+}
+(function titleGlitch() {
+  setTimeout(async () => {
+    const h = document.querySelector('h1');
+    if (h && !document.hidden && !matchMedia('(prefers-reduced-motion: reduce)').matches && await isLimboDay()) {
+      if (!h.querySelector('.gtext')) {
+        const g = Object.assign(document.createElement('span'), { className: 'gtext', textContent: h.textContent });
+        g.dataset.text = h.textContent;
+        h.replaceChildren(g);
+      }
+      h.classList.remove('tglitch'); void h.offsetWidth; h.classList.add('tglitch');
+      setTimeout(() => h.classList.remove('tglitch'), 500);
+    }
+    titleGlitch();
+  }, 25000 + Math.random() * 65000);
+})();
+function fxLayer(ms) {
+  const cv = document.createElement('canvas');
+  cv.className = 'confetti';
+  document.body.appendChild(cv);
+  const ctx = cv.getContext('2d');
+  const L = { parts: [], jobs: [] };
+  const end = performance.now() + ms;
+  let last = performance.now();
+  // Drawn at 1 canvas pixel per CSS pixel (the sprites are pixel art: style.css scales it up pixel-sharp) and at most
+  // ~60 times a second (30 with the 30 FPS setting): a full-screen canvas at a sharp screen's full resolution and refresh rate kept the GPU busy.
+  const frame = (now) => {
+    if (now > end || (!L.jobs.length && !L.parts.length)) { cv.remove(); return; }
+    if (now - last < (fps30() ? 32 : 15)) { requestAnimationFrame(frame); return; }
+    const dt = Math.min(0.05, (now - last) / 1000);
+    last = now;
+    const W = innerWidth, H = innerHeight, dpr = 1;
+    if (cv.width !== Math.round(W * dpr) || cv.height !== Math.round(H * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.imageSmoothingEnabled = false;   // pixel-sharp sprites
+    ctx.clearRect(0, 0, W, H);
+    L.jobs = L.jobs.filter((job) => job(now) !== false);
+    let n = 0;
+    for (const m of L.parts) {
+      if (!m.move(m, now, dt, W, H)) continue;   // landed / off screen
+      L.parts[n++] = m;
+      const img = SPRITES[m.file];
+      if (!img.complete || !img.naturalWidth) continue;
+      const sx = m.spin ? Math.cos((now - m.born) / m.spin * 2 * Math.PI) : 1;   // a coin flipping (turning on its upright axis)
+      ctx.setTransform(dpr * sx, 0, 0, dpr, (m.x + m.w / 2) * dpr, (m.y + m.h / 2) * dpr);
+      ctx.drawImage(img, -m.w / 2, -m.h / 2, m.w, m.h);
+    }
+    L.parts.length = n;
+    requestAnimationFrame(frame);
+  };
+  requestAnimationFrame(frame);
+  return L;
+}
+
+// One meso: a random piece (coins flip once every 0.4-0.9 s; bundles and bags don't turn at all).
+function meso(L, x, y, move) {
+  const [file, w, h, coin] = PIECES[Math.floor(Math.random() * PIECES.length)];
+  const m = { file, w, h, x, y, move, born: performance.now(), spin: coin ? rand(400, 900) : 0 };
+  L.parts.push(m);
+  return m;
+}
+
+// A meso falling from just above the screen to just below it in 2.2-3.6 s, drifting a little sideways.
+function fall(L) {
+  const W = innerWidth, x0 = Math.random() * W, drift = rand(-0.1, 0.1) * W, ms = rand(2200, 3600);
+  meso(L, x0, -40, (m, now, dt, W2, H) => {
+    const t = (now - m.born) / ms;
+    m.x = x0 + drift * t;
+    m.y = -40 + 1.05 * H * t;
+    return t < 1;
+  });
+}
+
+// Meso confetti falling from the top of the screen: a steady 120 a second for 3 s (360 in all).
+// A first-guess win gets the big show instead.
+function confetti(firstTry = false) {
+  if (firstTry) return bigWin();
+  rain(fxLayer(7000), 0, 3, 120);
+}
+
+// A puzzle won on the first guess keeps its game box glowing gold, also after a reload. Pages call this whenever
+// the shown puzzle changes or gets a new guess.
+// A fresh win holds the gold border and the "+mesos" back until the cards finish flipping (fxHold(flipMs) right after a
+// guess); loading a day that's already done shows them right away.
+let fxHoldTill = 0, glowTimer;
+function firstTryGlow(on) {
+  const game = document.querySelector('.game');
+  if (!game) return;
+  clearTimeout(glowTimer);
+  if (!on) fxHoldTill = 0;
+  const wait = fxHoldTill - Date.now();
+  if (on && wait > 0) { game.classList.remove('glow'); glowTimer = setTimeout(() => game.classList.add('glow'), wait); }
+  else game.classList.toggle('glow', on);
+}
+function fxHold(ms) {
+  fxHoldTill = Date.now() + ms;
+  if (document.querySelector('.game')?.classList.contains('glow')) firstTryGlow(true);
+}
+
+// First-guess win: a Sol Hecate skill screen plays over the page first, and the meso show starts when it bursts.
+// Everyone has the default one; the shop's Helia bundle adds 5 colours. In the Customize window (Win Effect) you pick one
+// or more, and each win plays a random one of those.
+// One is fetched a few seconds after the page loads (so it's ready while you're guessing; if it isn't yet, the mesos
+// just start right away). A win uses it up; switching to another mode (Story / Normal / Hard / Extreme) then fetches
+// another one. Pages with only one game mode don't fetch again.
+// Safari can't show a see-through WebM, so it gets the same clip as an animated WebP (video/hecate/<id>.webm / .webp,
+// picture images/fx/hecate/<id>.webp).
+const HECATE = {   // ms: clip length, burst: ms into the clip when it bursts (frame 15 of 48, 60 ms each)
+  default: { name: 'Sol Hecate', ms: 2880, burst: 900 },
+  helia1: { name: 'Helia (Pink)', ms: 2880, burst: 900, pack: 'helia' },
+  helia2: { name: 'Helia (Yellow)', ms: 2880, burst: 900, pack: 'helia' },
+  helia3: { name: 'Helia (Blue)', ms: 2880, burst: 900, pack: 'helia' },
+  helia4: { name: 'Helia (Red)', ms: 2880, burst: 900, pack: 'helia' },
+  helia5: { name: 'Helia (Purple)', ms: 2880, burst: 900, pack: 'helia' },
+  mimica1: { name: 'Mimica (Blue)', ms: 2880, burst: 900, pack: 'mimica' },
+  mimica2: { name: 'Mimica (Yellow)', ms: 2880, burst: 900, pack: 'mimica' },
+  mimica3: { name: 'Mimica (Black)', ms: 2880, burst: 900, pack: 'mimica' },
+  mimica4: { name: 'Mimica (Pink)', ms: 2880, burst: 900, pack: 'mimica' },
+  mimica5: { name: 'Mimica (Purple)', ms: 2880, burst: 900, pack: 'mimica' },
+  // Limbo's set: its cutscene (a wide banner, shown whole). Also what a win in 1 plays in Limbo mode, and what getting
+  // Limbo's glitch mashup right plays for everyone. The mesos come as it fades out (frame 54 of 65).
+  limboCut: { name: 'Limbo Transition', ms: 4200, burst: 3480, pack: 'limboSub', wide: true, solo: true, v: 2 },   // solo: its own card, no box
+  // Boss finishing effects (60 ms frames; Siren's Song's End starts 1 s before its Pre ends, Bellona's three parts play at once):
+  // burst (the mesos come out): Siren's Song as the ball booms into its sky, Iaido Alpha as the laser ends and booms, Guide of
+  // Destiny as the last card explodes, Fanatic's Execution as her axe lands
+  // yours once you claim that boss's Hidden achievement (achv.js)
+  sirenSong: { name: "Siren's Song", ms: 4500, burst: 2280, v: 2, achv: 'kill:Malefic Star' },
+  iaidoAlpha: { name: 'Kai-ryu Sword: Iaido Alpha', ms: 2640, burst: 1740, achv: 'kill:Kai' },
+  mayrinKill: { name: 'Guide of Destiny', ms: 3600, burst: 2640, v: 2, achv: 'kill:Mayrin' },
+  bellonaKill: { name: "Fanatic's Execution", ms: 2820, burst: 1620, v: 2, achv: 'kill:Bellona' },
+};
+const achvGot = (id) => { try { return JSON.parse(lsGet('mapleWordle:achv') || '{}')._claimed?.[id] != null; } catch { return false; } };   // claimed (achv.js)
+const EFFECTS_KEY = 'mapleWordle:effects', WINFX_KEY = 'mapleWordle:winFx';   // packs bought; win effects picked
+function ownedEffects() {
+  try { return JSON.parse(lsGet(EFFECTS_KEY) || '[]'); } catch { return []; }
+}
+const ownedSkins = () => Object.keys(HECATE).filter((id) => (HECATE[id].achv ? achvGot(HECATE[id].achv) : !HECATE[id].pack || ownedEffects().includes(HECATE[id].pack)));
+function pickedSkins() {
+  let got = [];
+  try { got = JSON.parse(lsGet(WINFX_KEY) || '[]'); } catch {}
+  got = got.filter((id) => ownedSkins().includes(id));
+  return got.length ? got : ['default'];
+}
+function setPickedSkins(ids) {
+  lsSet(WINFX_KEY, JSON.stringify(ids));
+  if (hecate && !ids.includes(hecate.id)) { hecate = null; loadHecate(); }   // the one waiting isn't picked any more
+}
+// The guess boxes are search boxes (no password manager pop-ups); Esc there shouldn't wipe what you typed.
+addEventListener('keydown', (e) => { if (e.key === 'Escape' && e.target.matches?.('input[type="search"]')) e.preventDefault(); }, true);
+const SAFARI = /^((?!chrome|chromium|android|crios|fxios|edg).)*safari/i.test(navigator.userAgent);
+let hecate = null, hecateLoading = false, hecateLast = null;   // hecate: { id, skin, blob } ready to play
+function loadHecate() {
+  if (hecate || hecateLoading) return;
+  const picked = limboAllOn() ? ['limboCut'] : pickedSkins();   // Limbo mode: Limbo's cutscene
+  const pool = picked.length > 1 ? picked.filter((id) => id !== hecateLast) : picked;
+  const id = pool[Math.floor(Math.random() * pool.length)];
+  hecateLoading = true;
+  if (SOUNDS[id]) soundFile(SOUNDS[id]).catch(() => {});   // its sound ready too (Limbo Transition, the boss finishing effects)
+  fetch(`video/hecate/${id}.${SAFARI ? 'webp' : 'webm'}${HECATE[id].v ? '?v=' + HECATE[id].v : ''}`).then((r) => (r.ok ? r.blob() : null))
+    .then((blob) => { if (blob) hecate = { id, skin: HECATE[id], blob }; }).catch(() => {}).finally(() => { hecateLoading = false; });
+}
+setTimeout(loadHecate, 3000);
+document.addEventListener('click', (e) => { if (e.target.closest?.('#modes button') && hecateLast) loadHecate(); });
+function playHecate(special = false) {   // special: Limbo's mashup win (plays whatever was put in, Limbo mode or not)
+  // Limbo mode turned on / off since it was loaded (Limbo Transition ticked on its own in Customize stays: it's a win
+  // effect of its own too)
+  if (!special && hecate && (limboAllOn() ? hecate.id !== 'limboCut' : hecate.id === 'limboCut' && !pickedSkins().includes('limboCut'))) { hecate = null; loadHecate(); }
+  if (!hecate) return 0;
+  const { id, skin, blob } = hecate;
+  hecate = null;
+  hecateLast = id;
+  if (!special) setTimeout(loadHecate, skin.ms + 500);   // the next one ready
+  const url = URL.createObjectURL(blob);   // a fresh URL each time, so the WebP starts from its first frame
+  const el = document.createElement(SAFARI ? 'img' : 'video');
+  el.disablePictureInPicture = true;   // no picture-in-picture button on hover
+  el.className = 'hecatefx' + (skin.wide ? ' widefx' : '');
+  let gone = false;
+  const done = () => { if (gone) return; gone = true; el.remove(); URL.revokeObjectURL(url); };
+  if (SAFARI) setTimeout(done, skin.ms + 20);
+  else {
+    Object.assign(el, { muted: true, playsInline: true, autoplay: true });
+    el.addEventListener('ended', done);
+    setTimeout(done, skin.ms + 1000);
+  }
+  el.src = url;
+  document.body.appendChild(el);
+  el.play?.().catch(done);
+  if (SOUNDS[id]) {   // its skill sound, in step with the clip (from when its video really starts)
+    // Guide of Destiny's sound starts 0.56 s late, so its last hit (2.08 s in) lands on the card exploding (2.64 s in)
+    const lag = id === 'limboCut' ? 150 : id === 'mayrinKill' ? 560 : 0;
+    if (SAFARI) resultSound(true, lag, id);
+    else el.addEventListener('playing', () => resultSound(true, lag, id), { once: true });
+  }
+  return skin.burst;
+}
+// A first-guess win with a boss finishing attack as the win effect: the first-guess music waits for its burst (with the
+// mesos), starting 0.5 s early so its fade-in is up by then, like on that boss's BGM Clip Extreme day. 0 for any other win effect.
+function firstTryBurst() {
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches || limboAllOn() || typeof hecate === 'undefined' || !hecate) return 0;
+  return HECATE[hecate.id]?.achv ? Math.max(1, HECATE[hecate.id].burst - 500) : 0;   // 0.5 s early: the music's fade-in is up by the burst
+}
+function bigWin() {
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  setTimeout(mesoShow, playHecate());
+}
+// BGM Clip Extreme on a boss with a finishing attack (Kai, Malefic Star, Mayrin, Bellona): that attack plays for everyone
+// when the game ends, won or lost (bgm.js). A first-guess win plays it in place of your win effect, with the meso show after.
+const bossKillFor = (boss) => Object.keys(HECATE).find((id) => HECATE[id].achv === `kill:${boss}`) || null;
+const bossKillBlob = {};
+function bossKillLoad(id) {
+  if (SOUNDS[id]) soundFile(SOUNDS[id]).catch(() => {});
+  bossKillBlob[id] ??= fetch(`video/hecate/${id}.${SAFARI ? 'webp' : 'webm'}${HECATE[id].v ? '?v=' + HECATE[id].v : ''}`).then((r) => (r.ok ? r.blob() : null)).catch(() => null);
+  return bossKillBlob[id];
+}
+// mesos: 'show' (a first-guess win: the meso fountain), 'rain' (a win in 2+), or none (lost); they come out at its burst.
+async function bossKill(id, mesos) {
+  // Resolves with its burst (ms; 0 when it can't play), so BGM Clip brings its BGM in with the mesos.
+  const fallback = () => { if (mesos === 'show') bigWin(); else if (mesos === 'rain') confetti(false); return 0; };
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return fallback();
+  const blob = await bossKillLoad(id);
+  if (!blob) return fallback();
+  const keep = hecate, was = hecateLast;
+  hecate = { id, skin: HECATE[id], blob };
+  const burst = playHecate(true);
+  hecate = keep;
+  hecateLast = was;
+  if (mesos) setTimeout(() => (mesos === 'show' ? mesoShow() : confetti(false)), burst);
+  return burst;
+}
+// Limbo's glitch mashup answered right (BGM Clip): Limbo's cutscene for everyone (only that: no meso show or glow).
+let limboCutBlob = null;
+function limboCutLoad() {
+  soundFile(SOUNDS.limboCut).catch(() => {});
+  limboCutBlob ??= fetch(`video/hecate/limboCut.${SAFARI ? 'webp' : 'webm'}?v=2`).then((r) => (r.ok ? r.blob() : null)).catch(() => null);
+  return limboCutBlob;
+}
+async function limboWin() {
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const blob = await limboCutLoad();
+  if (!blob) return;
+  const keep = hecate;
+  hecate = { id: 'limboCut', skin: HECATE.limboCut, blob };
+  const was = hecateLast;
+  playHecate(true);
+  hecate = keep;
+  hecateLast = was;
+}
+// Timed to its music (35 s): the game box shakes (and starts glowing), meso fountains spray up from both bottom corners
+// for 5 s, then mesos rain from the top, getting lighter until just before the music fades out.
+function mesoShow() {
+  const game = document.querySelector('.game');
+  if (game) {
+    game.classList.remove('shake', 'glow');
+    void game.offsetWidth;   // restart the animations if they're already running
+    game.classList.add('shake', 'glow');
+  }
+  const box = fxLayer(33000);
+  fountain(box, 5);
+  rain(box, 2, 6, 300);     // 2-8 s
+  rain(box, 8, 5, 120);     // 8-13 s
+  rain(box, 13, 5, 60);     // 13-18 s
+  rain(box, 18, 10, 30);    // 18-28 s
+}
+
+// `perSecond` mesos a second falling nonstop, from `at` seconds for `seconds` seconds.
+function rain(L, at, seconds, perSecond) {
+  let begin, made = 0, last = 0;
+  const start = performance.now() + at * 1000;
+  L.jobs.push((now) => {
+    if (now < start) return;
+    begin ??= now;
+    const due = Math.floor((Math.min(now - begin, seconds * 1000)) / 1000 * perSecond);   // how many should have started by now
+    if (now - last > 250) made = Math.max(made, due - 10);   // tab was in the background: don't dump them all at once
+    last = now;
+    for (; made < due; made++) fall(L);
+    return now - begin < seconds * 1000;
+  });
+}
+
+// Mesos thrown up from both bottom corners for `seconds`, arcing over and falling back down (simple physics).
+// 480 a second from each corner, however fast the screen refreshes.
+function fountain(L, seconds) {
+  const PER_SECOND = 480;
+  let begin, made = 0;
+  const fly = (m, now, dt, W, H) => {
+    m.vy += 1400 * dt;
+    m.x += m.vx * dt;
+    m.y += m.vy * dt;
+    return m.y <= H + 60;
+  };
+  const throwOne = (x, dir) => {
+    const m = meso(L, x, innerHeight, fly);
+    m.vx = dir * (rand(250, 650) * innerWidth / 1000 + 120);
+    m.vy = -rand(1000, 1500) * Math.sqrt(innerHeight / 800);
+  };
+  L.jobs.push((now) => {
+    begin ??= now;
+    const due = Math.min(Math.floor((now - begin) / 1000 * PER_SECOND), made + 16);   // at most 16 a frame (after a stall)
+    for (; made < due; made++) { throwOne(-10, 1); throwOne(innerWidth - 20, -1); }
+    return now - begin < seconds * 1000;
+  });
+}
+
+// ---- Result sounds (today's puzzle only): Star Force Success on a win, Star Force Destroy on a loss ----
+// The files are full ~1 minute tracks, so only the start plays, quietly, then fades out.
+// Played through Web Audio so the volume also works on iPhones (they ignore <audio> volume).
+const SOUND_VOLUME = 0.06;   // 0 = silent, 1 = full (at the slider's default 50%)
+const SOUND_SECONDS = 10;    // how long to play before fading out
+const SOUND_FADE = 2;        // seconds of fade-out
+const SOUNDS = { win: 'sounds/star-force-success.mp3', lose: 'sounds/star-force-destroy.mp3',
+  extremeLose: 'sounds/burning-city.mp3',         // Seren's Burning City (first 12.5 s), for an Extreme loss
+  extremeWin: 'sounds/four-auspicious-beasts.mp3',  // Kaling's Four Auspicious Beasts from 0:16 (1 s fade-in), Extreme win on guess 2+
+  animWin: 'sounds/rest-of-the-broken-truth.mp3',   // Malefic Star's Rest of the Broken Truth 0:15-0:36, Attack Animation win on guess 2-3
+  classLose: 'sounds/the-breeze-that-carried-sorrow.mp3',   // Malitia's The Breeze That Carried Sorrow 0:00-0:18 (1 s fade-in), Class Wordle loss
+  firstTry: 'sounds/the-unblessed-cathedral-descend.mp3',   // Mayrin's The Unblessed Cathedral -Descend- 1:07-1:42 (1 s fade-in), any first-guess win
+  classWin: 'sounds/succession-bloom.mp3',   // First Adversary's Succession Bloom 1:03-1:27 (1 s fade-in), Class Wordle win on guess 2-5
+  purchase: 'sounds/purchase.mp3',
+  achvComplete: 'sounds/achievement-complete.mp3',   // an achievement unlocked (each one, with its note)
+  gradeUp: 'sounds/grade-up.mp3',   // ranking up (Bronze, Silver, ...) by achievement points
+  appear: 'sounds/appear.mp3',   // an appearance effect (Seething Balance), when it plays in Settings   // the Cash Shop's buy sound (0.8 s), when you buy something in the shop
+  limboCut: 'sounds/limbo-cut.mp3',
+  sirenSong: 'sounds/siren-song.mp3', iaidoAlpha: 'sounds/iaido-alpha.mp3', mayrinKill: 'sounds/mayrin-kill.mp3',   // boss finishing effects' sounds
+  // Limbo's fail screen (limboFail), each colour its own: the pre with the screen coming in, the end with Limbo's face (1.92 s)
+  failBlackPre: 'sounds/limbo-fail-black-pre.mp3', failBlackEnd: 'sounds/limbo-fail-black-end.mp3',
+  failWhitePre: 'sounds/limbo-fail-white-pre.mp3', failWhiteEnd: 'sounds/limbo-fail-white-end.mp3' };   // Limbo's skill sound (5.4 s) with Limbo's cutscene, 0.15 s in: its big hit lands on the burst
+// Tracks that play longer than SOUND_SECONDS: seconds before the fade-out starts (fade-out is SOUND_FADE).
+const SOUND_LENGTH = { achvComplete: 3, gradeUp: 3, appear: 4, animWin: 19, classLose: 16, firstTry: 33, classWin: 22, failBlackPre: 3, failBlackEnd: 4, failWhitePre: 3, failWhiteEnd: 4 };
+// Tracks louder than SOUND_VOLUME.
+const SOUND_LOUDER = { firstTry: 0.30, purchase: 0.6, achvComplete: 0.3, gradeUp: 0.25, appear: 0.3, limboCut: 0.5, sirenSong: 0.45, iaidoAlpha: 0.73, mayrinKill: 0.63, failBlackPre: 0.5, failBlackEnd: 0.5, failWhitePre: 0.5, failWhiteEnd: 0.5 };   // limboCut and the boss finishing effects: as loud as the first-guess music they play with (a touch louder; set by loudness)
+// Phone and tablet speakers are much quieter, so they play everything twice as loud (12%, and 60% for a first-guess win).
+const PHONE = matchMedia('(hover: none) and (pointer: coarse)').matches;
+const muteKey = 'mapleWordle:muted';
+let audioCtx, master;   // master: the volume slider's gain, which every sound plays through
+const muted = () => { try { return localStorage.getItem(muteKey) === '1'; } catch { return false; } };
+
+// Volume slider, 0-100 (default 50), saved in a cookie for a year. 50 plays the volumes above as they are,
+// 100 plays them twice as loud, 0 is silent.
+const VOLUME_COOKIE = 'mapleWordleVolume';
+const COOKIE_PATH = location.pathname.replace(/[^/]*$/, '');   // the site's folder, so every game page shares it
+function sliderVolume() {
+  const m = document.cookie.match(new RegExp(`(?:^|; )${VOLUME_COOKIE}=(\\d+)`));
+  return m ? Math.min(100, Number(m[1])) : 50;
+}
+function saveSliderVolume(v) {
+  document.cookie = `${VOLUME_COOKIE}=${v}; max-age=${365 * 24 * 3600}; path=${COOKIE_PATH}; SameSite=Lax`;
+  if (master) master.gain.value = v / 50;   // also changes a sound that is playing now
+}
+
+// Result sounds playing (or about to), so stopResultSounds() can cut them off (BGM Clip does when you press Play).
+const resultPlaying = new Set();
+let resultGen = 0, resultActive = 0;   // active: result sounds waiting or playing (the background's music waits for them)
+function stopResultSounds() {
+  resultGen++;
+  for (const src of resultPlaying) { try { src.stop(); } catch {} }
+  resultPlaying.clear();
+}
+
+// Call during the click / Enter that ends the game: browsers only allow sound that starts from a user action.
+// Starts downloading the sound right away and plays it after `delay` ms (when the cards have flipped).
+// `file` picks a different track (a key of SOUNDS); default is the win / lose track.
+// The shared AudioContext (made on first use; browsers only let it play after a click or key press).
+function soundCtx() {
+  try {
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      master = audioCtx.createGain();
+      master.gain.value = sliderVolume() / 50;
+      master.connect(audioCtx.destination);
+    }
+    audioCtx.resume();
+    return audioCtx;
+  } catch { return null; }
+}
+// A sound file's bytes, downloaded once (soundFile(SOUNDS.x) ahead of time, so one that must be on time starts on time).
+const soundBytes = {};
+function soundFile(src) {
+  soundBytes[src] ??= fetch(src).then((r) => (r.ok ? r.arrayBuffer() : Promise.reject())).catch((e) => { delete soundBytes[src]; throw e; });
+  return soundBytes[src];
+}
+let loseAfterFail = 0;   // (limboOver: a loss with Limbo's fail screen coming: when it's over, in ms from now)
+// skip: seconds into the clip to start (0 = from the top).
+function resultSound(won, delay, file, skip = 0, quiet = true) {   // quiet: the background's music goes quiet meanwhile
+  if (loseAfterFail && !won && !file?.startsWith('fail')) delay = Math.max(delay ?? 0, loseAfterFail);
+  if (muted()) return;
+  const ctx = soundCtx();
+  if (!ctx) return;
+  const ready = soundFile(SOUNDS[file] || (won ? SOUNDS.win : SOUNDS.lose)).then((b) => ctx.decodeAudioData(b.slice(0)));
+  const due = Date.now() + delay;
+  const gen = resultGen;
+  // The background's music goes quiet when the sound starts (after the flip), not when it's asked for. A shop purchase
+  // plays over it (doesn't quiet it).
+  const duck = quiet && file !== 'purchase';
+  let counted = false;
+  const count = duck && setTimeout(() => { counted = true; resultActive++; }, Math.max(0, (delay ?? 0) - 150));
+  const done = () => { clearTimeout(count); if (counted) { counted = false; resultActive = Math.max(0, resultActive - 1); } };
+  ready.then((buffer) => {
+    if (gen !== resultGen) return done();   // stopped before it started
+    const start = ctx.currentTime + Math.max(0, due - Date.now()) / 1000;
+    const gain = ctx.createGain();
+    const volume = (SOUND_LOUDER[file] ?? SOUND_VOLUME) * (PHONE ? 2 : 1);
+    gain.gain.setValueAtTime(volume, start);
+    const len = (SOUND_LENGTH[file] ?? SOUND_SECONDS) - skip;
+    gain.gain.setValueAtTime(volume, start + len);
+    gain.gain.linearRampToValueAtTime(0, start + len + SOUND_FADE);
+    const src = ctx.createBufferSource();
+    src.buffer = buffer;
+    src.connect(gain).connect(master);
+    src.start(start, skip);
+    src.stop(start + len + SOUND_FADE);
+    resultPlaying.add(src);
+    src.onended = () => { resultPlaying.delete(src); done(); };
+  }).catch(done);
+}
+
+// Short interface sounds (the Cash Shop's hover tick on the shop's buttons): fetched and decoded once, then played right
+// away, through the same volume and sound on/off as everything else. uiSound() with no name just gets them ready
+// (call it from a click, so the browser lets the sound play later on hover).
+const UI_SOUNDS = { hover: ['sounds/hover.mp3', 0.35], dragon: ['sounds/limbo-dragon.mp3', 0.15] };   // file, volume (like SOUND_VOLUME); dragon: Limbo's wrong guess effect, kept soft
+const uiBuffers = {};
+let uiLast = 0;
+function uiSound(name) {
+  const ctx = soundCtx();
+  if (!ctx) return;
+  for (const k in UI_SOUNDS) uiBuffers[k] ??= fetch(UI_SOUNDS[k][0]).then((r) => r.arrayBuffer()).then((b) => ctx.decodeAudioData(b)).catch(() => null);
+  if (!name || muted() || performance.now() - uiLast < 60) return;   // 60 ms apart at most, when sliding across buttons
+  uiLast = performance.now();
+  uiBuffers[name].then((buffer) => {
+    if (!buffer) return;
+    const gain = ctx.createGain();
+    gain.gain.value = UI_SOUNDS[name][1] * (PHONE ? 2 : 1);
+    const src = ctx.createBufferSource();
+    src.buffer = buffer;
+    src.connect(gain).connect(master);
+    src.start();
+  });
+}
+const hoverSound = (el) => el.addEventListener('mouseenter', () => uiSound('hover'));
+
+// Sound on/off button and volume slider in the top right corner (both remembered per browser).
+// The slider shows on hover (computers) or after a tap on the button (phones).
+// Turning sound off also stops a sound playing now.
+// Settings (the ⚙️ in the top-right corner, a window like the Changelog): sound on/off and volume, and the background
+// effect (the falling leaves on 2x weekends) on/off.
+const FX_KEY = 'mapleWordle:bgEffect';   // 'off' turns the background effect off; on by default
+const bgEffectOn = () => { try { return localStorage.getItem(FX_KEY) !== 'off'; } catch { return true; } };
+// Box opacity (0-100) for the main game box: 0 = no background at all, 50 = the usual frosted box (default),
+// 100 = solid, the background can't be seen through it. Sets CSS variables the .game styles use.
+const BOX_KEY = 'mapleWordle:boxOpacity';
+function boxOpacity() {
+  try {
+    const v = localStorage.getItem(BOX_KEY);
+    if (v != null) return Math.min(100, Math.max(0, Number(v) || 0));
+    return localStorage.getItem('mapleWordle:clearBox') === 'on' ? 0 : 50;   // the earlier on/off setting
+  } catch { return 50; }
+}
+function applyBox() {
+  const v = boxOpacity(), k = v / 50;
+  const lerp = (base) => v <= 50 ? base * k : base + (1 - base) * (k - 1);   // 0 -> base -> 1
+  const st = document.documentElement.style;
+  st.setProperty('--boxA', lerp(0.55).toFixed(3));     // plain box: white
+  st.setProperty('--boxRA', lerp(0.42).toFixed(3));    // 🌈 box: white layer
+  st.setProperty('--boxT', (0.38 * Math.min(1, k)).toFixed(3));   // 🌈 box: pastel rainbow tint
+}
+applyBox();
+(() => {
+  const btn = document.createElement('button');
+  btn.id = 'settingsBtn';
+  btn.className = 'panel';
+  btn.title = 'Settings';
+  btn.textContent = '⚙️';
+  btn.addEventListener('click', () => {
+    const body = popup('settings', 'Settings');
+    // The (i) after each name explains it: hover on a computer, tap on a phone.
+    const tip = (text) => `<button class="infotip" type="button" aria-label="What is this?" data-tip="${text}">i</button>`;
+    body.innerHTML = (typeof acctRow === 'function' ? acctRow(tip) : '') +   // Account (account.js)
+      `<div class="setrow"><span class="setlabel">Sound ${tip('All sound effects, including win / lose sounds. BGM Clip has its own volume.')}</span>` +
+      '<button id="setMute"></button><input id="setVol" type="range" min="0" max="100"><span id="setVolPct"></span></div>' +
+      (ownsThemeBgm() ? `<div class="setrow"><span class="setlabel">Background BGM ${tip("Music for backgrounds that have it. Mute one in Customize > Background.")}</span>` +
+        '<button id="setBgm"></button><input id="setBgmVol" type="range" min="0" max="100"><span id="setBgmPct"></span></div>' : '') +
+      `<div class="setrow"><span class="setlabel">Box opacity ${tip('How see-through the game box is.')}</span>` +
+      '<input id="setBox" type="range" min="0" max="100" step="5"><span id="setBoxPct"></span></div>' +
+      `<div class="setrow"><span class="setlabel">Background effect ${tip('Maple leaves on 2x weekends, effects on holidays.')}</span>` +
+      '<span class="seg"><button data-fx="on">On</button><button data-fx="off">Off</button></span></div>' +
+      `<div class="setrow"><span class="setlabel">Theme ${tip('Light or dark boxes.')}</span>` +
+      '<span class="seg"><button data-dark="0">Light</button><button data-dark="1">Dark</button></span></div>' +
+      `<div class="setrow"><span class="setlabel">Effects ${tip('60 is smoother, 30 is lighter.')}</span>` +
+      '<span class="seg"><button data-fps="30">30 FPS</button><button data-fps="60">60 FPS</button></span></div>' +
+      `<div class="setrow"><span class="setlabel">Secret passcode ${tip('VIP access for helpers of the site!')}</span>` +
+      (vip.on ? '<span class="vipon">✨ VIP unlocked</span>'
+        : '<span class="vipfield"><input id="vipCode" type="text" placeholder="Passcode" autocomplete="off" spellcheck="false" autocapitalize="off" data-1p-ignore data-lpignore="true" data-form-type="other"><span id="vipMsg"></span></span><button id="vipGo">Enter</button>') + '</div>' +
+      '<div id="vipBox" hidden><div class="vipctl"><button id="vipPlay"></button><button id="vipReplay" title="Start this song over">⏮ Replay</button>' +
+      '<button id="vipSkip">⏭ Skip</button><button id="vipLoop" title="Loop this song">🔁 Loop</button></div><p id="vipNow"></p>' +
+      '<div id="vipTrack"><span id="vipText">0.0 / 0.0</span><span id="vipArrow">▼</span><div id="vipBar"><div id="vipFill"></div></div></div></div>' +
+      `<div class="setrow"><span class="setlabel">Credits &amp; Info ${tip('Who made what, and what the site saves.')}</span><button id="setCredits">View</button></div>`;
+    body.querySelector('#setCredits').addEventListener('click', creditsWin);
+    vipSetup(body);
+    if (typeof acctRowSetup === 'function') acctRowSetup(body);
+    // Each (i) gets a dark box that fades in over the rows below it (it doesn't push anything down): shown while
+    // hovered (computer) or after a tap (phone).
+    const closeTips = () => { for (const x of body.querySelectorAll('.infotip.open')) { x.classList.remove('open'); x.tipBox.classList.remove('show'); } };
+    for (const t of body.querySelectorAll('.infotip')) {
+      const box = Object.assign(document.createElement('p'), { className: 'tiptext', textContent: t.dataset.tip });
+      t.tipBox = box;
+      t.closest('.setrow').appendChild(box);
+      t.addEventListener('mouseenter', () => { if (!PHONE) box.classList.add('show'); });
+      t.addEventListener('mouseleave', () => { if (!PHONE && !t.classList.contains('open')) box.classList.remove('show'); });
+      if (!PHONE) { t.classList.add('hoveronly'); t.tabIndex = -1; }   // computers: hover shows it, a click does nothing
+      t.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (!PHONE) return;
+        const open = !t.classList.contains('open');
+        closeTips();
+        t.classList.toggle('open', open);
+        box.classList.toggle('show', open);
+      });
+    }
+    body.addEventListener('click', closeTips);
+    const mute = body.querySelector('#setMute'), vol = body.querySelector('#setVol'), pct = body.querySelector('#setVolPct');
+    vol.value = sliderVolume();
+    const show = () => {
+      mute.textContent = muted() ? '🔇 Off' : '🔊 On';
+      mute.title = muted() ? 'Sound off (click to turn on)' : 'Sound on (click to turn off)';
+      vol.disabled = muted();
+      pct.textContent = vol.value + '%';
+      for (const b of body.querySelectorAll('[data-fx]')) b.classList.toggle('on', (b.dataset.fx === 'on') === bgEffectOn());
+      for (const b of body.querySelectorAll('[data-dark]')) b.classList.toggle('on', (b.dataset.dark === '1') === darkOn());
+      for (const b of body.querySelectorAll('[data-fps]')) b.classList.toggle('on', (b.dataset.fps === '30') === fps30());
+      body.querySelector('#setBoxPct').textContent = boxOpacity() + '%';
+      if (bgmBtn) {
+        bgmBtn.textContent = themeBgmOn() ? '🎵 On' : '🔇 Off';
+        bgmBtn.title = themeBgmOn() ? 'Background BGM on (click to turn off)' : 'Background BGM off (click to turn on)';
+        bgmVol.disabled = !themeBgmOn();
+        body.querySelector('#setBgmPct').textContent = bgmVol.value + '%';
+      }
+    };
+    const bgmBtn = body.querySelector('#setBgm'), bgmVol = body.querySelector('#setBgmVol');
+    if (bgmBtn) {
+      bgmVol.value = themeBgmVol();
+      bgmBtn.addEventListener('click', () => { lsSet(THEME_BGM_KEY, themeBgmOn() ? '0' : '1'); themeBgm(); show(); });
+      bgmVol.addEventListener('input', () => { lsSet(THEME_BGM_VOL_KEY, bgmVol.value); if (tbgm.master) tbgm.master.gain.value = themeBgmLevel(); show(); });
+    }
+    mute.addEventListener('click', () => {
+      lsSet(muteKey, muted() ? '0' : '1');
+      if (muted() && audioCtx) { audioCtx.close(); audioCtx = master = null; }
+      show();
+    });
+    vol.addEventListener('input', () => { saveSliderVolume(vol.value); show(); });
+    for (const b of body.querySelectorAll('[data-fx]')) b.addEventListener('click', () => { lsSet(FX_KEY, b.dataset.fx); show(); leaves(); halloweenFx(); });
+    for (const b of body.querySelectorAll('[data-dark]')) b.addEventListener('click', () => {
+      lsSet(DARK_KEY, b.dataset.dark);
+      document.documentElement.classList.toggle('dark', b.dataset.dark === '1');
+      // The game runs inside index.html's frame: the browser paints a frame whose light / dark differs from the page
+      // around it with a solid background, so the outer page switches too (it reads the setting itself on load).
+      try { if (parent !== window) parent.document.documentElement.classList.toggle('dark', b.dataset.dark === '1'); } catch {}
+      show();
+    });
+    for (const b of body.querySelectorAll('[data-fps]')) b.addEventListener('click', () => {
+      const was = fps30();
+      lsSet(FPS_KEY, b.dataset.fps);
+      document.documentElement.classList.toggle('fps30', b.dataset.fps === '30');
+      if (!was && fps30()) requestAnimationFrame(fpsTick);
+      show();
+    });
+    const boxIn = body.querySelector('#setBox');
+    boxIn.value = boxOpacity();
+    boxIn.addEventListener('input', () => { lsSet(BOX_KEY, boxIn.value); applyBox(); show(); });
+    show();
+  });
+  document.body.appendChild(btn);
+  if (typeof acctAvatarCall === 'function') setTimeout(acctAvatarCall);   // a new shop avatar to look at (account.js; after the rest of this file has run)
+})();
+
+// VIP (the secret passcode in Settings): a player for every BGM we have, in random order, each from start to end.
+// It only lasts for this page: reloading or going to another page turns it off again. Only the passcode's hash is here.
+const VIP_HASH = '8cce1429a5b04f566923575513cd321f4f5aa34353b789691e55889cc379c588';
+const vip = { on: false, audio: null, list: null, names: {}, titles: {}, cur: null, loop: 0 };
+async function vipCheck(code) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(code.trim()));
+  return [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, '0')).join('') === VIP_HASH;
+}
+// Settings > Credits & Info: a window over Settings (Esc, the X or a click outside closes it).
+function creditsWin() {
+  const win = document.createElement('div');
+  win.className = 'popup buyask creditwin';
+  win.innerHTML = '<div class="panel"><h2>Credits &amp; Info</h2><div class="creditbody">' +
+    '<section><h3>About</h3>' +
+    '<p>Mapledle is a free, fan-made site. It is not affiliated with or endorsed by NEXON.</p>' +
+    "<p><b>No ads, ever. No purchases, ever.</b> It's non-profit and non-commercial: Meso and shop items are earned only by playing.</p></section>" +
+    '<section><h3>Your data</h3>' +
+    '<p>Your progress (Meso, Customize, stats, settings and so on) is saved in this browser.</p>' +
+    '<p>An account is optional and needs no email. You only need one for achievements, PvP (coming soon) or playing on another device.</p>' +
+    "<p>The only thing sent without asking is each day's result: how many guesses it took and whether a bonus was right. " +
+    "It's added to the anonymous counts everyone sees, with nothing that identifies you.</p></section>" +
+    '<section><h3>Credits</h3>' +
+    '<p><b>MapleStory</b><br>Art, music, sounds and names: ⓒ NEXON Korea Corporation All Rights Reserved. Used for fan purposes only.</p>' +
+    '<p><b>Game data</b><br>MapleStory Wiki (maplestorywiki.net), Namu Wiki, Bahamut (TMS boss HP)</p>' +
+    "<p><b>Fonts</b><br>Rubik (Google Fonts), and MapleStory's own fonts in Achievements</p></section>" +
+    '<section><h3>Special thanks</h3>' +
+    '<p><b>@mr_pigoo</b> on Discord for helping with Attack Animation clips</p>' +
+    '<p><b>@lax.lax</b> for reporting bugs and suggestions</p>' +
+    '<p><b>@ichiyam</b> for helping with initial development of the website and suggestions</p>' +
+    '<p>... and many more (anonymous or small contributions) for helping out!</p></section>' +
+    '<section><h3>Contact</h3>' +
+    '<p>Questions, feedback or bugs: <a href="https://discord.gg/f22H4UJ" target="_blank" rel="noopener">Join the Discord!</a></p></section>' +
+    '</div><p class="buybtns"><button class="plain">Close</button></p></div>';
+  const close = () => { win.remove(); removeEventListener('keydown', esc, true); };
+  const esc = (e) => { if (e.key === 'Escape') { e.stopImmediatePropagation(); close(); } };
+  win.addEventListener('click', (e) => { if (e.target === win) close(); });
+  win.querySelector('.buybtns button').addEventListener('click', close);
+  addEventListener('keydown', esc, true);
+  document.body.appendChild(win);
+}
+function vipSetup(body) {
+  const go = body.querySelector('#vipGo'), code = body.querySelector('#vipCode');
+  const tryCode = async () => {
+    if (!(await vipCheck(code.value))) {   // under the box for 2 s, then fades out
+      const msg = body.querySelector('#vipMsg');
+      msg.textContent = '❌ Wrong passcode';
+      msg.classList.add('show');
+      clearTimeout(vip.msgTimer);
+      vip.msgTimer = setTimeout(() => msg.classList.remove('show'), 2000);
+      return;
+    }
+    vip.on = true;
+    const row = code.closest('.setrow');
+    for (const el of row.querySelectorAll('.vipfield, #vipGo')) el.remove();
+    row.insertAdjacentHTML('beforeend', '<span class="vipon">✨ VIP unlocked</span>');
+    vipShow(body);
+  };
+  go?.addEventListener('click', tryCode);
+  code?.addEventListener('keydown', (e) => { if (e.key === 'Enter') tryCode(); });
+  if (vip.on) vipShow(body);
+}
+async function vipShow(body) {
+  body.querySelector('#vipBox').hidden = false;
+  if (!vip.list) {
+    const d = await (await fetch('data/bgm.json', { cache: 'no-cache' })).json();
+    vip.list = Object.keys(d.tracks);
+    for (const b of d.bosses) for (const a of b.areas) (vip.names[a.track] ??= new Set()).add(b.name);
+    vip.titles = Object.fromEntries(Object.entries(d.tracks).map(([k, t]) => [k, t.title]));
+    vip.versions = Object.fromEntries(Object.entries(d.tracks).map(([k, t]) => [k, t.v]));
+  }
+  body.querySelector('#vipPlay').onclick = () => {
+    if (!vip.audio) return vipNext();
+    if (vip.audio.paused) vip.audio.play().catch(() => {}); else vip.audio.pause();
+    vipDraw();
+  };
+  body.querySelector('#vipSkip').onclick = () => vipNext();
+  body.querySelector('#vipReplay').onclick = () => {   // from the top (and play)
+    if (!vip.audio) return vipNext();
+    vip.audio.currentTime = 0;
+    vip.audio.play().catch(() => {});
+    vipDraw();
+  };
+  body.querySelector('#vipLoop').onclick = () => {   // repeat the current song instead of moving on
+    vip.loopSong = !vip.loopSong;
+    if (vip.audio) vip.audio.loop = vip.loopSong;
+    vipDraw();
+  };
+  body.querySelector('#vipBar').onclick = (e) => {
+    if (!vip.audio?.duration) return;
+    const r = e.currentTarget.getBoundingClientRect();
+    vip.audio.currentTime = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) * vip.audio.duration;
+    vipDraw();
+  };
+  vipDraw();
+}
+function vipNext() {
+  if (!vip.list) return;
+  let id;
+  do id = vip.list[Math.floor(Math.random() * vip.list.length)]; while (vip.list.length > 1 && id === vip.cur);
+  vip.cur = id;
+  if (!vip.audio) {
+    vip.audio = new Audio();
+    vip.audio.loop = !!vip.loopSong;
+    vip.audio.addEventListener('ended', vipNext);   // straight on to another one
+    for (const ev of ['timeupdate', 'play', 'pause', 'loadedmetadata']) vip.audio.addEventListener(ev, vipDraw);
+    for (const ev of ['play', 'pause', 'ended']) vip.audio.addEventListener(ev, () => { if (tbgm.master) tbgm.master.gain.value = themeBgmLevel(); });
+  }
+  let v = 50;
+  try { v = Number(localStorage.getItem('mapleWordle:bgmVolume') ?? 50); } catch {}
+  vip.audio.volume = Math.min(1, v / 50);   // the same volume as BGM Clip's player
+  vip.audio.src = `audio/bgm/${id}.mp3${vip.versions?.[id] ? '?v=' + vip.versions[id] : ''}`;
+  vip.audio.play().catch(() => {});
+  vipDraw();
+}
+function vipDraw() {
+  const $v = (id) => document.getElementById(id);
+  if (!$v('vipBox') || $v('vipBox').hidden) return;
+  const a = vip.audio, playing = a && !a.paused;
+  $v('vipPlay').textContent = playing ? '❚❚ Pause' : '▶︎ Play';
+  $v('vipLoop').classList.toggle('on', !!vip.loopSong);
+  $v('vipNow').textContent = vip.cur ? `${[...(vip.names[vip.cur] || [])].join(' / ')} - ${vip.titles[vip.cur]}` : 'Press Play for a random BGM';
+  const t = a?.currentTime || 0, len = a?.duration || 0, at = len ? t / len * 100 : 0;
+  $v('vipFill').style.width = at + '%';
+  $v('vipText').textContent = `${t.toFixed(1)} / ${len.toFixed(1)}`;
+  for (const id of ['vipText', 'vipArrow']) $v(id).style.left = `clamp(0px, calc(${at}% - ${id === 'vipText' ? 30 : 6}px), calc(100% - ${id === 'vipText' ? 70 : 12}px))`;
+  if (playing && !vip.loop) vip.loop = requestAnimationFrame(() => { vip.loop = 0; vipDraw(); });   // one redraw loop at a time
+}
+
+// "NEW" tag on a game tab (data-new="<key>"): shows until the date below, and goes away for good once you click that tab.
+const NEW_UNTIL = { bgmClip: Date.UTC(2026, 9, 26) };   // BGM Clip: one week from Oct 19
+for (const btn of document.querySelectorAll('[data-new]')) {
+  const key = 'mapleWordle:seenNew:' + btn.dataset.new;
+  let seen = false;
+  try { seen = localStorage.getItem(key) === '1'; } catch {}
+  if (seen || !(Date.now() < (NEW_UNTIL[btn.dataset.new] ?? 0))) continue;
+  const tag = document.createElement('span');
+  tag.className = 'newtag';
+  tag.textContent = 'NEW';
+  btn.appendChild(tag);
+  btn.addEventListener('click', () => { try { localStorage.setItem(key, '1'); } catch {} tag.remove(); });
+}
+
+// The info strip under the tabs: PUZZLE #n | NEXT ... IN hh:mm:ss | STREAK n. Hover shows the date / reset time.
+function showPuzzle(n, date, live) {
+  document.getElementById('puzzleLabel').textContent = live ? 'Puzzle' : 'Archive';
+  const el = document.getElementById('puzzle');
+  el.textContent = `#${n}`;
+  el.parentElement.title = date;
+}
+function showTimer(label, s) {
+  const pad = (n) => String(n).padStart(2, '0');
+  document.getElementById('timerLabel').textContent = label;
+  const el = document.getElementById('timer');
+  el.textContent = `${pad(Math.floor(s / 3600))}:${pad(Math.floor(s / 60) % 60)}:${pad(s % 60)}`;
+  el.parentElement.title = 'Resets at 00:00 UTC (same as Maple reset)';
+}
+
+// Secret themes: getting a glitch mashup's bonus right in BGM Clip on the day itself (not from the Archive) unlocks
+// that map as a background for every page. Kept in this browser for good. Default is free for everyone, so the
+// Theme button (above the credit box) only shows once you've unlocked another one.
+const THEMES = { default: 'Default', deepsea: 'Unglamoured Ruins', limbo: "Limbo's Subconscious Background (Light)", limboDark: "Limbo's Subconscious Background (Dark)",
+  limboP1: 'Limbo Background',
+  vonbon: "Von Bon's Realm", bellona: 'Solatum',
+  lucid: 'Garden of Eternal Dream', lucidBloom: 'Lucid Garden', lucidNight: 'Lucid Night', lucidBg: 'Lucid Background', halloween: 'Haunted Mansion' };
+const THEME_IMG = { deepsea: 'images/deepsea.webp', limbo: 'images/limbo.webp', limboDark: 'images/limbo-dark.webp', limboP1: 'images/limbo-p1.webp', vonbon: 'images/vonbon.webp', bellona: 'images/bellona.webp',
+  lucid: 'images/lucid-dream.jpg?v=2', lucidBloom: 'images/lucid-bloom.webp', lucidNight: 'images/lucid-night.webp', lucidBg: 'images/lucid-bg.webp',
+  halloween: 'images/holiday/halloween.webp' };
+// Moving backgrounds: a looping video over the still picture (which shows until the video starts).
+const THEME_VIDEO = { lucid: ['video/lucid-dream.webm?v=2', 'video/lucid-dream.mp4?v=2'],
+  limbo: ['video/limbo-bg/light.webm', 'video/limbo-bg/light.mp4'], limboDark: ['video/limbo-bg/dark.webm', 'video/limbo-bg/dark.mp4'],   // Limbo: 48 s loops recorded in MapRender
+  limboP1: ['video/limbo-bg/phase1.webm', 'video/limbo-bg/phase1.mp4'] };   // Phase 1's map: a 25.3 s loop (the boss's cycle)
+// Backgrounds with their own music (Settings > Background BGM, once you own one): it loops while that background is on.
+// Limbo's light and dark sides are Phase 3's White and Black tracks; Limbo Background is Phase 1's (Specter A).
+const THEME_BGM = { limbo: 'audio/bgm/c743160da5.mp3', limboDark: 'audio/bgm/d8872d703d.mp3', limboP1: 'audio/bgm/460fc75990.mp3',
+  lucid: 'audio/bgm/lucid-garden.mp3' };   // Garden of Eternal Dream: Shattered Time's "Garden of Eternal Dream" (a 20 s loop)
+// A background's music can be muted on its own (the speaker on its card in Customize > Background), the rest stay on.
+// Only a background you picked there: Limbo mode (Custom Effects) always has its music.
+const THEME_MUTE_KEY = 'mapleWordle:themeMute';
+const themeMuted = (t) => { try { return JSON.parse(lsGet(THEME_MUTE_KEY) || '[]').includes(t); } catch { return false; } };
+function setThemeMuted(t, on) {
+  let list = [];
+  try { list = JSON.parse(lsGet(THEME_MUTE_KEY) || '[]'); } catch {}
+  lsSet(THEME_MUTE_KEY, JSON.stringify(on ? [...new Set([...list, t])] : list.filter((x) => x !== t)));
+  themeBgm();
+}
+// A pair of sides (Limbo mode swaps between them): both videos and both tracks run together, only one shown / heard,
+// so a swap changes picture and music at the same moment, each carrying on from where it is.
+const THEME_PAIR = { limbo: 'limboDark', limboDark: 'limbo' };
+// A screen effect over a side's map (under the game box): the dark side's purple scanline tint (BossLimbo's screen loop),
+// fading in 2 s after that side comes up, like the game. The game's cycle: the loop file's 4 frames, then the pre's frames 4-15
+// (its first 4 are the loop's, fading in), 60 ms each. Limbo Background: Phase 1's purple mist, 16 frames of 120 ms, on
+// from the start. .webm (see-through), .webp for Safari.
+const THEME_SCREEN = { limboDark: 'video/limbo-bg/dark-screen', limboP1: 'video/limbo-bg/phase1-screen' };
+// Inside the main page (shell.js) the background and its music live in that page, under this game's, so they carry on
+// (video and all) when you switch games.
+const TBGM_HOST = (() => { try { return window.parent !== window && window.parent.mwShell ? window.parent : window; } catch { return window; } })();
+const bgDoc = () => TBGM_HOST.document;
+function bgSwapClass(on) { for (const d of new Set([document, bgDoc()])) d.body.classList.toggle('limboswap', on); }
+function bgVideo(t) {
+  const v = bgDoc().createElement('video');
+  v.disablePictureInPicture = true;   // no picture-in-picture button on hover
+  Object.assign(v, { autoplay: true, muted: true, loop: true, playsInline: true, poster: THEME_IMG[t] });
+  v.setAttribute('aria-hidden', 'true');
+  v.dataset.theme = t;
+  for (const src of THEME_VIDEO[t]) v.appendChild(Object.assign(bgDoc().createElement('source'), { src, type: src.includes('.webm') ? 'video/webm' : 'video/mp4' }));
+  v.play?.().catch(() => {});
+  return v;
+}
+const THEMES_KEY = 'mapleWordle:themes', THEME_KEY = 'mapleWordle:theme';
+const lsGet = (k) => { try { return localStorage.getItem(k); } catch { return null; } };
+const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch {} };
+function ownedThemes() {
+  let got = [];
+  try { got = JSON.parse(lsGet(THEMES_KEY) || '[]'); } catch {}
+  return ['default', ...Object.keys(THEMES).filter((t) => t !== 'default' && got.includes(t))];
+}
+// The theme is its own layer under everything (a playing mashup's egg background still shows on top of it).
+// Picking one in the window fades it in over the old one; on page load it's just there.
+// Holiday specials (images/holiday/): on its day each year (the site's UTC day), a holiday's background replaces
+// whatever theme you have on, on every page. BGM Clip Extreme's Easter egg backgrounds still go on top of it. The same
+// day it's in the shop (price in mesos), so you can keep it as a theme for any day.
+const HOLIDAYS = {
+  halloween: { month: 10, day: 31, name: 'Haunted Mansion', kind: 'Background + effect (Bundle of 2)', price: 500,
+               contents: ['Haunted Mansion', 'Halloween Night (bats, ghosts, fog)'],
+               hidden: true, effect: true, themes: ['halloween'], img: 'images/fx/halloween-bundle.webp', zoom: 'images/fx/halloween-bundle-big.webp' },
+};
+const holidayToday = (d = new Date()) => Object.keys(HOLIDAYS).find((k) => HOLIDAYS[k].month === d.getUTCMonth() + 1 && HOLIDAYS[k].day === d.getUTCDate());
+// fade: false (just show it), true (1 s, picking a theme) or a number of seconds (2 at midnight on a holiday).
+function applyTheme(fade = false) {
+  const secs = fade === true ? 1 : fade || 0;
+  const pick = lsGet(THEME_KEY);
+  const t = limboAllOn() ? (limboDarkSide ? 'limboDark' : 'limbo') : holidayToday() ?? (ownedThemes().includes(pick) ? pick : 'default');
+  const doc = bgDoc();
+  const old = [...doc.querySelectorAll('.themebg')];
+  const top = old.at(-1)?.dataset.theme ?? 'default';
+  if (top === t) {   // already showing (Limbo mode may have just come on: add the other side)
+    if (THEME_PAIR[t]) pairVideos(old.at(-1), t);
+    themeBgm(t);
+    return t;
+  }
+  if (THEME_PAIR[t] === top) {   // the other side of a pair: switch in place, on the same frame
+    const el = old.at(-1);
+    el.dataset.theme = t;
+    el.style.backgroundImage = `url("${THEME_IMG[t]}")`;
+    pairVideos(el, t);
+    themeBgm(t);
+    return t;
+  }
+  const gone = () => old.forEach((el) => el.remove());
+  themeBgm(t);
+  if (t !== 'default') {
+    const el = doc.createElement('div');
+    el.className = 'themebg';
+    el.dataset.theme = t;
+    el.style.backgroundImage = `url("${THEME_IMG[t]}")`;
+    if (THEME_PAIR[t]) pairVideos(el, t);
+    else if (THEME_VIDEO[t]) el.appendChild(bgVideo(t));
+    if (!THEME_PAIR[t] && THEME_SCREEN[t]) el.appendChild(themeScreen(THEME_SCREEN[t])).classList.add('on');   // (on from the start: no fade)
+    if (secs) {
+      el.style.transition = `opacity ${secs}s ease`;
+      el.style.opacity = 0;
+      requestAnimationFrame(() => requestAnimationFrame(() => { el.style.opacity = 1; }));
+    }
+    doc.body.prepend(el);
+    old.forEach((o) => doc.body.prepend(o));   // keep the old one underneath while the new one fades in
+    if (secs) setTimeout(gone, secs * 1000 + 100); else gone();
+  } else if (secs) {
+    old.forEach((o) => { o.style.transition = `opacity ${secs}s ease`; o.style.opacity = 0; });
+    setTimeout(gone, secs * 1000 + 100);
+  } else gone();
+  return t;
+}
+// Both sides' videos in one background (the other side's only in Limbo mode, where they swap); the hidden one stays
+// at opacity 0 rather than display: none, so it keeps playing and shows straight away.
+function pairVideos(el, t) {
+  for (const side of [t, THEME_PAIR[t]]) {
+    if (side !== t && !limboAllOn()) continue;
+    if (!el.querySelector(`video[data-theme="${side}"]`)) el.appendChild(bgVideo(side));
+  }
+  for (const v of el.querySelectorAll('video[data-theme]')) v.classList.toggle('off', v.dataset.theme !== t);
+  const scr = THEME_SCREEN[t] ?? (limboAllOn() && THEME_SCREEN[THEME_PAIR[t]]);
+  if (scr && !el.querySelector('.themescreen')) el.appendChild(themeScreen(scr));
+  el.querySelector('.themescreen')?.classList.toggle('on', !!THEME_SCREEN[t]);
+}
+function themeScreen(src) {
+  const el = SAFARI ? Object.assign(bgDoc().createElement('img'), { src: src + '.webp', alt: '' })
+    : Object.assign(bgDoc().createElement('video'), { src: src + '.webm', muted: true, loop: true, autoplay: true, playsInline: true, disablePictureInPicture: true });
+  el.className = 'themescreen';
+  el.setAttribute('aria-hidden', 'true');
+  el.play?.().catch(() => {});
+  return el;
+}
+
+// Background BGM: on by default at 50% (its own On / Off and volume in Settings). Browsers only let it start after a
+// click or key press, so it comes in with your first one. Not on BGM Clip (it would get in the way of the guessing),
+// and it goes quiet while the VIP player plays.
+const THEME_BGM_KEY = 'mapleWordle:themeBgm', THEME_BGM_VOL_KEY = 'mapleWordle:themeBgmVol';
+const themeBgmOn = () => lsGet(THEME_BGM_KEY) !== '0';
+const themeBgmVol = () => { const v = Number(lsGet(THEME_BGM_VOL_KEY) ?? 50); return Number.isFinite(v) ? v : 50; };
+const ownsThemeBgm = () => ownedThemes().some((t) => THEME_BGM[t]);
+const tbgm = TBGM_HOST.mwTbgm ??= { ctx: null, master: null, cur: null, tracks: {} };   // tracks: theme -> { gain, src, ready }
+// Limbo mode's transition sound: always heard (only the sound mute button stops it), whatever the background's music is
+// doing (on, off, or quiet for a clip or a result sound); half as loud as the music would be at your music volume.
+let transSound = null;
+function limboTransitionSound() {
+  if (muted()) return;
+  const ctx = soundCtx();
+  if (!ctx) return;
+  transSound ??= fetch('sounds/limbo-transition.mp3').then((r) => r.arrayBuffer()).then((b) => ctx.decodeAudioData(b)).catch(() => null);
+  transSound.then((buf) => {
+    if (!buf) return;
+    const s = ctx.createBufferSource(), g = ctx.createGain();
+    s.buffer = buf;
+    g.gain.value = themeBgmVol() / 100 * 0.5 * (PHONE ? 2 : 1) * 0.5;
+    s.connect(g).connect(ctx.destination);
+    s.start();
+  });
+}
+// Quiet (not stopped) while the VIP player plays, while a game's result sound (win, lose, guess-in-1 effect) plays, and
+// on BGM Clip while its clip or a mashup plays (bgm.js themeBgmHold); back right after.
+// After any of those it waits 2 more seconds before coming back.
+let tbgmQuietTill = 0;
+function themeBgmLevel() {
+  if ((vip.audio && !vip.audio.paused) || resultActive || window.themeBgmHold?.()) tbgmQuietTill = Date.now() + 2000;
+  return themeBgmOn() && Date.now() >= tbgmQuietTill ? themeBgmVol() / 100 * 0.5 * (PHONE ? 2 : 1) : 0;
+}
+// Straight back (no 2 s wait), e.g. switching BGM Clip to another mode or day.
+function themeBgmNow() {
+  tbgmQuietTill = 0;
+  if (!tbgm.master) return;
+  tbgmLevel = themeBgmLevel();
+  tbgm.master.gain.setTargetAtTime(tbgmLevel, tbgm.ctx.currentTime, 0.05);
+}
+let tbgmLevel = null;
+setInterval(() => {   // fades to / from quiet when one of those starts or stops
+  if (!tbgm.master) return;
+  const want = themeBgmLevel();
+  if (want === tbgmLevel) return;
+  tbgmLevel = want;
+  tbgm.master.gain.setTargetAtTime(want, tbgm.ctx.currentTime, 0.12);
+}, 150);
+// Where the music is, kept when leaving the page (this tab only), so the next page of the site carries on from there.
+const TBGM_POS_KEY = 'mwThemeBgmAt';
+addEventListener('pagehide', () => {
+  const k = Object.keys(tbgm.tracks).filter((x) => tbgm.tracks[x].src);
+  const tr = tbgm.tracks[k[0]];
+  if (!tr || !tbgm.ctx) return sessionStorage.removeItem(TBGM_POS_KEY);
+  try { sessionStorage.setItem(TBGM_POS_KEY, JSON.stringify({ k, pos: tbgm.ctx.currentTime - tr.t0, at: Date.now() })); } catch {}
+});
+function themeBgm(t = tbgm.cur) {
+  tbgm.cur = t;
+  const want = THEME_BGM[t] && themeBgmOn() && (limboAllOn() || !themeMuted(t)) ? [t, ...(THEME_PAIR[t] && limboAllOn() ? [THEME_PAIR[t]] : [])] : [];
+  for (const k of Object.keys(tbgm.tracks)) if (!want.includes(k)) {   // a background without music now: stop it
+    try { tbgm.tracks[k].src?.stop(); } catch {}
+    delete tbgm.tracks[k];
+  }
+  if (!want.length) return;
+  try {
+    if (!tbgm.ctx) {
+      tbgm.ctx = new (TBGM_HOST.AudioContext || TBGM_HOST.webkitAudioContext)();
+      tbgm.master = tbgm.ctx.createGain();
+      tbgm.master.connect(tbgm.ctx.destination);
+    }
+    if (!themeBgm.woke) {   // (each game page listens for its own clicks)
+      themeBgm.woke = true;
+      const wake = () => { if (tbgm.ctx.state === 'suspended') tbgm.ctx.resume(); };
+      for (const ev of ['pointerdown', 'keydown']) document.addEventListener(ev, wake, true);
+    }
+  } catch { return; }
+  const ctx = tbgm.ctx;
+  tbgm.master.gain.value = themeBgmLevel();
+  for (const k of want) {
+    const had = tbgm.tracks[k];
+    if (had && (had.src || had.page === window)) continue;
+    if (had) had.gain.disconnect();   // the last game page was left mid-download: start that one again
+    const tr = tbgm.tracks[k] = { gain: ctx.createGain(), page: window };
+    tr.gain.connect(tbgm.master);
+    tr.gain.gain.value = 0;
+    tr.ready = TBGM_HOST.fetch(THEME_BGM[k]).then((r) => r.arrayBuffer()).then((b) => ctx.decodeAudioData(b));
+  }
+  // Start together once both are decoded, so a pair stays in step (each loops on its own from there). Coming from another
+  // page of the site, it carries on from where that page was (plus the moment the page change took), not from 0:00.
+  const fresh = want.filter((k) => !tbgm.tracks[k].src);
+  if (fresh.length) {
+    Promise.all(fresh.map((k) => tbgm.tracks[k].ready)).then((bufs) => {
+      const at = ctx.currentTime + 0.05;
+      let was = null;
+      try { was = JSON.parse(sessionStorage.getItem(TBGM_POS_KEY)); } catch {}
+      const from = was && fresh.some((k) => was.k.includes(k)) ? was.pos + (Date.now() - was.at) / 1000 + 0.05 : 0;
+      fresh.forEach((k, i) => {
+        const tr = tbgm.tracks[k];
+        if (!tr || tr.src) return;
+        const off = from % bufs[i].duration;
+        tr.src = ctx.createBufferSource();
+        tr.src.buffer = bufs[i];
+        tr.src.loop = true;
+        tr.src.connect(tr.gain);
+        tr.src.start(at, off);
+        tr.t0 = at - off;   // when 0:00 would have been (for where it's at now)
+      });
+    }).catch(() => {});
+  }
+  for (const k of want) tbgm.tracks[k].gain.gain.setValueAtTime(k === t ? 1 : 0, ctx.currentTime);   // only this side heard (a swap switches straight over)
+  if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+}
+// The Customize button (only once you have a theme besides Default, or a win effect from the shop) opens a window like
+// the Changelog with 3 tabs: Background (click a theme to use it), Win Effect (click to tick / untick; a random one of the
+// ticked ones plays when you win in 1 guess, at least one stays ticked; a bought bundle opens and closes like a Changelog
+// box) and Custom Effects (nothing to buy yet).
+// Something you just got (bought or unlocked) is "NEW" on the button, on its tab and on itself until the page reloads.
+let customTab = 'bg';
+const customFresh = new Set();   // shop item / theme ids got since this page loaded
+const customTabOf = (id) => (CUSTOM_FX_PACKS.includes(id) || id === 'halloween' ? 'fx' : SHOP[id]?.effect || HECATE[id] ? 'win' : 'bg');
+function markCustomNew(id) {
+  customFresh.add(id);
+  customTab = customTabOf(id);   // the window opens on its tab
+}
+const newTag = () => Object.assign(document.createElement('span'), { className: 'newtag', textContent: 'NEW' });
+const bundleOpen = new Set();   // bundles opened in the Win Effect tab (stay open while you click around)
+function drawThemeButton() {
+  document.getElementById('themeBtn')?.remove();
+  document.getElementById('themes')?.remove();
+  const own = ownedThemes();
+  if (own.length < 2 && !ownedEffects().length && !ownedSkins().some((x) => HECATE[x].achv)) return;
+  const btn = document.createElement('button');
+  btn.id = 'themeBtn';
+  btn.className = 'panel';
+  btn.innerHTML = '<img src="images/home.png" alt="">';
+  btn.title = 'Customize';
+  btn.setAttribute('aria-label', 'Customize');
+  const win = document.createElement('div');
+  win.id = 'themes';
+  win.hidden = true;
+  win.innerHTML = '<div class="panel"><h2>Customize</h2><p class="themetabs"><button data-tab="bg">Background</button>' +
+    '<button data-tab="win">Win Effect</button><button data-tab="fx">Custom Effects</button></p><p class="themehelp"></p>' +
+    '<div id="themeList"></div><p class="closebar"><button id="themesClose">Close</button></p></div>';
+  const list = win.querySelector('#themeList'), help = win.querySelector('.themehelp');
+  const card = (into, img, label, on, click, isNew) => {
+    const c = document.createElement('button');
+    c.className = 'themecard' + (on ? ' on' : '');
+    const pic = document.createElement('span');
+    pic.className = 'themepic' + (img ? '' : ' default');
+    if (img) pic.style.backgroundImage = `url("${img}")`;
+    const name = document.createElement('span');
+    name.className = 'themename';
+    name.textContent = label;
+    c.append(pic, name);
+    if (isNew) c.appendChild(newTag());
+    if (click) c.addEventListener('click', click);
+    into.appendChild(c);
+    return c;
+  };
+  const tags = () => {   // NEW on the button and on the tabs with something new
+    btn.querySelector('.newtag')?.remove();
+    if (customFresh.size) btn.appendChild(newTag());
+    for (const b of win.querySelectorAll('.themetabs button')) {
+      b.querySelector('.newtag')?.remove();
+      if ([...customFresh].some((id) => customTabOf(id) === b.dataset.tab)) b.appendChild(newTag());
+    }
+  };
+  // An on / off card (win effects, Limbo's effects, Halloween Night): green border, ✓ and green name when on, red ✕ and
+  // red name when off (a shape too, not only a colour).
+  const onOff = (c, on) => {
+    c.classList.add('fxcard');
+    c.classList.toggle('on', on);
+    const name = c.querySelector('.themename');
+    name.classList.add(on ? 'fxon' : 'fxoff');
+    name.prepend(Object.assign(document.createElement('b'), { className: 'fxmark', textContent: on ? '✓' : '✕', ariaLabel: on ? 'On' : 'Off' }));
+    return c;
+  };
+  // A short message over the window (what a click just did, or why it can't), fading in then out after 2 s.
+  let toastTimer;
+  const toast = (text, kind = '') => {
+    win.querySelector('.fxtoast')?.remove();
+    const el = Object.assign(document.createElement('div'), { className: 'fxtoast ' + kind, textContent: text });
+    el.setAttribute('role', 'status');
+    win.querySelector('.panel').appendChild(el);
+    requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('show')));
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { el.classList.remove('show'); setTimeout(() => el.remove(), 300); }, 2000);
+  };
+  let fill = () => {
+    list.innerHTML = '';
+    for (const b of win.querySelectorAll('.themetabs button')) b.classList.toggle('on', b.dataset.tab === customTab);
+    tags();
+    if (limboAllOn() && customTab !== 'fx') {   // Limbo mode overrides the other tabs
+      list.appendChild(Object.assign(document.createElement('div'), { className: 'fxvoid',
+        innerHTML: 'Special Effects are turned on:<br><b>Limbo\'s Subconscious Toggle</b><br>All other customization are voided.' }));
+    }
+    if (customTab === 'win') {
+      help.textContent = 'Plays when you win in 1 guess. Tick one or more: each win plays a random one of them.';
+      if (limboAllOn()) help.textContent = 'Limbo mode is on, so a win in 1 plays Limbo Transition. Ticking one turns Limbo mode off.';
+      const all = limboAllOn();   // Limbo mode: none of these shows as on (its own transition plays instead)
+      const picked = pickedSkins();
+      const toggle = (id) => {
+        const on = !all && picked.includes(id);   // as the card shows it (Limbo mode: all off; a click turns that one on, and Limbo mode off)
+        if (on && picked.length === 1) return toast('Keep at least one win effect on.', 'no');
+        setPickedSkins(on ? picked.filter((x) => x !== id) : [...new Set([...picked, id])]);
+        if (limboAllOn()) { limboAllOff(); drawCustomFx(); }
+        fill();
+        toast(`${HECATE[id].name}: ${on ? 'Off' : 'On'}`, on ? 'no' : 'yes');
+      };
+      const skinCard = (into, id) => onOff(card(into, `images/fx/hecate/${id}.webp${HECATE[id].achv ? '?v=7' : ''}`, HECATE[id].name, false, () => toggle(id), customFresh.has(id)), !all && picked.includes(id));
+      for (const id of ownedSkins().filter((x) => !HECATE[x].pack || HECATE[x].solo)) skinCard(list, id);
+      for (const pack of ownedEffects().filter((x) => Object.values(HECATE).some((h) => h.pack === x && !h.solo))) {
+        const ids = ownedSkins().filter((x) => HECATE[x].pack === pack && !HECATE[x].solo);
+        const n = all ? 0 : ids.filter((x) => picked.includes(x)).length;
+        const box = document.createElement('details');
+        box.className = 'fxbundle';
+        box.open = bundleOpen.has(pack);
+        box.addEventListener('toggle', () => { if (box.open) bundleOpen.add(pack); else bundleOpen.delete(pack); });
+        const sum = document.createElement('summary');
+        sum.className = 'themecard' + (n ? ' on' : '');
+        const pic = Object.assign(document.createElement('span'), { className: 'themepic' });
+        pic.style.backgroundImage = `url("${SHOP[pack].img}")`;
+        const name = Object.assign(document.createElement('span'), { className: 'themename' });
+        name.append(SHOP[pack].name, Object.assign(document.createElement('small'), { textContent: `${n} of ${ids.length} on` }));
+        sum.append(pic, name);
+        if (customFresh.has(pack)) sum.appendChild(newTag());
+        const inner = Object.assign(document.createElement('div'), { className: 'fxbundlelist' });
+        for (const id of ids) skinCard(inner, id);
+        box.append(sum, inner);
+        list.appendChild(box);
+      }
+    } else if (customTab === 'fx') {
+      help.textContent = 'Effects on every page. Toggle effects replaces your customization.';
+      const all = limboAllOn();   // Limbo mode: every card shows off (only its switch is on); a click turns that one on, and Limbo mode off
+      const cur = all ? null : customFx();
+      // Click one to use it; click the one in use to turn it off again.
+      const fxCard = (into, id) => onOff(card(into, CUSTOM_FX[id].img, CUSTOM_FX[id].name, false, () => {
+        const off = id === cur;
+        setCustomFx(off ? 'none' : id);
+        fill();
+        toast(`${CUSTOM_FX[id].name}: ${off ? 'Off' : 'On'}`, off ? 'no' : 'yes');
+      }), id === cur);
+      // First: one click turns every effect off (Limbo's set, its wrong guess effect and life count, Halloween Night).
+      card(list, CUSTOM_FX.none.img, 'Remove all effects', false, async () => {
+        if (!await acctAsk('Are you sure you want to remove all effects?', '', ['Yes', 'yes'], ['No', 'no'])) return;   // (account.js's small question window)
+        setCustomFx('none');
+        if (ownedEffects().includes('limboSub')) { setLimboGuess(false); setLimboHud(false); }
+        if (hwFxOwned()) setHwFx(false);
+        fill();
+        toast(holidayToday() === 'halloween' && hwFxOwned() ? 'All effects removed (except the holiday\'s, until it\'s over)' : 'All effects removed');
+      });
+      for (const id of ownedCustomFx().filter((x) => !CUSTOM_FX[x].pack && x !== 'none')) fxCard(list, id);
+      if (hwFxOwned()) {   // Halloween's bats, ghosts and fog: on / off, on top of anything else (its name green when on, red when off)
+        // On Halloween itself they're on for everyone (like its background), so the switch waits until it's over.
+        const holiday = holidayToday() === 'halloween', on = !limboAllOn() && (holiday || hwFxOn());   // (off in Limbo mode)
+        // On / off: green ✓ or red ✕ before its name (a shape too, not only a colour), and a message when it's switched.
+        onOff(card(list, 'images/fx/halloween-fx.webp', 'Halloween Night (bats, ghosts, fog)', false, () => {
+          if (holiday) return toast('You cannot change effects on special occasional days.', 'no');
+          setHwFx(!on);
+          fill();
+          toast(`Halloween Night: ${on ? 'Off' : 'On'}`, on ? 'no' : 'yes');
+        }, customFresh.has('halloween')), on).classList.toggle('locked', holiday);
+      }
+      // a bought set: one box (like the Win Effect bundles) with its effects, and Limbo's light / dark swap switch
+      for (const pack of CUSTOM_FX_PACKS.filter((x) => ownedEffects().includes(x))) {
+        const ids = ownedCustomFx().filter((x) => CUSTOM_FX[x].pack === pack);
+        const using = ids.find((x) => x === cur);
+        const box = document.createElement('details');
+        box.className = 'fxbundle';
+        box.open = bundleOpen.has(pack);
+        box.addEventListener('toggle', () => { if (box.open) bundleOpen.add(pack); else bundleOpen.delete(pack); });
+        const sum = document.createElement('summary');
+        sum.className = 'themecard' + ((pack === 'limboSub' ? limboAnyOn() : using) ? ' on' : '');
+        const pic = Object.assign(document.createElement('span'), { className: 'themepic' });
+        pic.style.backgroundImage = `url("${SHOP[pack].img}")`;
+        const name = Object.assign(document.createElement('span'), { className: 'themename' });
+        name.append(SHOP[pack].name, Object.assign(document.createElement('small'), {
+          // Limbo's set: how many of its 3 parts are on (a border, the wrong guess effect, the life count); blank with the Special toggle on
+          textContent: pack !== 'limboSub' ? (using ? 'On' : 'Off') : limboAllOn() ? ''
+            : `${[using, limboGuessOn(), hudOwnOn()].filter(Boolean).length} of 3 on` }));
+        sum.append(pic, name);
+        if (pack === 'limboSub' && limboAllOn()) {   // Special toggle on: a slow spinning Limbo-coloured ring + glow around the box (style.css)
+          sum.classList.add('special');
+          const label = name.firstChild;   // the name, glitching (style.css draws the split colour copies from data-text)
+          const g = Object.assign(document.createElement('span'), { className: 'gtext', textContent: label.textContent });
+          g.dataset.text = label.textContent;
+          label.replaceWith(g);
+          sum.insertAdjacentHTML('afterbegin', '<span class="spglow"><i></i></span><span class="spring"><i></i></span>');
+        }
+        if (pack === 'limboSub') {   // one switch for everything in Limbo's set, on the box itself (no need to open it)
+          const row = Object.assign(document.createElement('label'), { className: 'fxswitch onbox', title: 'Enable all Limbo effects, including hidden ones' });
+          row.innerHTML = '<input type="checkbox"><span class="knob"></span><span class="gtext" data-text="Special toggle">Special toggle</span>';
+          row.querySelector('input').checked = limboAllOn();
+          row.addEventListener('click', (e) => {   // (not the box's open / close)
+            e.preventDefault();
+            e.stopPropagation();
+            setLimboAll(!limboAllOn());
+            fill();
+          });
+          sum.appendChild(row);
+        }
+        if (customFresh.has(pack)) sum.appendChild(newTag());
+        const inner = Object.assign(document.createElement('div'), { className: 'fxbundlelist' });
+        for (const id of ids) fxCard(inner, id);
+        if (pack === 'limboSub') {   // the wrong guess effect: on / off, works with any border
+          const on = !all && limboGuessOn();
+          onOff(card(inner, 'images/fx/limbo-guess.webp', 'Limbo Wrong Guess Effect', false, () => {
+            setLimboGuess(!on); fill(); toast(`Limbo Wrong Guess Effect: ${on ? 'Off' : 'On'}`, on ? 'no' : 'yes');
+          }), on);
+          const hud = !all && hudOwnOn();   // the Erosion life count (and in Limbo mode, the map change timer)
+          onOff(card(inner, 'images/fx/limbo-hud.webp?v=2', 'Limbo Life Count / Timer', false, () => {
+            setLimboHud(!hud); fill(); toast(`Limbo Life Count / Timer: ${hud ? 'Off' : 'On'}`, hud ? 'no' : 'yes');
+          }), hud);
+        }
+        box.append(sum, inner);
+        list.appendChild(box);
+      }
+      if (ownedCustomFx().length < 2) list.appendChild(Object.assign(document.createElement('p'), { className: 'themehelp', textContent: 'More effects are coming to the shop later!' }));
+    } else {
+      help.textContent = 'Your backgrounds. Pick one to use it on every page.';
+      const cur = applyTheme(true);
+      // A holiday's background is on all of its day (see HOLIDAYS), so picking one does nothing until it's over.
+      const locked = !!holidayToday() && !limboAllOn();
+      for (const t of own) {
+        const c = card(list, THEME_IMG[t], THEMES[t], t === cur && !limboAllOn(), () => {   // Limbo mode: none picked here
+          if (locked) return toast('You cannot change theme on special occasional days.', 'no');
+          lsSet(THEME_KEY, t);
+          if (limboAllOn()) { limboAllOff(); drawCustomFx(); }
+          else applyTheme(true);
+          fill();
+        }, customFresh.has(t));
+        c.classList.toggle('locked', locked);
+        if (THEME_BGM[t]) {   // its music: on / off (just this background's)
+          const muted = themeMuted(t);
+          const m = Object.assign(document.createElement('span'), { className: 'thememute' + (muted ? ' off' : ''), textContent: muted ? '🔇' : '🔊',
+            title: muted ? 'Music muted (click to unmute)' : 'Music on (click to mute)', tabIndex: 0 });
+          m.setAttribute('role', 'button');
+          m.setAttribute('aria-label', `${THEMES[t]} music: ${muted ? 'muted' : 'on'}`);
+          const flip = (e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            setThemeMuted(t, !muted);
+            fill();
+            toast(`${THEMES[t]} music: ${muted ? 'On' : 'Muted'}`, muted ? 'yes' : 'no');
+          };
+          m.addEventListener('click', flip);
+          m.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') flip(e); });
+          c.appendChild(m);
+        }
+      }
+    }
+  };
+  // Each tab: the default ones first (Default background, Sol Hecate, Remove all effects), then the rest A to Z (a bundle by its name).
+  const FIRST = ['Remove all effects', THEMES.default, HECATE.default.name];
+  const fillSorted = fill;
+  const labelOf = (el) => ([...(el.querySelector('.themename')?.childNodes || [])].find((n) => n.nodeType === 3)?.textContent || '').trim();   // its name (not the ✓ / ✕ or "1 of 5 on")
+  const rank = (el) => (el.classList.contains('fxvoid') ? -1 : FIRST.includes(labelOf(el)) ? FIRST.indexOf(labelOf(el)) : 9);
+  fill = () => {
+    fillSorted();
+    const kids = [...list.children];
+    kids.sort((a, b) => rank(a) - rank(b) || (rank(a) === 9 ? labelOf(a).localeCompare(labelOf(b)) : 0));
+    list.append(...kids);
+  };
+  for (const b of win.querySelectorAll('.themetabs button')) b.addEventListener('click', () => { customTab = b.dataset.tab; fill(); });
+  btn.addEventListener('click', () => {
+    win.hidden = false;
+    fill();
+  });
+  win.querySelector('#themesClose').addEventListener('click', () => { win.hidden = true; });
+  win.addEventListener('click', (e) => { if (e.target === win) win.hidden = true; });
+  addEventListener('keydown', (e) => { if (e.key === 'Escape') win.hidden = true; });
+  fill();
+  document.body.append(btn, win);
+}
+// Custom effects (Customize > Custom Effects): one at a time, on every page. Limbo's alert borders (from the shop's
+// "Limbo's Subconscious" set) come in with their entrance, then loop over the page's edges. With the swap switch on,
+// every 30-60 s a glitch swaps Limbo's light side (light background, white border) and dark side (dark background,
+// black border). Clips: video/limbo/border-<white|black>-<in|loop>.webm (.webp on Safari).
+const CUSTOM_FX = {
+  none: { name: 'No Effect', img: 'images/fx/hecate/none.webp' },
+  limboWhite: { name: 'Limbo Alert Border (White)', img: 'images/fx/limbo-border-white.webp', pack: 'limboSub', color: 'white' },
+  limboBlack: { name: 'Limbo Alert Border (Black)', img: 'images/fx/limbo-border-black.webp', pack: 'limboSub', color: 'black' },
+};
+const CUSTOM_FX_PACKS = ['limboSub'];
+const CUSTOM_FX_KEY = 'mapleWordle:customFx';
+const ownedCustomFx = () => Object.keys(CUSTOM_FX).filter((id) => !CUSTOM_FX[id].pack || ownedEffects().includes(CUSTOM_FX[id].pack));
+const customFx = () => {
+  if (limboAllOn()) return limboDarkSide ? 'limboBlack' : 'limboWhite';   // Limbo mode: the border of the side showing
+  const id = lsGet(CUSTOM_FX_KEY);
+  return ownedCustomFx().includes(id) ? id : 'none';
+};
+function setCustomFx(id) {
+  if (limboAllOn() && CUSTOM_FX[id]?.pack === 'limboSub') {   // Limbo mode: picking a border just flips to that side
+    if ((id === 'limboBlack') !== limboDarkSide) { limboDarkSide = !limboDarkSide; applyTheme(true); }
+    limboTransitions();   // (a transition on its way doesn't swap it back)
+  } else {
+    limboAllOff();
+    lsSet(CUSTOM_FX_KEY, id);
+  }
+  cfxPreview();
+  halloweenFx();
+}
+// The alert border (Limbo's set) is only on the page while a game is down to its last 2 guesses (Story Mode and Attack
+// Animation have no limit, so never), and for a moment when you pick one in Customize. It comes in with its entrance
+// and leaves with its exit. Win: it goes once the row has turned over. Lose: Limbo's fail screen in its colour plays,
+// and it goes under that.
+let cfxAlert = false, cfxHold = false, cfxPreviewing = false, cfxPreviewT = 0, failPending = false;
+const cfxShown = () => cfxAlert || cfxHold || cfxPreviewing;
+function cfxPreview() {
+  cfxPreviewing = true;
+  clearTimeout(cfxPreviewT);
+  drawCustomFx(true);
+  cfxPreviewT = setTimeout(() => { cfxPreviewing = false; drawCustomFx(); }, 3000);
+}
+function limboAlertCheck() {   // each game says how many guesses are left (window.gameLeft)
+  const g = window.gameLeft?.();
+  const was = cfxShown();
+  const want = !!g && !g.over && g.left <= 2;
+  if (want && !cfxAlert && performance.now() < flipEnd) {   // coming on: once the guess has turned over
+    clearTimeout(limboAlertCheck.t);
+    limboAlertCheck.t = setTimeout(limboAlertCheck, flipEnd - performance.now() + 50);
+    return;
+  }
+  cfxAlert = want;
+  if (cfxShown() !== was) drawCustomFx(cfxAlert);
+}
+function limboOver(won, delay = 0) {   // game over (called by the games, with when the result shows)
+  const fx = CUSTOM_FX[customFx()];
+  if (!fx.color || (won && !cfxShown())) return;   // a loss always gets the fail screen (guessing fast, the border may not be up yet)
+  cfxHold = true;
+  const release = (ms) => setTimeout(() => { cfxHold = false; drawCustomFx(); }, ms);
+  if (won) return release(delay);
+  failPending = true;
+  loseAfterFail = delay + LIMBO_FAIL_MS + 100;   // the game's own lose sound, called right after this, waits until the fail screen is over
+  setTimeout(() => { loseAfterFail = 0; });
+  setTimeout(() => {   // the fail screen in the colour showing now, over (and instead of) any transition on its way
+    failPending = false;
+    limboTransitionStop();
+    limboFail(CUSTOM_FX[customFx()].color ?? fx.color);
+  }, delay);
+  release(delay + 600);   // by then the fail screen covers everything
+}
+const cfxClips = {};
+const CFX_V = { 'fail-black': 5, 'fail-white': 4 };   // a clip that was replaced (so browsers fetch the new one)
+function cfxClip(name) {
+  cfxClips[name] ??= fetch(`video/limbo/${name}.${SAFARI ? 'webp' : 'webm'}${CFX_V[name] ? '?v=' + CFX_V[name] : ''}`).then((r) => (r.ok ? r.blob() : null)).catch(() => null);
+  return cfxClips[name];
+}
+let cfxGen = 0;
+async function drawCustomFx(entrance = false) {
+  const gen = ++cfxGen;
+  const fx = CUSTOM_FX[customFx()];
+  let layer = document.getElementById('cfx');
+  if (!fx.color || !cfxShown()) {   // not wanted now: its exit plays, then it's gone
+    if (!layer) return;
+    layer.removeAttribute('id');
+    layer.className = 'cfxout';
+    const out = await cfxClip(`border-${layer.dataset.color}-out`);
+    for (const old of layer.children) URL.revokeObjectURL(old.src);
+    layer.innerHTML = '';
+    if (!out) return layer.remove();
+    const el = layer.appendChild(gfxVideo(out, false));
+    setTimeout(() => { URL.revokeObjectURL(el.src); layer.remove(); }, 300);
+    return;
+  }
+  const [loopBlob, inBlob] = await Promise.all([cfxClip(`border-${fx.color}-loop`), entrance ? cfxClip(`border-${fx.color}-in`) : null]);
+  if (gen !== cfxGen || !loopBlob) return;
+  layer = document.getElementById('cfx');
+  if (!layer) { layer = Object.assign(document.createElement('div'), { id: 'cfx' }); document.body.appendChild(layer); }
+  layer.dataset.color = fx.color;
+  const make = gfxVideo;
+  for (const old of layer.children) URL.revokeObjectURL(old.src);
+  layer.innerHTML = '';
+  const loopEl = make(loopBlob, true);
+  layer.appendChild(loopEl);
+  if (inBlob) {   // the entrance first, then the loop
+    loopEl.hidden = true;
+    const inEl = make(inBlob, false);
+    layer.appendChild(inEl);
+    setTimeout(() => { if (gen === cfxGen) { loopEl.hidden = false; URL.revokeObjectURL(inEl.src); inEl.remove(); } }, 840);
+  }
+}
+let transTimer = 0, transGen = 0, transAt = 0;   // transAt: when the next one starts (Limbo's HUD counts down to it)
+function limboTransitions() {   // Limbo mode: a transition (and a swap of sides) every 30-60 s
+  clearTimeout(transTimer);
+  transGen++;
+  transAt = 0;
+  if (limboAllOn()) {   // whole seconds (30-60), so the first number shows for a full second
+    const wait = (30 + Math.floor(Math.random() * 31)) * 1000;
+    transAt = Date.now() + wait;
+    transTimer = setTimeout(limboTransition, wait);
+  }
+}
+function limboSwap(white = false) {   // the light and dark side (background + border) trade places, with a quick glitch
+  if (white) {   // the transition: like the game, the background goes white for a moment (under the burst) and the sides swap there
+    const w = document.body.appendChild(Object.assign(document.createElement('div'), { className: 'limbowhite' }));
+    limboDarkSide = !limboDarkSide;
+    applyTheme(0);
+    drawCustomFx(false);
+    setTimeout(() => w.classList.add('out'), 85);
+    setTimeout(() => w.remove(), 250);
+    return;
+  }
+  bgSwapClass(true);
+  setTimeout(() => {
+    limboDarkSide = !limboDarkSide;
+    applyTheme(0.15);
+    drawCustomFx(false);
+  }, 120);
+  setTimeout(() => bgSwapClass(false), 320);
+}
+// Limbo's transition (Limbo mode, between its sides): a dark pool spreads along the bottom of the screen, Limbo bursts
+// out of it in three places (left, middle, right), then a dome of light breaks and the sides swap under its flash.
+const TRANS_CLIPS = ['trans-pools', 'trans-sharks', 'trans-end'];   // two pools, two sharks out of them (each pair one clip, a half + its mirror, so they stay in step)
+const TRANS_PRE = 3150, TRANS_BURST = 420, TRANS_END = 2340;   // the pools churn for 3.15 s, then the sharks pop up on the sound's hit (small, then giant); the dome comes as they bite
+const TRANS_SWAP = 200;   // like the game: the dome, then as it bursts into lavender the background goes white and the sides swap
+let transBox = null;
+function limboTransitionStop() {   // losing: the fail screen takes over (Limbo mode's next transition 30-60 s later)
+  if (transBox) { for (const el of transBox.children) URL.revokeObjectURL(el.src); transBox.remove(); transBox = null; }
+  limboTransitions();
+}
+async function limboTransition() {
+  if (failPending) return limboTransitions();   // a lost game's fail screen is on its way: not now
+  const gen = transGen;
+  const blobs = await Promise.all(TRANS_CLIPS.map(cfxClip));
+  if (gen !== transGen || !limboAllOn()) return;
+  if (blobs.some((b) => !b)) { limboSwap(); return limboTransitions(); }   // the clips didn't load: just swap
+  const box = transBox = Object.assign(document.createElement('div'), { className: 'limbotrans' });
+  document.body.appendChild(box);
+  const play = (i) => box.appendChild(gfxVideo(blobs[i], false)).classList.add(TRANS_CLIPS[i].slice(6));
+  const gone = () => { for (const el of box.children) URL.revokeObjectURL(el.src); box.remove(); if (transBox === box) transBox = null; };
+  const wait = (ms) => new Promise((ok) => setTimeout(ok, ms));
+  play(0);
+  limboTransitionSound();   // the pools' rumble, then a hit as the sharks burst out (3.15 s)
+  await wait(TRANS_PRE);
+  if (gen !== transGen) return gone();   // Limbo mode turned off (or a side picked) meanwhile
+  play(1);
+  await wait(TRANS_BURST);
+  if (gen !== transGen) return gone();
+  play(2);
+  box.firstElementChild.classList.add('out');   // the pools stay at full strength under the sharks, then go with the burst
+  await wait(TRANS_SWAP);
+  if (gen !== transGen) return gone();
+  if (!failPending) {   // (a lost game's fail screen is coming: it plays on, no swap, and the fail screen takes over)
+    limboSwap(true);
+    transAt = Date.now();   // (WARNING! stays those 0.12 s)
+    setTimeout(limboTransitions, 120);   // the next one, from the moment the background flips
+  }
+  await wait(Math.max(TRANS_END, 2880 - TRANS_BURST));   // the bursts' own clips run 2.88 s
+  gone();
+}
+// The same transition on its own, for BGM Clip's Limbo mashup scene (paused there for 5 s): onSwap() at the moment the
+// sides swap; resolves when it's over. vol: its sound's volume (0-1).
+async function limboSharks(onSwap, vol) {
+  const blobs = await Promise.all(TRANS_CLIPS.map(cfxClip));
+  if (blobs.some((b) => !b)) return onSwap();   // the clips didn't load: just swap
+  const box = Object.assign(document.createElement('div'), { className: 'limbotrans' });
+  document.body.appendChild(box);
+  const play = (i) => box.appendChild(gfxVideo(blobs[i], false)).classList.add(TRANS_CLIPS[i].slice(6));
+  const wait = (ms) => new Promise((ok) => setTimeout(ok, ms));
+  play(0);
+  const snd = new Audio('sounds/limbo-transition.mp3');
+  snd.volume = vol;
+  snd.play().catch(() => {});
+  await wait(TRANS_PRE);
+  play(1);
+  await wait(TRANS_BURST);
+  play(2);
+  box.firstElementChild.classList.add('out');
+  await wait(TRANS_SWAP);
+  onSwap();
+  await wait(Math.max(TRANS_END, 2880 - TRANS_BURST));
+  for (const el of box.children) URL.revokeObjectURL(el.src);
+  box.remove();
+}
+// Limbo's wrong guess effect (in Limbo's set): a purple bar charges over the new guess row while it flips,
+// and a wrong guess gets swallowed by Limbo's dragon, which then stays on that row until the effect is turned off
+// (the guess text stays on top, tinted in its tile colour). Games that flip a row of clue tiles get the bar for
+// the whole flip; the others (nothing to wait for) get it for 0.5 s on wrong guesses.
+const GUESS_FX_KEY = 'mapleWordle:guessFx';
+const limboGuessOn = () => limboAllOn() || (ownedEffects().includes('limboSub') && lsGet(GUESS_FX_KEY) === '1');
+const GFX = { x: 399, y: 340, w: 2183, h: 445, W: 2793, H: 1157 };   // the bar's body inside the clips (source pixels)
+const GFX_RUSH = 720;
+const gfxLayers = new Set();   // { row, layer, host }: every bar / dragon showing
+function gfxClips() { cfxClip('guess-bar'); cfxClip('guess-eat'); cfxClip('guess-idle'); }
+function gfxVideo(blob, loop) {
+  const el = document.createElement(SAFARI ? 'img' : 'video');
+  el.disablePictureInPicture = true;   // no picture-in-picture button on hover
+  if (!SAFARI) Object.assign(el, { muted: true, playsInline: true, autoplay: true, loop });
+  el.src = URL.createObjectURL(blob);
+  el.play?.().catch(() => {});
+  return el;
+}
+function gfxDrop(g) {
+  gfxLayers.delete(g);
+  g.row.classList.remove('limboeaten');
+  delete g.row.dataset.gfx;
+  for (const el of g.layer.children) URL.revokeObjectURL(el.src);
+  g.layer.remove();
+}
+let gfxTracking = false;
+function gfxTrack() {   // keep every layer on its row (new guesses push rows down); read all, then write all
+  const pos = [...gfxLayers].map((g) => [g, g.row.isConnected && g.row.getBoundingClientRect(), g.host.getBoundingClientRect()]);
+  for (const [g, r, o] of pos) {
+    if (!r) { gfxDrop(g); continue; }   // the list was redrawn (another day picked)
+    const sx = r.width / GFX.w, sy = r.height / GFX.h;
+    Object.assign(g.layer.style, { left: r.left - o.left - GFX.x * sx + 'px', top: r.top - o.top - GFX.y * sy + 'px',
+      width: GFX.W * sx + 'px', height: GFX.H * sy + 'px' });
+  }
+  gfxTracking = gfxLayers.size > 0;
+  if (gfxTracking) requestAnimationFrame(gfxTrack);
+}
+function gfxLayer(row) {
+  const g = { row, host: row.closest('.game') ?? document.body, layer: Object.assign(document.createElement('div'), { className: 'limboguess' }) };
+  row.dataset.gfx = '1';
+  g.host.appendChild(g.layer);
+  gfxLayers.add(g);
+  if (!gfxTracking) gfxTrack();
+  return g;
+}
+async function limboDragon(row) {   // a wrong guess from before (page load): its dragon is just there
+  row.dataset.gfx = '1';
+  const blob = await cfxClip('guess-idle');
+  if (!blob || !gfxKeep(row, limboGuessOn())) return;
+  const g = gfxLayer(row);
+  g.layer.classList.add('still');
+  g.layer.appendChild(gfxVideo(blob, true)).classList.add('dragon');
+  row.classList.add('limboeaten');
+}
+async function limboGuess(row, wrong, flipMs, force = false) {   // force: show it even without the effect (Limbo's mashup)
+  if (!row || !(limboGuessOn() || force) || (flipMs == null && !wrong)) return;
+  row.dataset.gfx = '1';
+  const barMs = flipMs ?? 500;
+  const start = performance.now();
+  if (wrong) uiSound();   // its sound ready by the time the dragon comes
+  const [barBlob, eatBlob, idleBlob] = await Promise.all([cfxClip('guess-bar'), wrong && cfxClip('guess-eat'), wrong && cfxClip('guess-idle')]);
+  if (!barBlob || !row.isConnected) return;
+  const g = gfxLayer(row);
+  const bar = gfxVideo(barBlob, true);
+  g.layer.appendChild(bar);
+  const wait = (ms) => new Promise((ok) => setTimeout(ok, Math.max(0, ms)));
+  await wait(barMs - (performance.now() - start));
+  if (!gfxLayers.has(g)) return;
+  if (!wrong || !eatBlob || !idleBlob) {   // right: the bar fades out over 0.2 s
+    g.layer.classList.add('out');
+    await wait(200);
+    return gfxDrop(g);
+  }
+  const eat = gfxVideo(eatBlob, false);   // the dragon rushes in from the left and swallows the row...
+  uiSound('dragon');   // (its attack sound)
+  g.layer.appendChild(eat).classList.add('dragon');
+  setTimeout(() => { URL.revokeObjectURL(bar.src); bar.remove(); }, 60);
+  await wait(250);
+  row.classList.add('limboeaten');
+  await wait(GFX_RUSH - 250);
+  if (!gfxLayers.has(g)) return;
+  const idle = gfxVideo(idleBlob, true);   // ...and stays there
+  g.layer.appendChild(idle).classList.add('dragon');
+  setTimeout(() => { URL.revokeObjectURL(eat.src); eat.remove(); }, 60);
+}
+// Every wrong guess row (and wrong bonus answer) on the page gets its dragon (page load, or the effect turned on);
+// turned off, they all go (except on Limbo's mashup answer, which everyone sees).
+const gfxWrong = (row) => (row.matches('.gbar') ? !row.classList.contains('green') : !row.classList.contains('right'));   // (a guess row's first cell is its photo card: never coloured)
+const gfxResult = (el) => el.matches('#bonusResult, #titleResult');
+const gfxKeep = (el, on) => el.isConnected && (gfxResult(el) ? el.classList.contains('wrong') && (on || el.dataset.limbo === '1') : on);
+function limboDragons() {
+  const on = limboGuessOn();
+  for (const g of [...gfxLayers]) if (!gfxKeep(g.row, on)) gfxDrop(g);
+  const rows = on ? [...document.querySelectorAll('#rows > tr:not(.bestrow):not(.hintrow):not(.answer), #rows > .gbar')].filter(gfxWrong) : [];
+  const results = [...document.querySelectorAll('#bonusResult.wrong, #titleResult.wrong')].filter((el) => gfxKeep(el, on));
+  for (const el of [...rows, ...results]) if (!el.dataset.gfx) limboDragon(el);
+}
+// "Toggle all Limbo effects" (Limbo mode): Limbo's background + border (swapping light / dark side every 30-60 s)
+// and the wrong guess effect, with every other effect and background off. It goes on top of your own settings
+// without changing them, so turning it off brings back exactly what you had. Picking anything yourself ends it.
+const LIMBO_ALL_KEY = 'mapleWordle:limboAll';
+let limboDarkSide = false;
+const limboAllOn = () => ownedEffects().includes('limboSub') && lsGet(LIMBO_ALL_KEY) === '1';
+const limboAnyOn = () => limboAllOn() || (ownedEffects().includes('limboSub')
+  && (CUSTOM_FX[customFx()].pack === 'limboSub' || ['limbo', 'limboDark'].includes(lsGet(THEME_KEY)) || limboGuessOn()));
+function setLimboAll(on) {
+  if (on === limboAllOn()) return;
+  lsSet(LIMBO_ALL_KEY, on ? '1' : '0');
+  if (on) { limboDarkSide = false; gfxClips(); limboFailLoad(); }
+  hecate = null; loadHecate();   // the win effect waiting: Limbo's cutscene in Limbo mode
+  applyTheme(true);
+  if (on) cfxPreview(); else drawCustomFx();
+  halloweenFx();
+  limboTransitions();
+  limboDragons();
+}
+function limboAllOff() { if (limboAllOn()) { lsSet(LIMBO_ALL_KEY, '0'); applyTheme(true); drawCustomFx(); halloweenFx(); limboTransitions(); limboDragons(); hecate = null; loadHecate(); } }   // you picked something yourself
+// Losing with the alert border on plays Limbo's fail screen full screen, in the border's colour (white or black).
+const LIMBO_FAIL_MS = 2820;   // (the longer of the two clips)
+// The end sound comes in as the pre sound trails off (overlapping it a little), with the screen's end part (Limbo's mouth,
+// then its face): black 0.66 s, white 0.78 s. The glitch before it plays at its normal speed and the end part cuts in
+// halfway through it (the rest of the glitch was taken out of each clip).
+const FAIL_END_AT = { black: 660, white: 780 };
+const failSounds = (color) => (color === 'black' ? ['failBlackPre', 'failBlackEnd'] : ['failWhitePre', 'failWhiteEnd']);
+function limboFailLoad() { cfxClip('fail-white'); cfxClip('fail-black'); for (const c of ['white', 'black']) for (const k of failSounds(c)) soundFile(SOUNDS[k]).catch(() => {}); if (limboAllOn()) TRANS_CLIPS.forEach(cfxClip); }   // ready when needed
+async function limboFail(color, delay = 0) {
+  const start = performance.now();
+  const [blob] = await Promise.all([cfxClip(`fail-${color}`), new Promise((ok) => setTimeout(ok, delay))]);
+  if (!blob || performance.now() - start > delay + 3000) return;   // too late now (slow download)
+  const el = document.createElement(SAFARI ? 'img' : 'video');
+  el.disablePictureInPicture = true;   // no picture-in-picture button on hover
+  el.className = 'limboscreen';
+  const url = URL.createObjectURL(blob);
+  const done = () => { el.remove(); URL.revokeObjectURL(url); };
+  if (SAFARI) setTimeout(done, LIMBO_FAIL_MS + 50);
+  else { Object.assign(el, { muted: true, playsInline: true, autoplay: true }); el.addEventListener('ended', done); setTimeout(done, LIMBO_FAIL_MS + 1500); }
+  // Its sounds, in step with the screen (from when the video really starts)
+  const [pre, end] = failSounds(color);
+  const sound = () => { resultSound(false, 0, pre); resultSound(false, FAIL_END_AT[color], end); };
+  if (SAFARI) sound(); else el.addEventListener('playing', sound, { once: true });
+  el.src = url;
+  document.body.appendChild(el);
+  el.play?.().catch(done);
+}
+// Limbo's "Life Count / Timer" (Limbo's set: its own card in Customize, and on in Limbo mode; for everyone else only while
+// Limbo's mashup scene plays):
+// the in-game Erosion HUD. Erosion is your lives used: misses x 1000 / lives, to the nearest 5 (7 lives: 0145, 0285, ...),
+// 1000 when you lose, always 0000 with unlimited guesses. In Limbo mode a timer under it counts down to the next light /
+// dark transition (the last 5 s: WARNING!).
+const HUD_KEY = 'mapleWordle:limboHud';
+const hudOwnOn = () => ownedEffects().includes('limboSub') && (limboAllOn() || lsGet(HUD_KEY) === '1');   // Limbo mode: on too
+const hudWanted = () => hudOwnOn() || !!window.limboDayHud?.();
+function setLimboHud(on) { limboAllOff(); lsSet(HUD_KEY, on ? '1' : '0'); limboHud(); }
+const HUD = { w: 384, h: 217, num: [189, 117], timer: [199, 150] };   // a plate frame; where the digits go (art pixels)
+const hudArt = {};
+function hudLoad() {
+  for (const n of ['plate.webp', 'plate-warning.webp', 'digits-big.png', 'digits-small.png', 'timer-back.png'])
+    hudArt[n] ??= Object.assign(new Image(), { src: 'images/limbo-hud/' + n });
+  return Object.values(hudArt).every((im) => im.complete && im.naturalWidth);
+}
+const hudTime = (ms) => {   // HH:MM:SS (MM:SS under an hour)
+  const t = Math.max(0, Math.ceil(ms / 1000)), h = Math.floor(t / 3600), p = (n) => String(n).padStart(2, '0');
+  return (h ? p(h) + ':' : '') + p(Math.floor(t / 60) % 60) + ':' + p(t % 60);
+};
+// The timer as in the game: each ":" is the timerBack piece (its pink glow with the colon in the middle), the digits
+// (timerNumber, as they are: one draw each, so their faded top edge stays faded) on either side.
+// Into a canvas context at x (left) / y (top of the digits), scale k; returns the width.
+const TIMER_COLON = 14;   // room the colon takes between two digit groups (art pixels)
+// Each colon's glow (its colon (43-44, 20-26) on the slot). With two colons (HH:MM:SS) the glows overlap over the
+// minutes: they're merged keeping the brighter of the two at each pixel, not added up, so the minutes aren't pinker.
+const timerGlows = {};
+function timerGlow(text, k, back) {
+  const key = text.replace(/\d/g, '0') + '|' + k;
+  if (timerGlows[key]) return timerGlows[key];
+  const ox = Math.ceil(44 * k), oy = Math.ceil(15 * k);
+  const out = document.createElement('canvas');
+  Object.assign(out, { width: Math.ceil(hudDigits(null, text, 0, 0, k, true)) + 2 * ox, height: Math.ceil(47 * k), ox, oy });
+  const tmp = document.createElement('canvas');
+  Object.assign(tmp, { width: out.width, height: out.height });
+  const tc = tmp.getContext('2d', { willReadFrequently: true });
+  let acc = null, cx = 0;
+  for (const ch of text) {
+    if (ch === ':') {
+      tc.clearRect(0, 0, tmp.width, tmp.height);
+      tc.imageSmoothingEnabled = false;
+      tc.drawImage(back, ox + cx + (TIMER_COLON / 2 - 44) * k, oy + (8 - 23) * k, 87 * k, 47 * k);
+      const px = tc.getImageData(0, 0, tmp.width, tmp.height);
+      if (!acc) acc = px;
+      else for (let i = 0; i < acc.data.length; i++) acc.data[i] = Math.max(acc.data[i], px.data[i]);
+    }
+    cx += (ch === ':' ? TIMER_COLON : 13) * k;
+  }
+  if (acc) out.getContext('2d').putImageData(acc, 0, 0);
+  return (timerGlows[key] = out);
+}
+function hudDigits(ctx, text, x, y, k, measure = false) {
+  const w = [...text].reduce((n, ch) => n + (ch === ':' ? TIMER_COLON : 13), -1) * k;
+  if (measure) return w;
+  const d = hudArt['digits-small.png'], back = hudArt['timer-back.png'];
+  ctx.save();
+  ctx.imageSmoothingEnabled = false;
+  const glow = timerGlow(text, k, back);   // the glow pieces first (under the digits)
+  ctx.drawImage(glow, x - glow.ox, y - glow.oy);
+  let cx = x;
+  for (const ch of text) {
+    if (ch !== ':') ctx.drawImage(d, +ch * 12, 0, 12, 16, cx, y, 12 * k, 16 * k);
+    cx += (ch === ':' ? TIMER_COLON : 13) * k;
+  }
+  ctx.restore();
+  return w;
+}
+let hudTimer = 0, hudShown = 0, hudFrame = 0;
+function hudTarget() {
+  if (window.limboErosionMax?.()) return 9999;   // Limbo's Easter egg day: maxed out
+  const g = window.gameLife?.();
+  if (!g || !g.max) return 0;
+  return g.lost ? 1000 : Math.min(1000, Math.round((g.misses * 1000) / g.max / 5) * 5);
+}
+// Where: with just the Life Count card on, it takes the info strip's middle box (the "Next … in" timer, shown in Limbo's
+// digits) and replaces the "Guesses left" line. In Limbo mode the info strip stays as it is, and the HUD sits under it
+// (in place of the "Guesses left" line) with the map change timer.
+const hudCell = () => document.getElementById('timer')?.parentElement;
+const hudUnder = () => limboAllOn();
+let hudMode = null;
+const HUD_STATUS = /^(Guesses left|Guess \d+ of|Guesses: \d+ \(unlimited\)|Unlimited guesses)/;
+function hudStatus(on) {   // hide the game's own guesses-left line (its other messages still show)
+  const st = document.getElementById('status');
+  if (st) st.classList.toggle('hudhide', on && HUD_STATUS.test(st.textContent));
+}
+function limboHud() {
+  let box = document.getElementById('limbohud');
+  const cell = hudCell();
+  const off = () => {
+    clearInterval(hudTimer); hudTimer = 0;
+    document.getElementById('limbohudbox')?.remove(); box?.remove(); box = null;
+    cell?.classList.remove('limbohudcell'); hudStatus(false); hudMode = null;
+  };
+  if (!hudWanted() || !cell) return off();
+  if (hudTimer && hudMode === hudUnder()) return;
+  off();   // (first time, or Limbo mode switched: rebuilt in the other spot)
+  hudMode = hudUnder();
+  hudLoad();
+  box = Object.assign(document.createElement('canvas'), { id: 'limbohud', width: HUD.w * 2, height: HUD.h * 2 });
+  box.setAttribute('aria-hidden', 'true');
+  if (hudMode) {
+    const wrap = Object.assign(document.createElement('div'), { id: 'limbohudbox' });
+    wrap.appendChild(box);
+    cell.parentElement.after(wrap);   // under the info strip
+  } else {
+    cell.appendChild(box);
+    cell.classList.add('limbohudcell');
+  }
+  hudShown = hudTarget();
+  const ctx = box.getContext('2d');
+  const draw = () => {
+    if (!hudWanted() || hudMode !== hudUnder()) return limboHud();
+    hudStatus(true);
+    if (!hudLoad()) return;
+    hudFrame = (hudFrame + 1) % 12;
+    const target = hudTarget();   // the counter rolls up (or down) in steps of 5, over about a second
+    const gap = Math.abs(target - hudShown);   // (the last step lands right on it, e.g. 9999)
+    if (gap) hudShown += Math.sign(target - hudShown) * Math.min(gap, Math.max(5, Math.round(gap / 4 / 5) * 5));
+    const left = transAt - Date.now();   // the swap (at the bite) starts the next countdown, so WARNING! ends there
+    const timed = hudMode && !!transAt;   // Limbo mode: the map change timer under the count
+    const warn = timed && left <= 5000;
+    ctx.clearRect(0, 0, box.width, box.height);
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(hudArt[warn ? 'plate-warning.webp' : 'plate.webp'], hudFrame * HUD.w, 0, HUD.w, HUD.h, 0, 0, HUD.w * 2, HUD.h * 2);
+    String(hudShown).padStart(4, '0').split('').forEach((ch, i) =>
+      ctx.drawImage(hudArt['digits-big.png'], +ch * 17, 0, 17, 21, (HUD.num[0] + i * 18) * 2, HUD.num[1] * 2, 34, 42));
+    if (!warn) {   // the map change timer (Limbo mode), or in the middle box the time to the next puzzle
+      const text = hudMode ? hudTime(timed ? left : 0) : hudTime(86400000 - (Date.now() % 86400000));
+      const w = hudDigits(ctx, text, 0, 0, 2, true);
+      hudDigits(ctx, text, HUD.timer[0] * 2 - w / 2, HUD.timer[1] * 2, 2);
+    }
+  };
+  draw();
+  hudTimer = setInterval(draw, 120);   // the plate's frames are 0.12 s
+}
+function setLimboGuess(on) { limboAllOff(); lsSet(GUESS_FX_KEY, on ? '1' : '0'); if (on) gfxClips(); limboDragons(); }
+
+function unlockTheme(t) {
+  if (!(t in THEMES) || ownedThemes().includes(t)) return;
+  lsSet(THEMES_KEY, JSON.stringify(ownedThemes().filter((x) => x !== 'default').concat(t)));
+  markCustomNew(t);
+  drawThemeButton();
+}
+applyTheme();
+
+// ---- Mesos: finishing today's puzzle (not an Archive day) pays mesos, once per game per day. Kept in this browser.
+// Each table: mesos for winning in 1, 2, 3, ... guesses; the last number is for any more guesses than that, or a loss.
+const MESO_TABLE = {
+  story: [100, 20, 10, 5, 2, 1, 0], normal: [100, 50, 20, 10, 5, 2, 1], hard: [100, 50, 30, 20, 10, 5],
+  extreme: [100, 75, 50, 25, 10], bgmnormal: [50, 40, 30, 20, 10, 5, 2], bgm: [100, 80, 60, 40, 20, 10], class: [100, 50, 25, 10, 5], anim: [100, 40, 20, 10, 5],
+  sound: [100, 40, 20, 10, 5], map: [100, 80, 60, 40, 20, 10, 5],
+};
+// Tables used before Oct 21 (BGM Clip had only what's now Extreme, with lower pay).
+const MESO_TABLE_OLD = { bgm: [100, 50, 20, 10, 5] };
+const MESO_BONUS = { bgmnormal: 20, bgm: 20, sound: 20, map: 50 };   // bonus question right
+const MESO_SPECIAL = 100;                               // ...unless it's one of the hidden glitch days
+const MESO_NAMES = { shop: 'Shop', story: 'Boss Wordle - Story', normal: 'Boss Wordle - Normal', hard: 'Boss Wordle - Hard',
+  extreme: 'Boss Wordle - Extreme', bgmnormal: 'BGM Clip - Normal', bgm: 'BGM Clip - Extreme', sound: 'Boss - Sound Clip', class: 'Class - Wordle',
+  anim: 'Class - Attack Animation', map: 'Guess the Map', achv: 'Achievement' };
+const MESO_SOON = new Set(['sound', 'map']);
+const MESO_DAY = (y, m, d) => Date.UTC(y, m - 1, d) / 86400000;
+// BGM Clip launch week: everything it pays (bonus too) is x3, Oct 20 to Oct 26.
+const MESO_EVENTS = [{ mode: 'bgm', label: 'BGM Clip', from: MESO_DAY(2026, 10, 20), to: MESO_DAY(2026, 10, 26), times: 3 },
+  { mode: 'bgmnormal', label: 'BGM Clip', from: MESO_DAY(2026, 10, 20), to: MESO_DAY(2026, 10, 26), times: 3 }];
+// Weekends (Saturday and Sunday, UTC days: Friday 5pm to Sunday 5pm Pacific) pay 2x on that day's own puzzles, on top
+// of any game event; Archive days don't get it.
+const isWeekend = (day) => [0, 6].includes(new Date(day * 86400000).getUTCDay());
+const weekendNow = () => isWeekend(Math.floor(Date.now() / 86400000));
+// Halloween (Oct 31, UTC day): that day's own puzzles pay 5x, instead of the weekend / event multipliers (no stacking).
+const HALLOWEEN_TIMES = 5;
+const isHalloween = (day) => holidayToday(new Date(day * 86400000)) === 'halloween';
+const mesoTimes = (mode, day) => (isHalloween(day) && !isArchive(day) ? HALLOWEEN_TIMES
+  : (MESO_EVENTS.find((e) => e.mode === mode && day >= e.from && day <= e.to)?.times ?? 1) * (isWeekend(day) && !isArchive(day) ? 2 : 1));
+const MESO_LOG_KEY = 'mapleWordle:mesoLog';   // [{ key: "<mode>:<day>" or "<mode>+bonus:<day>", day, mode, what, amount }]
+function mesoLog() { try { return JSON.parse(lsGet(MESO_LOG_KEY) || '[]'); } catch { return []; } }
+const mesoTotal = () => mesoLog().reduce((s, e) => s + e.amount, 0);
+// Archive days (any day before today) pay 10%, rounded up.
+const isArchive = (day) => day < Math.floor(Date.now() / 86400000);
+// A game finished on its own day (not from the Archive): mapleWordle:live:<mode>:<day>. Only these count towards the
+// Hidden achievements (achv.js; bgm.js saveTracks), the ones there now and any added later. Set when the game's mesos
+// are worked out (earnGame, every game). Games from before this was kept: counted, unless the meso log says Archive.
+const LIVE_PREFIX = 'mapleWordle:live:';
+const playedLive = (mode, day) => lsGet(`${LIVE_PREFIX}${mode}:${day}`) === '1';
+(function liveSeed() {
+  if (lsGet('mapleWordle:liveSeeded') === '1') return;
+  const archived = new Set(mesoLog().filter((e) => / \(Archive 10%\)$/.test(e.what || '')).map((e) => e.key));
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const m = /^mapleWordle:result:([a-z]+):(\d+)$/.exec(localStorage.key(i));
+      if (m && /^(Won|Lost)/.test(localStorage.getItem(localStorage.key(i)) || '') && !archived.has(`${m[1]}:${m[2]}`)) lsSet(`${LIVE_PREFIX}${m[1]}:${m[2]}`, '1');
+    }
+  } catch {}
+  lsSet('mapleWordle:liveSeeded', '1');
+})();
+const mesoPay = (base, mode, day) => Math.ceil(base * mesoTimes(mode, day) * (isArchive(day) ? 0.1 : 1));
+function earnMeso(key, mode, day, what, base, final = false) {
+  const log = mesoLog();
+  if (log.some((e) => e.key === key)) return;
+  const amount = final ? base : mesoPay(base, mode, day);
+  if (isArchive(day)) what += ' (Archive 10%)';
+  if (amount > 0) {
+    log.push({ key, mode, day, what, amount, times: mesoTimes(mode, day) });
+    lsSet(MESO_LOG_KEY, JSON.stringify(log));
+  }
+  drawMeso(amount);
+}
+// Boss Wordle and BGM Clip (from Oct 21): only your best mode each day pays. A better result on another mode pays the
+// difference, so the day's total is always your best one. A game's bonus pays once a day, whichever mode it's in.
+const MESO_GROUPS = [['story', 'normal', 'hard', 'extreme'], ['bgmnormal', 'bgm']];
+const groupOf = (mode) => MESO_GROUPS.find((g) => g.includes(mode));
+const BEST_ONLY_FROM = MESO_DAY(2026, 10, 21);
+// A game calls this when today's puzzle is over, with its Archive result ("Won 3/6", "Won in 4", "Lost").
+function earnGame(mode, day, result) {
+  if (!isArchive(day) && !playedLive(mode, day)) lsSet(`${LIVE_PREFIX}${mode}:${day}`, '1');
+  const t = (day < BEST_ONLY_FROM && MESO_TABLE_OLD[mode]) || MESO_TABLE[mode];
+  if (!t) return;
+  const m = /^Won (?:in )?(\d+)/.exec(result);
+  const n = m ? +m[1] : Infinity;
+  let amount = mesoPay(t[Math.min(n, t.length) - 1], mode, day), what = m ? `Won in ${n}` : 'Lost';
+  const group = groupOf(mode);
+  if (group && day >= BEST_ONLY_FROM) {
+    const log = mesoLog();
+    if (log.some((e) => e.key === `${mode}:${day}`)) return;
+    const best = log.filter((e) => group.some((w) => e.key === `${w}:${day}`)).reduce((s, e) => s + e.amount, 0);
+    if (amount <= best) return;
+    if (best) { what += isArchive(day) ? ' (better than another mode)' : ' (better than earlier today)'; amount -= best; }
+  }
+  earnMeso(`${mode}:${day}`, mode, day, what, amount, true);
+}
+// kind 'bonus' (BGM Clip's Bonus 1 / mashup) or 'title' (Bonus 2, the track's title): each pays once a day.
+const MESO_TITLE = { bgmnormal: 70, bgm: 70 };
+function earnBonus(mode, day, special, kind = 'bonus') {
+  if (day >= BEST_ONLY_FROM && groupOf(mode)?.some((m) => mesoLog().some((e) => e.key === `${m}+${kind}:${day}`))) return;
+  const base = kind === 'title' ? MESO_TITLE[mode] ?? 0 : special ? MESO_SPECIAL : MESO_BONUS[mode] ?? 0;
+  earnMeso(`${mode}+${kind}:${day}`, mode, day, kind === 'title' ? 'Title' : 'Bonus', base);
+}
+const fmt = (n) => n.toLocaleString('en-US');
+// The meso count sits in the game box's top-right corner; clicking it opens a window like the Changelog.
+// The meso count sits in the game box's top-right corner with the Shop button under it; each opens a window like the
+// Changelog (Mesos: total, recent, how to earn / Shop: items you've found).
+function drawMeso(gained = 0) {
+  const game = document.querySelector('.game');
+  if (!game) return;
+  let btn = document.getElementById('mesoBtn');
+  if (!btn) {
+    const corner = Object.assign(document.createElement('div'), { id: 'mesoCorner' });
+    btn = document.createElement('button');
+    btn.id = 'mesoBtn';
+    btn.title = 'Your mesos';
+    btn.innerHTML = '<img src="images/fx/meso-gold.png" alt=""><span></span>';
+    btn.addEventListener('click', () => openMeso());
+    const shop = Object.assign(document.createElement('button'), { id: 'shopBtn', title: 'Shop', textContent: '🛍️ Shop' });
+    shop.addEventListener('click', openShop);
+    corner.append(btn, shop);
+    game.appendChild(corner);
+    shopNewTag();
+  }
+  btn.querySelector('span').textContent = fmt(mesoTotal());
+  if (isHalloween(Math.floor(Date.now() / 86400000)) && !btn.querySelector('.mesotag')) {
+    btn.appendChild(Object.assign(document.createElement('span'), { className: 'mesotag weekendtag', textContent: `🎃 ${HALLOWEEN_TIMES}x Halloween`, title: `Halloween: ${HALLOWEEN_TIMES}x mesos today!` }));
+  } else if (weekendNow() && !btn.querySelector('.mesotag')) {
+    btn.appendChild(Object.assign(document.createElement('span'), { className: 'mesotag weekendtag', textContent: '2x Weekend', title: 'Weekend: 2x mesos today!' }));
+  }
+  if (gained > 0) {
+    const plus = Object.assign(document.createElement('span'), { className: 'mesoplus', textContent: `+${fmt(gained)}` });
+    btn.appendChild(plus);
+    btn.classList.remove('bump'); void btn.offsetWidth; btn.classList.add('bump');
+    setTimeout(() => plus.remove(), 2200);
+  }
+}
+// A window like the Changelog: closes with its Close button, a click outside it, or Esc.
+function popup(id, title) {
+  let win = document.getElementById(id);
+  if (!win) {
+    win = document.createElement('div');
+    win.id = id;
+    win.className = 'popup';
+    win.innerHTML = `<div class="panel"><h2>${title}</h2><div class="popupbody"></div><p class="closebar"><button>Close</button></p></div>`;
+    win.querySelector('.closebar button').addEventListener('click', () => { win.hidden = true; });
+    win.addEventListener('click', (e) => { if (e.target === win) win.hidden = true; });
+    addEventListener('keydown', (e) => { if (e.key === 'Escape') win.hidden = true; });
+    document.body.appendChild(win);
+  }
+  win.hidden = false;
+  return win.querySelector('.popupbody');
+}
+const mesoDate = (d) => new Date(d * 86400000).toLocaleDateString(undefined, { timeZone: 'UTC', month: 'short', day: 'numeric' });
+const MESO_PER_PAGE = 10;
+// Page buttons: < 1 … 4 5 6 … 10 >  (first and last page always there, so no separate << / >>).
+// Always the same number of slots (« ‹ 7 slots › »), so the arrows never move: 1 2 3 4 5 … 24 / 1 … 8 9 10 … 24 /
+// 1 … 20 21 22 23 24. « and » jump 10 pages.
+function pager(cur, last) {
+  if (last <= 1) return '';
+  const lo = Math.min(Math.max(cur - 1, 3), last - 4), slots = last <= 7 ? Array.from({ length: last }, (_, i) => i + 1)
+    : cur <= 4 ? [1, 2, 3, 4, 5, 0, last] : cur >= last - 3 ? [1, 0, last - 4, last - 3, last - 2, last - 1, last] : [1, 0, lo, lo + 1, lo + 2, 0, last];
+  const arrow = (to, off, label, txt) => `<button data-page="${Math.min(Math.max(to, 1), last)}" ${off ? 'disabled' : ''} aria-label="${label}">${txt}</button>`;
+  return `<div class="pager" style="--n:${slots.length + 4}">` + arrow(cur - 10, cur === 1, 'Back 10 pages', '«') + arrow(cur - 1, cur === 1, 'Previous page', '‹') +
+    slots.map((n) => n ? `<button data-page="${n}" class="${n === cur ? 'on' : ''}">${n}</button>` : '<span class="gap">…</span>').join('') +
+    arrow(cur + 1, cur === last, 'Next page', '›') + arrow(cur + 10, cur === last, 'Forward 10 pages', '»') + '</div>';
+}
+function openMeso(page = 1) {
+  const body = popup('meso', 'Mesos');
+  const today = Math.floor(Date.now() / 86400000);
+  const all = mesoLog().slice().reverse();
+  const last = Math.max(1, Math.ceil(all.length / MESO_PER_PAGE));
+  page = Math.min(Math.max(1, page), last);
+  const recent = all.slice((page - 1) * MESO_PER_PAGE, page * MESO_PER_PAGE);
+  // Halloween: 5x today (in place of the weekend's 2x).
+  const weekend = isHalloween(today) ? `<p class="mesoevent">🎃 <b>Halloween</b>: today's puzzles pay <b>${HALLOWEEN_TIMES}x</b> mesos!</p>`
+    : weekendNow() ? '<p class="mesoevent">🍁 <b>Weekend</b>: today\'s puzzles pay <b>2x</b> mesos!</p>' : '';
+  const ev = weekend + MESO_EVENTS.filter((e, i, all) => today <= e.to && all.findIndex((x) => x.label === e.label) === i)
+    .map((e) => `<p class="mesoevent">🎉 <b>${e.label ?? MESO_NAMES[e.mode]}</b> pays <b>${e.times}x</b> mesos from ${mesoDate(e.from)} to ${mesoDate(e.to)}!</p>`).join('');
+  const rows = (mode) => {
+    const t = MESO_TABLE[mode];
+    const cells = t.map((v, i) => `<td>${i + 1}${i === t.length - 1 ? '+' : ''}</td>`).join('');
+    const vals = t.map((v) => `<td>${fmt(v)}</td>`).join('');
+    const bonus = (MESO_BONUS[mode] ? `<p class="mesobonus">Bonus right: +${MESO_BONUS[mode]}` : '') +
+      (MESO_TITLE[mode] ? `<br>Title right (Bonus 2): +${MESO_TITLE[mode]}` : '') + (MESO_BONUS[mode] ? '</p>' : '');
+    return `<h3>${MESO_NAMES[mode]}${MESO_SOON.has(mode) ? ' <small>(coming soon)</small>' : ''}</h3>` +
+      `<table class="mesotable"><tr><th>Guesses</th>${cells}</tr><tr><th>Mesos</th>${vals}</tr></table>${bonus}`;
+  };
+  body.innerHTML =
+    `<p class="mesototal"><img src="images/fx/meso-gold.png" alt=""> ${fmt(mesoTotal())}</p>` + ev +
+    '<p>Finish puzzles to earn mesos. The fewer guesses, the more you get! Archive days pay 10% (rounded up). Spend them in the 🛍️ Shop.</p>' +
+    (all.length ? '<h3>Recent</h3><ul class="mesorecent">' + recent.map(mesoRow).join('') + '</ul>' + pager(page, last) : '') +
+    '<h3 class="mesohow">How to earn</h3><p class="mesobonus">Boss Wordle and BGM Clip: only your best mode each day pays (do better on another mode and you get the difference), and the bonus pays once a day.</p>' +
+    Object.keys(MESO_TABLE).map(rows).join('');
+  // The list is as tall as its tallest page (some rows take 2 lines), so the arrows under it never move and can be spammed.
+  const ul = body.querySelector('.mesorecent');
+  if (ul && last > 1) {
+    const probe = ul.cloneNode(false);
+    probe.style.cssText = `position:absolute;visibility:hidden;width:${ul.offsetWidth}px`;
+    ul.parentNode.appendChild(probe);
+    let tall = 0;
+    for (let i = 0; i < all.length; i += MESO_PER_PAGE) { probe.innerHTML = all.slice(i, i + MESO_PER_PAGE).map(mesoRow).join(''); tall = Math.max(tall, probe.offsetHeight); }
+    probe.remove();
+    ul.style.minHeight = tall + 'px';
+  }
+  for (const b of body.querySelectorAll('[data-page]')) b.addEventListener('click', () => openMeso(+b.dataset.page));
+}
+const mesoRow = (e) => `<li><span>${mesoDate(e.day)} · ${MESO_NAMES[e.mode] ?? e.mode} · ${e.what}${(e.times ?? 1) > 1 ? ` (${e.times}x)` : ''}</span>` +
+  `<b>${e.amount < 0 ? '−' + fmt(-e.amount) : '+' + fmt(e.amount)}</b></li>`;
+
+// ---- Shop: most items only show up once you've found them (e.g. Lucid's Garden of Eternal Dream: hear it in BGM Clip on
+// its day and get the bonus right, not from the Archive); "always" ones are there from the start. Buying a background
+// adds it to your themes; buying an effect pack (effect: true) adds its win effects (see HECATE).
+const SHOP = {
+  ...HOLIDAYS,   // holiday specials: in the shop only on their day
+  helia: { name: 'Sol Hecate: Helia', kind: 'Guess in 1 win effect (Bundle of 5)', price: 2000, always: true, effect: true, added: Date.UTC(2026, 9, 24),
+           img: 'images/fx/hecate/helia-bundle.webp', zoom: 'images/fx/hecate/helia-bundle-big.webp' },
+  limboSub: { hidden: true, name: "Limbo's Subconscious", kind: 'Full Limbo set (Bundle of 7)', price: 10000, effect: true,
+              contents: ["Limbo's Subconscious Background (Light)", "Limbo's Subconscious Background (Dark)", 'Limbo Alert Border (White)', 'Limbo Alert Border (Black)',
+                'Limbo Wrong Guess Effect', 'Limbo Life Count / Timer', 'Limbo Transition (win effect)'], bonus: 'Special toggle',
+              themes: ['limbo', 'limboDark'], img: 'images/fx/limbo-bundle.webp?v=2', zoom: 'images/fx/limbo-bundle-big.webp?v=2' },
+  mimica: { name: 'Sol Hecate: Mimica', kind: 'Guess in 1 win effect (Bundle of 5)', price: 2000, always: true, effect: true, added: Date.UTC(2026, 9, 25),
+            img: 'images/fx/hecate/mimica-bundle.webp', zoom: 'images/fx/hecate/mimica-bundle-big.webp' },
+  limboP1: { hidden: true, name: 'Limbo Background', kind: 'Moving background + BGM', price: 1000, limboClock: true },   // also from the Archive (full price)
+  // Lucid's bonus right on its day: Garden of Eternal Dream (moving background + its music) and Lucid's animated sprite as
+  // your account's avatar (account.js ACCT_AVATARS: yours while you have this background)
+  lucid: { hidden: true, name: "Lucid's Eternal Dream", kind: 'Background + avatar (Bundle of 2)', price: 10000,
+           contents: ['Garden of Eternal Dream (moving background + BGM)', 'Lucid (animated avatar for your account)'], themes: ['lucid'],
+           img: 'images/fx/lucid-eternal-bundle.webp', zoom: 'images/fx/lucid-eternal-bundle-big.webp' },
+  // Lucid's day: a guess on the day itself finds Lucid Garden + Lucid Night together; finishing it (the Archive too) finds Lucid Background
+  lucidSet: { hidden: true, name: 'Lucid Garden & Lucid Night', kind: 'Backgrounds (Bundle of 2)', price: 2000, contents: ['Lucid Garden', 'Lucid Night'],
+              themes: ['lucidBloom', 'lucidNight'], img: 'images/fx/lucid-bundle.webp?v=2', zoom: 'images/fx/lucid-bundle-big.webp?v=2' },
+  lucidBg: { hidden: true, name: 'Lucid Background', kind: 'Background', price: 500 },
+};
+// Owned: an effect pack in your effects; a bundle of backgrounds when you have all of them; a background in your themes.
+const shopOwned = (t) => (SHOP[t]?.effect ? ownedEffects().includes(t)
+  : SHOP[t]?.themes ? SHOP[t].themes.every((x) => ownedThemes().includes(x)) : ownedThemes().includes(t));
+drawThemeButton();   // here, not with applyTheme above: the Customize window needs SHOP
+drawCustomFx();
+if (limboGuessOn()) gfxClips();   // ready for the first guess
+// Rows the game draws by itself (loading a day) get their dragons; a new guess's own effect marks its row first.
+const rowsList = document.getElementById('rows');
+if (rowsList) new MutationObserver(() => { if (limboGuessOn()) limboDragons(); limboAlertCheck(); }).observe(rowsList, { childList: true });
+if (limboAllOn() || CUSTOM_FX[customFx()].color) limboFailLoad();
+addEventListener('load', () => limboHud());   // (BGM Clip says if it's Limbo's day by then)
+setInterval(() => { if (!hudTimer && hudWanted()) limboHud(); }, 1000);   // e.g. Limbo's day picked in the Archive / bought now
+limboTransitions();
+const SHOP_KEY = 'mapleWordle:shop';   // items found so far
+function shopFound() {
+  let found = [];
+  try { found = JSON.parse(lsGet(SHOP_KEY) || '[]').filter((t) => t in SHOP && (!(t in HOLIDAYS) || window.mwDevHolidays)); } catch {}
+  const always = Object.keys(SHOP).filter((t) => SHOP[t].always && !found.includes(t));
+  return [...new Set([...(holidayToday() ? [holidayToday()] : []), ...always, ...found])];
+}
+// A bundle's "(Bundle of N)" in the shop: hover it (or tap it) for the list of what's inside, plus its bonus if it has one.
+const bundleList = (t) => SHOP[t].contents ?? Object.keys(HECATE).filter((id) => HECATE[id].pack === t).map((id) => HECATE[id].name);
+const bundleKind = (t) => SHOP[t].kind.replace(/Bundle of \d+/, (m) => (bundleList(t).length ? `<span class="bundletip" tabindex="0" data-tip="${t}">${m}</span>` : m));
+function bundleTip(el, show) {
+  document.getElementById('bundletipbox')?.remove();
+  if (!show) return;
+  const t = el.dataset.tip;
+  const box = Object.assign(document.createElement('div'), { id: 'bundletipbox' });
+  box.innerHTML = '<ol>' + bundleList(t).map((n) => `<li>${n}</li>`).join('') + '</ol>' +
+    (SHOP[t].bonus ? `<p><b>BONUS:</b> ${SHOP[t].bonus}</p>` : '');
+  document.body.appendChild(box);
+  const r = el.getBoundingClientRect(), w = box.offsetWidth, h = box.offsetHeight;
+  box.style.left = Math.max(8, Math.min(innerWidth - w - 8, r.left + r.width / 2 - w / 2)) + 'px';
+  box.style.top = (r.bottom + 6 + h > innerHeight ? r.top - h - 6 : r.bottom + 6) + 'px';
+  const watch = () => { if (!box.isConnected) return; if (!el.isConnected || !el.offsetParent) return box.remove(); requestAnimationFrame(watch); };
+  watch();   // (the shop closed under it)
+}
+function bundleTips(root) {
+  for (const el of root.querySelectorAll('.bundletip')) {
+    el.addEventListener('mouseenter', () => bundleTip(el, true));
+    el.addEventListener('mouseleave', () => bundleTip(el, false));
+    el.addEventListener('focus', () => bundleTip(el, true));
+    el.addEventListener('blur', () => bundleTip(el, false));
+    el.addEventListener('click', (e) => { e.stopPropagation(); bundleTip(el, !document.getElementById('bundletipbox')); });   // tap on phones
+  }
+}
+function shopUnlock(t, deal = true) {   // deal: found on its special day itself (not from the Archive): 90% off today
+  if (!(t in SHOP) || shopFound().includes(t)) return;
+  lsSet(SHOP_KEY, JSON.stringify([...shopFound(), t]));
+  if (deal) lsSet(SHOP_FOUND_DAY_KEY, JSON.stringify({ ...shopFoundDay(), [t]: Math.floor(Date.now() / 86400000) }));
+  shopNewTag();
+}
+// Limited hidden items: 90% off for the rest of the (UTC) day you find them, e.g. Limbo's set found with 5 hours of its
+// day left is 90% off for those 5 hours; a holiday's item is 90% off all of its day. Still locked: full price.
+const SHOP_FOUND_DAY_KEY = 'mapleWordle:shopFoundDay';   // { item: the UTC day it was found }
+const SHOP_DEAL = 0.1;
+function shopFoundDay() { try { return JSON.parse(lsGet(SHOP_FOUND_DAY_KEY) || '{}'); } catch { return {}; } }
+const shopDeal = (t) => !!SHOP[t]?.hidden && !shopOwned(t)
+  && (holidayToday() === t || shopFoundDay()[t] === Math.floor(Date.now() / 86400000));
+const shopPrice = (t) => (shopDeal(t) ? Math.ceil(SHOP[t].price * SHOP_DEAL) : SHOP[t].price);
+const shopDealLeft = () => {   // until the site's day ends (UTC midnight)
+  const m = Math.ceil((86400000 - (Date.now() % 86400000)) / 60000);
+  return m >= 60 ? `${Math.floor(m / 60)}h ${m % 60}m left` : `${m}m left`;
+};
+const priceHtml = (t) => `<span class="price${shopDeal(t) ? ' deal' : ''}"><img src="images/fx/meso-gold.png" alt=""> ` +
+  (shopDeal(t) ? `<s>${fmt(SHOP[t].price)}</s> ` : '') + `<span>${fmt(shopPrice(t))}</span></span>`;
+// NEW on the Shop button while it has something you haven't seen yet (not owned). An item put in the shop for everyone
+// ("added": its UTC day) is only NEW for 3 days after that; one you found yourself is NEW until you've seen it. Opening
+// the shop sees them all, and they keep a NEW tag in the shop until the page reloads.
+const SHOP_NEW_DAYS = 3;
+const SHOP_SEEN_KEY = 'mapleWordle:shopSeen';
+const shopSeen = () => { try { return JSON.parse(lsGet(SHOP_SEEN_KEY) || '[]'); } catch { return []; } };
+const shopRecent = (t) => !SHOP[t].added || Date.now() < SHOP[t].added + SHOP_NEW_DAYS * 86400000;
+const shopNew = () => shopFound().filter((t) => shopRecent(t) && !shopSeen().includes(t) && !shopOwned(t));
+const shopFresh = new Set();
+function shopNewTag() {
+  const b = document.getElementById('shopBtn');
+  if (!b) return;
+  b.querySelector('.newtag')?.remove();
+  const fresh = shopNew();
+  if (fresh.length) b.appendChild(newTag());
+  // Something you found yourself (a hidden item) and haven't looked at yet: the Shop button glows until you open it.
+  b.classList.toggle('shopcall', fresh.some((t) => SHOP[t].hidden));
+}
+function openShop() {
+  const body = popup('shop', 'Shop');
+  const found = shopFound(), have = mesoTotal();
+  for (const t of shopNew()) shopFresh.add(t);
+  lsSet(SHOP_SEEN_KEY, JSON.stringify([...new Set([...shopSeen(), ...found])]));
+  shopNewTag();
+  for (const el of document.querySelectorAll('.shopnote')) el.hidden = true;   // "unlocked in the shop": seen it now
+  // A "hidden" item not found yet: a locked card with just its price (no picture or name), so people can save up for it.
+  // In order, each alphabetical: what you can buy, then the hidden ones, then everything you own (a holiday item you
+  // bought shows here after its day too).
+  const byName = (a, b) => SHOP[a].name.localeCompare(SHOP[b].name);
+  const buyable = found.filter((t) => !shopOwned(t)).sort(byName);
+  const mine = Object.keys(SHOP).filter((t) => shopOwned(t)).sort(byName);
+  const locked = Object.keys(SHOP).filter((t) => SHOP[t].hidden && !found.includes(t) && !shopOwned(t)).sort((a, b) => SHOP[b].price - SHOP[a].price || byName(a, b)).map((t) =>
+    `<div class="shopitem lockeditem"><span class="themepic hiddenpic">?</span>` +
+    `<span class="shopinfo"><b>Hidden</b><small>???</small>` +
+    `<span class="price"><img src="images/fx/meso-gold.png" alt=""> <span>${fmt(SHOP[t].price)}</span></span></span><span class="locked">🔒 Locked</span></div>`).join('');
+  body.innerHTML = `<p class="mesototal"><img src="images/fx/meso-gold.png" alt=""> ${fmt(have)}</p>` +
+    (buyable.length || locked || mine.length ? '<div class="shoplist">' + buyable.map(card).join('') + locked + mine.map(card).join('') + '</div>' : '<p class="shopempty">Nothing here yet... 👀</p>') +
+    '<p class="mesoshop">More cosmetics are coming to the shop later, so save up your mesos!</p>';
+  function card(t) {
+      const it = SHOP[t], owned = shopOwned(t);
+      // Not enough mesos: a greyed-out Buy; clicking it fades the price out to "Missing <how many more>" (red, 2 s), then back.
+      const btn = owned ? '<span class="owned">Owned ✓</span>'
+        : `<button data-buy="${t}"${have < shopPrice(t) ? ' class="poor" title="Not enough mesos"' : ''}>Buy</button>`;
+      return `<div class="shopitem">${shopFresh.has(t) && !owned ? '<span class="newtag">NEW</span>' : ''}<span class="themepic zoomable" data-zoom="${t}" title="Click to zoom in" style="background-image:url('${it.img ?? THEME_IMG[t]}')"></span>` +
+        `<span class="shopinfo"><b>${it.name}</b><small>${bundleKind(t)}</small>${priceHtml(t)}` +
+        `${!shopDeal(t) ? '' : t === 'limboSub' || SHOP[t].limboClock ? '<span class="dealtag limbodeal">90% OFF <canvas class="limboclock"></canvas></span>'
+          : `<span class="dealtag">90% OFF · ${shopDealLeft()}</span>`}</span>${btn}</div>`;
+  }
+  uiSound();   // opened by a click: get the hover sound ready
+  for (const b of body.querySelectorAll('[data-buy]')) { b.addEventListener('click', () => buy(b.dataset.buy, b)); hoverSound(b); }
+  for (const pic of body.querySelectorAll('[data-zoom]')) pic.addEventListener('click', () => zoomItem(pic.dataset.zoom));
+  bundleTips(body);
+  const clocks = [...body.querySelectorAll('.limboclock')];   // Limbo's sales: their time left in Limbo's glowing digits, ticking
+  if (clocks.length) {
+    const tick = () => {
+      if (!clocks[0].isConnected) return clearInterval(timer);
+      if (!hudLoad()) return;
+      const text = hudTime(86400000 - (Date.now() % 86400000)), k = 1;
+      const w = Math.ceil(hudDigits(null, text, 0, 0, k, true)) + 60;   // room for the colons' glow
+      for (const clock of clocks) {
+        if (clock.width !== w) Object.assign(clock, { width: w, height: 47 * k });
+        const ctx = clock.getContext('2d');
+        ctx.clearRect(0, 0, clock.width, clock.height);
+        hudDigits(ctx, text, 30, 15 * k, k);
+      }
+    };
+    const timer = setInterval(tick, 250);
+    tick();
+  }
+}
+// A shop item's picture, big (its "zoom" picture if it has a sharper one), with its name. Click anywhere or Esc closes it
+// (only this, the shop stays open).
+function zoomItem(t) {
+  const it = SHOP[t];
+  const win = document.createElement('div');
+  win.className = 'zoomview';
+  win.innerHTML = `<img src="${it.zoom ?? it.img ?? THEME_IMG[t]}" alt=""><b>${it.name}</b>`;
+  const close = () => { win.remove(); removeEventListener('keydown', esc, true); };
+  const esc = (e) => { if (e.key === 'Escape') { e.stopImmediatePropagation(); close(); } };
+  win.addEventListener('click', close);
+  addEventListener('keydown', esc, true);
+  document.body.appendChild(win);
+}
+function tooPoor(btn, t) {
+  const price = btn.closest('.shopitem').querySelector('.price');
+  const num = price.querySelector('span');
+  if (price.classList.contains('short')) return;
+  const was = price.querySelector('s');   // a deal's crossed-out price: hidden while it says Missing
+  const swap = (text, short) => {
+    price.classList.add('swap');
+    setTimeout(() => { num.textContent = text; if (was) was.hidden = short; price.classList.toggle('short', short); price.classList.remove('swap'); }, 150);
+  };
+  swap(`Missing ${fmt(shopPrice(t) - mesoTotal())}`, true);
+  setTimeout(() => swap(fmt(shopPrice(t)), false), 2150);
+}
+// A small window over the shop about one item: its picture and name (and price), then two buttons. Resolves true for
+// the first button; the second, Esc or a click outside resolve false (and only close this, the shop stays open).
+function itemPopup(t, title, withPrice, [okText, okClass], [noText, noClass]) {
+  const it = typeof t === 'object' ? t : SHOP[t];   // or { name, img }: an achievement's reward (achv.js)
+  return new Promise((done) => {
+    const win = document.createElement('div');
+    win.className = 'popup buyask';
+    win.innerHTML = `<div class="panel"><h2>${title}</h2>` +
+      `<span class="themepic zoomable" title="Click to zoom in" style="background-image:url('${it.img ?? THEME_IMG[t]}')"></span><b class="buyname">${it.name}</b>` +
+      (withPrice ? priceHtml(t) : '') +
+      `<p class="buybtns"><button class="${okClass}">${okText}</button><button class="${noClass}">${noText}</button></p></div>`;
+    const [ok, no] = win.querySelectorAll('.buybtns button');
+    if (typeof t !== 'object') win.querySelector('.themepic').addEventListener('click', () => zoomItem(t));   // like the shop's pictures
+    else win.querySelector('.themepic').classList.remove('zoomable');
+    const close = (yes) => { win.remove(); removeEventListener('keydown', esc, true); done(yes); };
+    const esc = (e) => { if (e.key === 'Escape' && !document.querySelector('.zoomview')) { e.stopImmediatePropagation(); close(false); } };
+    ok.addEventListener('click', () => close(true));
+    no.addEventListener('click', () => close(false));
+    hoverSound(ok);
+    hoverSound(no);
+    win.addEventListener('click', (e) => { if (e.target === win) close(false); });
+    addEventListener('keydown', esc, true);
+    document.body.appendChild(win);
+    ok.focus();
+  });
+}
+// "Are you sure?" before buying: a green Yes and a red No.
+const askBuy = (t) => itemPopup(t, 'Are you sure you want to purchase?', true, ['Yes', 'yes'], ['No', 'no']);
+async function buy(t, btn) {
+  const it = SHOP[t];
+  if (!it || shopOwned(t)) return;
+  const price = shopPrice(t);
+  if (mesoTotal() < price) return btn && tooPoor(btn, t);
+  if (!await askBuy(t) || shopOwned(t) || mesoTotal() < price) return;
+  const log = mesoLog();
+  log.push({ key: `shop:${t}`, mode: 'shop', day: Math.floor(Date.now() / 86400000), what: `Bought ${it.name}${price < it.price ? ' (90% off)' : ''}`, amount: -price });
+  lsSet(MESO_LOG_KEY, JSON.stringify(log));
+  // Bought: it's yours in Customize, nothing is put on (you pick what to use there)
+  if (it.effect) {
+    lsSet(EFFECTS_KEY, JSON.stringify([...ownedEffects(), t]));
+    if (it.themes) lsSet(THEMES_KEY, JSON.stringify([...new Set([...ownedThemes().filter((x) => x !== 'default'), ...it.themes])]));
+  } else {
+    lsSet(THEMES_KEY, JSON.stringify([...new Set([...ownedThemes().filter((x) => x !== 'default'), ...(it.themes ?? [t])])]));
+  }
+  resultSound(true, 0, 'purchase');
+  markCustomNew(t);
+  if (!it.effect) it.themes?.forEach(markCustomNew);   // a bundle of backgrounds: each one NEW in Customize
+  drawThemeButton();
+  if (typeof acctAvatarCall === 'function') acctAvatarCall();   // it came with an avatar: the cog glows NEW (account.js)
+  applyTheme(true);
+  drawMeso();
+  openShop();
+  // Bought: Customize closes the shop and opens the Customize window on the item's tab
+  if (await itemPopup(t, 'Successfully Purchased!', false, ['Customize', 'yes'], ['Close', 'plain'])) {
+    document.getElementById('shop').hidden = true;
+    document.getElementById('themeBtn')?.click();
+  }
+}
+
+// BGM Clip's moving Easter egg backgrounds (a track with "egg" in data/bgm.json): fades in over the page while that
+// track plays after the game, and stays for the day. eggScene(null) takes it away.
+function eggScene(t) {
+  const cur = document.querySelector('.eggscene');
+  if (cur && cur.dataset.egg === t) return;
+  cur?.remove();
+  if (!t || !THEME_VIDEO[t]) return;
+  const el = document.createElement('div');
+  el.className = 'eggscene';
+  el.dataset.egg = t;
+  el.style.backgroundImage = `url("${THEME_IMG[t]}")`;
+  el.appendChild(bgVideo(t));
+  document.body.prepend(el);
+  requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('on')));
+}
+// Under the result message: a spinning gold meso and how many mesos today's game paid (with its bonus).
+function mesoGain(mode, day, show) {
+  const status = document.getElementById('status');
+  if (!status) return;
+  let el = document.getElementById('mesoGain');
+  const got = show ? mesoLog().filter((e) => [`${mode}:${day}`, `${mode}+bonus:${day}`, `${mode}+title:${day}`].includes(e.key)).reduce((s, e) => s + e.amount, 0) : 0;
+  // Nothing for this mode because another mode already paid more today (Boss Wordle / BGM Clip): say so.
+  const group = groupOf(mode), elsewhere = show && !got && group && day >= BEST_ONLY_FROM
+    && mesoLog().some((e) => group.some((m) => m !== mode && e.key === `${m}:${day}`));
+  if (!got && !elsewhere) { el?.remove(); return; }
+  if (!el) {
+    el = document.createElement('p');
+    el.id = 'mesoGain';
+    el.innerHTML = '<img src="images/fx/meso-gold.png" alt=""><span></span>';
+    el.title = 'Mesos earned for this puzzle';
+    el.addEventListener('click', () => openMeso());
+    status.after(el);
+  }
+  el.querySelector('span').textContent = `+${fmt(got)}`;
+  el.classList.toggle('none', !got);
+  if (!got) el.querySelector('span').textContent = `+0 (you already earned more on another mode ${isArchive(day) ? 'that day' : 'today'})`;
+  if (fxHoldTill > Date.now()) revealAfter(el, fxHoldTill - Date.now());
+}
+// A few mesos burst out of the meso count's icon (e.g. an achievement's meso reward claimed).
+// Mesos fly into the meso counter (top of the page) from `from` (e.g. an achievement's Claim button): they burst out a
+// little, then each one swoops to the counter, which bumps as they land. Returns false if nothing flew.
+function mesoFly(n = 12, from) {
+  const icon = document.querySelector('#mesoBtn img');
+  if (!icon || !from || matchMedia('(prefers-reduced-motion: reduce)').matches) return false;
+  const s = from.getBoundingClientRect(), e = icon.getBoundingClientRect();
+  const sx = s.left + s.width / 2 - 15, sy = s.top + s.height / 2 - 15, dx = e.left + e.width / 2 - 15 - sx, dy = e.top + e.height / 2 - 15 - sy;
+  let left = n;
+  for (let i = 0; i < n; i++) {
+    const m = Object.assign(document.createElement('img'), { src: 'images/fx/meso-gold.png', className: 'mesofly', alt: '' });
+    m.style.left = sx + 'px';
+    m.style.top = sy + 'px';
+    document.body.appendChild(m);
+    const a = Math.random() * Math.PI * 2, d = 18 + Math.random() * 26, bx = Math.cos(a) * d, by = Math.sin(a) * d;
+    const side = 60 + Math.random() * 60;   // swoop out to the right on the way up (the curve in the picture)
+    m.animate([{ transform: 'translate(0, 0) scale(0.5)', opacity: 0 },
+      { transform: `translate(${bx}px, ${by}px) scale(1)`, opacity: 1, offset: 0.2 },
+      { transform: `translate(${bx + dx * 0.45 + side}px, ${by + dy * 0.55}px) scale(1) rotate(${Math.random() * 360}deg)`, opacity: 1, offset: 0.6 },
+      { transform: `translate(${dx}px, ${dy}px) scale(0.6) rotate(${Math.random() * 540}deg)`, opacity: 1 }],
+      { duration: 750 + Math.random() * 200, delay: i * 35, easing: 'ease-in-out', fill: 'both' }).onfinish = () => {
+      m.remove();
+      if (--left === 0) { const b = document.getElementById('mesoBtn'); b?.classList.remove('bump'); void b?.offsetWidth; b?.classList.add('bump'); }
+    };
+  }
+  return true;
+}
+// Under the Mode buttons (Boss Wordle, BGM Clip): only your best mode each day pays.
+(() => {
+  const modes = document.getElementById('modes');
+  if (!modes || Math.floor(Date.now() / 86400000) < BEST_ONLY_FROM) return;
+  const note = document.createElement('p');
+  note.className = 'mesonote';
+  note.innerHTML = '<img src="images/fx/meso-gold.png" alt=""><span>You only get mesos for your <b>best</b> mode each day.</span>';
+  note.title = 'Do better on another mode and you get the difference.';
+  modes.after(note);
+})();
+drawMeso();
+// Weekend background effect: a few small maple leaves drifting down behind the game (Settings can turn it off).
+let leafTimer = null;
+function leaves() {
+  const on = weekendNow() && bgEffectOn() && !matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let box = document.getElementById('leaves');
+  if (!on) { clearInterval(leafTimer); leafTimer = null; box?.remove(); return; }
+  if (leafTimer) return;
+  box = Object.assign(document.createElement('div'), { id: 'leaves' });
+  box.setAttribute('aria-hidden', 'true');
+  document.body.prepend(box);
+  const drop = () => {
+    if (document.hidden || box.childElementCount >= 10) return;
+    const leaf = box.appendChild(Object.assign(document.createElement('img'), { src: 'images/fx/leaf.png', alt: '' }));
+    const size = 10 + Math.random() * 8, x = Math.random() * 100, drift = (Math.random() - 0.5) * 160;
+    const spin = (Math.random() < 0.5 ? -1 : 1) * (180 + Math.random() * 360), secs = 7 + Math.random() * 4;
+    leaf.style.cssText = `width:${size}px;left:${x}vw`;
+    leaf.animate([
+      { transform: 'translate(0, -30px) rotate(0deg)', opacity: 0 },
+      { opacity: 0.85, offset: 0.08 },
+      { transform: `translate(${drift * 0.6}px, 50vh) rotate(${spin / 2}deg)`, offset: 0.5 },
+      { transform: `translate(${drift}px, calc(100vh + 30px)) rotate(${spin}deg)`, opacity: 0.85 },
+    ], { duration: secs * 1000, easing: 'linear' }).onfinish = () => leaf.remove();
+  };
+  drop();
+  leafTimer = setInterval(drop, 700);
+}
+leaves();
+// A game's tab shows its meso event while it's on, e.g. "3x" with a gold meso on BGM Clip.
+for (const btn of document.querySelectorAll('[data-meso]')) {
+  const today = Math.floor(Date.now() / 86400000);
+  // Only a game's own event (like BGM Clip's launch week): Halloween and weekends pay every game, so they're on the meso button instead.
+  const times = MESO_EVENTS.find((e) => e.mode === btn.dataset.meso && today >= e.from && today <= e.to)?.times ?? 1;
+  if (times <= 1) continue;
+  const tag = document.createElement('span');
+  tag.className = 'mesotag';
+  tag.title = `${times}x mesos today!`;
+  tag.innerHTML = `${times}x<img src="images/fx/meso-gold.png" alt="mesos">`;
+  btn.appendChild(tag);
+}
+
+// The version button (bottom left) shows the newest version in CHANGELOG.md (its first "## alpha vX.Y - date" line), so
+// a changelog edit on GitHub updates it too. The text in the page is only a fallback until that loads.
+fetch('CHANGELOG.md', { cache: 'no-cache' }).then((r) => r.text()).then((md) => {
+  const m = md.match(/^## (.+?)(?: - .*)?$/m);
+  const btn = document.getElementById('version');
+  if (m && btn) btn.textContent = m[1].trim().replace(/\bv\.(?=\d)/, 'v');   // "alpha v.4.3.2" shows as "alpha v4.3.2"
+}).catch(() => {});
+// The big v6 update (achievements): until Nov 6 (UTC), the Changelog opens by itself once for everyone (with alpha v6.0
+// open, even once newer versions are above it), then never again. Seen: mapleWordle:seenV6 (goes to the account too).
+const SEEN_V6_KEY = 'mapleWordle:seenV6';
+addEventListener('load', () => {
+  if (Date.now() >= Date.UTC(2026, 10, 6) || lsGet(SEEN_V6_KEY) || location.pathname.includes('/maplewordledev')) return;   // (not on the test site: no changelog there)
+  setTimeout(() => {
+    const btn = document.getElementById('version');
+    if (!btn || lsGet(SEEN_V6_KEY) || document.querySelector('.popup:not([hidden])')) return;
+    lsSet(SEEN_V6_KEY, '1');
+    window.changelogOpenVer = 'alpha v6.0';   // it's about v6.0 (achievements), not whatever's newest
+    btn.click();
+    setTimeout(() => { window.changelogOpenVer = null; }, 3000);
+  }, 600);
+});
+// The Changelog window (every game) built from CHANGELOG.md. Each "## alpha v4.3 - date" is a box you can open and close,
+// and the versions are grouped by their first number (alpha v4, alpha v3, ...) in bigger boxes that open and close too.
+// Only the newest group and its newest version start open.
+function buildChangelog(body, md) {
+  let group = null, major = null, ver = null, list = null;
+  for (const line of md.split('\n')) {
+    if (line.startsWith('## ')) {
+      const [name, date] = line.slice(3).trim().split(' - ');
+      const label = name.replace(/\bv\.(?=\d)/, 'v');   // "alpha v.4.3" shows as "alpha v4.3"
+      const maj = (label.match(/^.*?v\d+/) || [label])[0];   // "alpha v4.3.2" -> "alpha v4"
+      if (maj !== major) {
+        major = maj;
+        group = body.appendChild(document.createElement('details'));
+        group.className = 'clgroup';
+        group.open = body.childElementCount === 1;
+        group.appendChild(document.createElement('summary')).textContent = maj;
+      }
+      ver = group.appendChild(document.createElement('details'));
+      ver.className = 'clver';
+      ver.open = group.open && group.childElementCount === 2;   // the group's first version (after its summary)
+      if (window.changelogOpenVer) ver.open = label === window.changelogOpenVer;   // the v6 popup: just v6.0 open, even with newer ones above it
+      const s = ver.appendChild(document.createElement('summary'));
+      s.appendChild(document.createElement('b')).textContent = label;
+      if (date) {
+        const d = s.appendChild(document.createElement('span'));
+        d.className = 'date';
+        d.textContent = '- ' + date;
+      }
+      list = ver.appendChild(document.createElement('ul'));
+    } else if (list && /^\s*[-*] /.test(line)) {
+      // "- item" (or "* item"); indent it (2+ spaces or a tab) to put it under the bullet above it.
+      const depth = line.match(/^\s*/)[0].replace(/\t/g, '  ').length >> 1;
+      let ul = list;
+      for (let i = 0; i < depth; i++) {
+        const last = ul.lastElementChild;
+        if (!last) break;
+        ul = last.querySelector(':scope > ul') || last.appendChild(document.createElement('ul'));
+      }
+      clText(ul.appendChild(document.createElement('li')), line.replace(/^\s*[-*] /, ''));
+    } else if (list && line.trim() && (!line.startsWith('#') || line.startsWith('### '))) {
+      // A plain line ("[BGM Clip] Fixes:") is a small heading, "### ✨ New" a section heading; the bullets after
+      // either go under it.
+      if (!list.childElementCount) list.remove();   // no bullets came before it
+      const p = ver.appendChild(document.createElement('p'));
+      p.className = 'clnote';
+      if (line.startsWith('### ')) p.classList.add('clsect');
+      clText(p, line.slice(line.startsWith('### ') ? 4 : 0).trim());
+      list = ver.appendChild(document.createElement('ul'));
+    }
+  }
+  for (const ul of body.querySelectorAll('.clver > ul:empty')) ul.remove();
+}
+// Changelog text (every game's Changelog window): **bold** shows bold, the same as on GitHub. Anything else stays plain text.
+// A section heading that starts with ✨ ("### ✨ New") makes its words sparkle a little.
+function clText(el, text) {
+  let into = el;
+  const m = el.classList.contains('clsect') && text.match(/^✨\s*(.+)$/);
+  if (m) {
+    el.append('✨ ');
+    into = el.appendChild(document.createElement('span'));
+    into.className = 'sparkle';
+    text = m[1];
+  }
+  text.split(/(\*\*[^*]+\*\*)/).forEach((part, i) => {
+    if (i % 2) into.appendChild(document.createElement('b')).textContent = part.slice(2, -2);
+    else if (part) into.appendChild(document.createTextNode(part));
+  });
+  return el;
+}
+
+// Halloween effects (holiday specials, Oct 31): Stirge bats and Pumpkin Bats flying across the top, a Jr. Wraith ghost
+// drifting by now and then, and a low fog, all behind the game box. Settings > Background effect turns them off.
+// The Haunted Mansion bundle's custom effect puts them on any day, on top of any other effect (Limbo mode turns
+// everything else off, these too).
+let hwTimer = null;
+const HW_FX_KEY = 'mapleWordle:hwFx';
+const hwFxOwned = () => ownedEffects().includes('halloween');
+const hwFxOn = () => hwFxOwned() && lsGet(HW_FX_KEY) === '1';
+function setHwFx(on) { limboAllOff(); lsSet(HW_FX_KEY, on ? '1' : '0'); halloweenFx(); }
+const hwWanted = () => !limboAllOn() && (holidayToday() === 'halloween' || hwFxOn())
+  && bgEffectOn() && !matchMedia('(prefers-reduced-motion: reduce)').matches;
+function halloweenFx() {
+  const on = hwWanted();
+  let box = document.getElementById('hwfx');
+  if (!on) { clearInterval(hwTimer); hwTimer = null; box?.remove(); return; }
+  if (hwTimer) return;
+  box = Object.assign(document.createElement('div'), { id: 'hwfx' });
+  box.setAttribute('aria-hidden', 'true');
+  box.innerHTML = '<div class="fog f1"></div><div class="fog f2"></div>';
+  document.body.prepend(box);
+  const rand = (a, b) => a + Math.random() * (b - a);
+  const fly = (src, size, secs) => {   // across the screen at a random height in the top half, bobbing up and down
+    const img = box.appendChild(Object.assign(document.createElement('img'), { src, alt: '', className: 'flyer' }));
+    const ltr = Math.random() < 0.5, y = rand(4, 45), bob = rand(15, 40);
+    img.style.cssText = `width:${size}px;top:${y}vh;${ltr ? 'transform:scaleX(-1)' : ''}`;
+    const from = ltr ? -15 : 110, to = ltr ? 110 : -15, flip = ltr ? ' scaleX(-1)' : '';
+    img.animate([0, 0.25, 0.5, 0.75, 1].map((t, i) => ({ transform: `translate(${from + (to - from) * t}vw, ${i % 2 ? -bob : 0}px)${flip}` })),
+      { duration: secs * 1000, easing: 'linear' }).onfinish = () => img.remove();
+  };
+  const ghost = () => {   // fades in at the side of the screen, drifts up a little, fades out
+    const img = box.appendChild(Object.assign(document.createElement('img'), { src: 'images/holiday/fx/ghost.gif', alt: '', className: 'ghost' }));
+    const left = Math.random() < 0.5 ? rand(2, 18) : rand(78, 94);
+    img.style.cssText = `width:${Math.round(rand(46, 64))}px;left:${left}vw;top:${rand(45, 70)}vh`;
+    img.animate([{ opacity: 0, transform: 'translateY(0)' }, { opacity: 0.75, offset: 0.25 }, { opacity: 0.75, offset: 0.7 }, { opacity: 0, transform: 'translateY(-60px)' }],
+      { duration: 9000, easing: 'ease-in-out' }).onfinish = () => img.remove();
+  };
+  let tick = 0;
+  const step = () => {
+    if (!hwWanted()) return halloweenFx();   // the page stayed open past Halloween (or the effect went off): stop
+    if (document.hidden) return;
+    tick++;
+    if (box.querySelectorAll('.flyer').length < 4) fly('images/holiday/fx/bat.gif', Math.round(rand(34, 50)), rand(11, 17));
+    if (tick % 5 === 0) fly('images/holiday/fx/pumpkin-bats.gif', 64, 22);
+    if (tick % 4 === 2 && !box.querySelector('.ghost')) ghost();
+  };
+  step();
+  hwTimer = setInterval(step, 2500);
+}
+halloweenFx();
+
+// Midnight (the site's UTC day changing) with the page open: a holiday's background fades in over 2 s when it starts
+// and fades back out over 2 s when it ends; its effects start / stop with it.
+let fxDay = Math.floor(Date.now() / 86400000);
+setInterval(() => {
+  const d = Math.floor(Date.now() / 86400000);
+  if (d === fxDay) return;
+  fxDay = d;
+  applyTheme(2);
+  halloweenFx();
+  leaves();
+}, 1000);

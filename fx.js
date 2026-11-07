@@ -703,22 +703,25 @@ function creditsWin() {
   const win = document.createElement('div');
   win.className = 'popup buyask creditwin';
   win.innerHTML = '<div class="panel"><h2>Credits &amp; Info</h2><div class="creditbody">' +
-    '<h3>About</h3><ul>' +
-    '<li>Mapledle is a free, fan-made site. It is not affiliated with or endorsed by NEXON.</li>' +
-    '<li><b>No ads, ever.</b> <b>No purchases, ever.</b> The site is non-profit and non-commercial: Meso and everything in the shop are earned only by playing.</li></ul>' +
-    '<h3>Your data</h3><ul>' +
-    '<li>Your progress (Meso, Customize, stats, settings and so on) is saved in this browser only.</li>' +
-    '<li>An account is optional. You only need one for achievements and PvP (coming soon), or to play on another device. It needs no email.</li>' +
-    "<li>The only thing sent without asking: each day's result (how many guesses it took, and whether a bonus was right), " +
-    "added to the anonymous counts in everyone's results. Nothing that identifies you goes with it.</li></ul>" +
-    '<h3>Credits</h3><ul>' +
-    '<li>MapleStory and its art, music, sounds and names: ⓒ NEXON Korea Corporation All Rights Reserved. Used here for fan purposes only.</li>' +
-    '<li>Game data: MapleStory Wiki (maplestorywiki.net), Namu Wiki, Bahamut (TMS boss HP).</li>' +
-    '<li>Fonts: Rubik (Google Fonts), and MapleStory\'s own fonts in Achievements.</li></ul>' +
-    '<h3>Special thanks</h3><ul>' +
-    '<li>Everyone in the Discord who tested, reported bugs and shared ideas!</li></ul>' +
-    '<h3>Contact</h3><ul>' +
-    '<li>Questions, feedback or bugs: <a href="https://discord.gg/f22H4UJ" target="_blank" rel="noopener">Join the Discord!</a></li></ul>' +
+    '<section><h3>About</h3>' +
+    '<p>Mapledle is a free, fan-made site. It is not affiliated with or endorsed by NEXON.</p>' +
+    "<p><b>No ads, ever. No purchases, ever.</b> It's non-profit and non-commercial: Meso and shop items are earned only by playing.</p></section>" +
+    '<section><h3>Your data</h3>' +
+    '<p>Your progress (Meso, Customize, stats, settings and so on) is saved in this browser.</p>' +
+    '<p>An account is optional and needs no email. You only need one for achievements, PvP (coming soon) or playing on another device.</p>' +
+    "<p>The only thing sent without asking is each day's result: how many guesses it took and whether a bonus was right. " +
+    "It's added to the anonymous counts everyone sees, with nothing that identifies you.</p></section>" +
+    '<section><h3>Credits</h3>' +
+    '<p><b>MapleStory</b><br>Art, music, sounds and names: ⓒ NEXON Korea Corporation All Rights Reserved. Used for fan purposes only.</p>' +
+    '<p><b>Game data</b><br>MapleStory Wiki (maplestorywiki.net), Namu Wiki, Bahamut (TMS boss HP)</p>' +
+    "<p><b>Fonts</b><br>Rubik (Google Fonts), and MapleStory's own fonts in Achievements</p></section>" +
+    '<section><h3>Special thanks</h3>' +
+    '<p><b>@mr_pigoo</b> on Discord for helping with Attack Animation clips</p>' +
+    '<p><b>@lax.lax</b> for reporting bugs and suggestions</p>' +
+    '<p><b>@ichiyam</b> for helping with initial development of the website and suggestions</p>' +
+    '<p>... and many more (anonymous or small contributions) for helping out!</p></section>' +
+    '<section><h3>Contact</h3>' +
+    '<p>Questions, feedback or bugs: <a href="https://discord.gg/f22H4UJ" target="_blank" rel="noopener">Join the Discord!</a></p></section>' +
     '</div><p class="buybtns"><button class="plain">Close</button></p></div>';
   const close = () => { win.remove(); removeEventListener('keydown', esc, true); };
   const esc = (e) => { if (e.key === 'Escape') { e.stopImmediatePropagation(); close(); } };

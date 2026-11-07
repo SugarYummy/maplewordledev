@@ -469,10 +469,10 @@ body.glitch :is(button, input, select) { text-shadow: inherit; }   /* the browse
 .creditwin .panel { max-width: min(460px, calc(100vw - 32px)); align-items: stretch; max-height: calc(100vh - 48px); box-sizing: border-box; }
 .creditwin h2 { text-align: center; }
 .creditbody { overflow-y: auto; text-align: left; line-height: 1.4; font-size: 14px; padding-right: 4px; }
-.creditbody h3 { font-size: 15px; margin: 10px 0 4px; }
-.creditbody h3:first-child { margin-top: 0; }
-.creditbody ul { margin: 0; padding-left: 18px; }
-.creditbody li { margin: 3px 0; }
+.creditbody section + section { border-top: 1px solid rgba(0, 0, 0, 0.12); margin-top: 12px; padding-top: 10px; }
+.creditbody h3 { font-size: 15px; margin: 0 0 6px; }
+.creditbody p { margin: 0 0 6px; }
+.creditbody p:last-child { margin-bottom: 0; }
 .creditwin .buybtns { justify-content: center; }
 .buyask .price { display: flex; align-items: center; gap: 5px; font-weight: 700; font-size: 17px; color: #8a6000; }
 .buyask .price img { width: 20px; height: 20px; image-rendering: pixelated; }
