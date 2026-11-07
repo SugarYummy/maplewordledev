@@ -313,11 +313,14 @@ function playHecate(special = false) {   // special: Limbo's mashup win (plays w
   }
   return skin.burst;
 }
-// A first-guess win with a boss finishing attack as the win effect: the first-guess music waits for its burst (with the
-// mesos), starting 0.5 s early so its fade-in is up by then, like on that boss's BGM Clip Extreme day. 0 for any other win effect.
+// A first-guess win with a boss finishing attack or Limbo Transition (Limbo mode, or ticked on its own) as the win effect:
+// the first-guess music waits for its burst (with the mesos), starting 0.5 s early so its fade-in is up by then, like in
+// BGM Clip. 0 for any other win effect.
 function firstTryBurst() {
-  if (matchMedia('(prefers-reduced-motion: reduce)').matches || limboAllOn() || typeof hecate === 'undefined' || !hecate) return 0;
-  return HECATE[hecate.id]?.achv ? Math.max(1, HECATE[hecate.id].burst - 500) : 0;   // 0.5 s early: the music's fade-in is up by the burst
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches || typeof hecate === 'undefined' || !hecate) return 0;
+  const id = hecate.id;
+  if (limboAllOn() ? id !== 'limboCut' : id === 'limboCut' && !pickedSkins().includes('limboCut')) return 0;   // (playHecate drops it)
+  return HECATE[id]?.achv || id === 'limboCut' ? Math.max(1, HECATE[id].burst - 500) : 0;   // 0.5 s early: the music's fade-in is up by the burst
 }
 function bigWin() {
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
