@@ -842,7 +842,8 @@ input[type="search"]::-webkit-search-cancel-button, input[type="search"]::-webki
 .acctwelcome { font-size: 15px; }
 .acctform { display: flex; flex-direction: column; gap: 6px; }
 .acctwin .panel { width: 320px; align-items: stretch; }
-.acctwin .panel.acctpickwin { width: 400px; max-width: calc(100vw - 32px); position: relative; }   /* MapleStory Character (relative: for its On / Off message) */
+.acctwin .panel.acctpickwin { width: 400px; max-width: calc(100vw - 32px); position: relative; }
+.acctpickwin > .fxtoast { bottom: auto; }   /* its On / Off message: at the top (account.js sets top), clear of the buttons */   /* MapleStory Character (relative: for its On / Off message) */
 .acctwin h2 { text-align: center; }
 .acctfield { display: flex; flex-direction: column; gap: 3px; font-size: 13px; font-weight: 700; }
 .acctfield input { font-family: inherit; font-size: 15px; padding: 6px 9px; border: 1px solid #999; border-radius: 6px; background: rgba(var(--wb), 0.9); }

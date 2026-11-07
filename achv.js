@@ -224,7 +224,8 @@
     el.title = '';   // (no row tooltip over the cup)
     // The game's tip is 27.8% of a row's height (rows are 545 x 100): sized to the row as the window is drawn now (it's
     // scaled to fit the screen), the tip's own size being 28.25 px tall.
-    const scale = () => (el.closest('.achv')?.getBoundingClientRect().width || 545) / 545 * 27.8 / 28.25;
+    // At least 0.8 (22.6 px tall): on a phone, the game's size would be too small to read
+    const scale = () => Math.max(0.8, (el.closest('.achv')?.getBoundingClientRect().width || 545) / 545 * 27.8 / 28.25);
     const show = (e) => { const t = rateText(id); if (t) tipAt(e, t, scale()); else tipHide(); };
     el.addEventListener('pointerenter', show);
     el.addEventListener('pointermove', (e) => { if (e.pointerType === 'mouse') show(e); });
