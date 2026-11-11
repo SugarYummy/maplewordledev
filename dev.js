@@ -21,7 +21,7 @@
     constructor(...a) { if (a.length) super(...a); else super(RealDate.now() - BEHIND); }
     static now() { return RealDate.now() - BEHIND; }
   };
-  const BUILD = 'alphaTest v6.2.10112026.171418', STAMP = BUILD.split(' v')[1];
+  const BUILD = 'alphaTest v6.2.10112026.171852', STAMP = BUILD.split(' v')[1];
   const ROOT = location.pathname.match(/^(.*?\/maplewordledev\/)/)?.[1] ?? '/';
   const kept = window.localStorage;   // the browser's own storage: only the test login ('mwdev:login') goes here
   Object.defineProperty(window, 'localStorage', { value: window.sessionStorage, configurable: true });
@@ -297,7 +297,7 @@
       #devConsole input { flex: 1; min-width: 0; font: 13px ui-monospace, Consolas, monospace; padding: 4px 8px; border: 1px solid #999; border-radius: 6px; }
       #devConsole pre { flex-basis: 100%; margin: 0; white-space: pre-wrap; font: 12px/1.4 ui-monospace, Consolas, monospace; color: #444; }
       #devConsole pre:empty { display: none; }
-      @media (max-width: 700px) { #devTag { bottom: 64px; } #devBuilds { bottom: 104px; } }`;
+      @media (max-width: 700px) { #devTag { font-size: 10px; padding: 3px 8px; } #devBuilds { bottom: 44px; } }`;
     document.head.appendChild(css);
   });
 })();
