@@ -21,7 +21,7 @@
     constructor(...a) { if (a.length) super(...a); else super(RealDate.now() - BEHIND); }
     static now() { return RealDate.now() - BEHIND; }
   };
-  const BUILD = 'alphaTest v6.2.10112026.205602', STAMP = BUILD.split(' v')[1];
+  const BUILD = 'alphaTest v6.2.10112026.211744', STAMP = BUILD.split(' v')[1];
   const ROOT = location.pathname.match(/^(.*?\/maplewordledev\/)/)?.[1] ?? '/';
   const kept = window.localStorage;   // the browser's own storage: only the test login ('mwdev:login') goes here
   Object.defineProperty(window, 'localStorage', { value: window.sessionStorage, configurable: true });
@@ -92,6 +92,10 @@
       const have = {};
       for (const g of saves) for (const [k, v] of Object.entries(g)) if (!k.startsWith('_') && v != null) have[k] = (have[k] || 0) + 1;
       return reply({ total: saves.length, have });
+    }
+    if (path === 'place') {   // a place by achievement points among the test accounts (the real server: GET /place)
+      const ap = Number(new URL(url).searchParams.get('ap')) || 0;
+      return reply({ place: Object.values(s.users).filter((u) => (parseInt(u.data?.['mapleWordle:ap'], 10) || 0) > ap).length + 1 });
     }
     const body = init.body ? JSON.parse(init.body) : {};
     const byName = (n) => Object.values(s.users).find((u) => u.name.toLowerCase() === String(n).toLowerCase());
