@@ -500,7 +500,7 @@ body:has(#pvpBtn) #themeBtn { top: 138px; }
 .zoomview b { color: #fff; font-size: 20px; text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6); }
 @keyframes zoomin { from { opacity: 0; transform: scale(0.94); } to { opacity: 1; transform: none; } }
 .buybtns button:hover { transform: translateY(-2px) scale(1.05); filter: brightness(1.08); }
-.popupbody { width: min(440px, calc(100vw - 96px)); text-align: left; }
+.popupbody { width: min(440px, max(280px, calc(100vw - 96px))); text-align: left; }   /* (280: the window's own smallest width, so small phones use all of it) */
 .popupbody h3 { margin: 14px 0 4px; }
 .popupbody h3 small { font-weight: normal; opacity: 0.7; }
 #shopBtn { font-family: inherit; font-size: 13px; font-weight: 600; padding: 3px 10px; border-radius: 10px; cursor: pointer;
@@ -1048,6 +1048,7 @@ html.dark .fxswitch.onbox { color: #ccc; }
 html.dark :is(#games, #subgames) button:disabled { color: #999; }
 html.dark .shopitem.lockeditem b, html.dark .shopitem .locked { color: #aaa; }
 html.dark td.cardcell { background: #3a3f4a; }
+html.dark :is(.green, .yellow, .red), html.dark .answer td:not(.cardcell) { color: #1b1e24; }   /* the hint colours are light: dark text on them, as in light mode (the dark theme's light grey was nearly invisible on the answer row's blue) */
 html.dark #bundletipbox { background: #262a32; color: #c3c8d1; }
 html.dark :is(td, th) { border-color: #5a606c; }
 html.dark :is(#archiveList button, .themecard, .acctpickrow, .shopitem) { border-color: rgba(255, 255, 255, 0.15); }
