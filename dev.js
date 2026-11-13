@@ -21,7 +21,7 @@
     constructor(...a) { if (a.length) super(...a); else super(RealDate.now() - BEHIND); }
     static now() { return RealDate.now() - BEHIND; }
   };
-  const BUILD = 'alphaTest v6.2.12112026.202553', STAMP = BUILD.split(' v')[1];
+  const BUILD = 'alphaTest v6.2.12112026.235534', STAMP = BUILD.split(' v')[1];
   const ROOT = location.pathname.match(/^(.*?\/maplewordledev\/)/)?.[1] ?? '/';
   const kept = window.localStorage;   // the browser's own storage: only the test login ('mwdev:login') goes here
   Object.defineProperty(window, 'localStorage', { value: window.sessionStorage, configurable: true });
